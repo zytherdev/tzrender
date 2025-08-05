@@ -157,7 +157,7 @@ export default class Render
             {
                 const id__ = this.__id();
 
-                const { variant = 'simple', theme = 'dark', text = {}, backdrop = true, custom = {} } = prms.props
+                const { variant = 'simple', theme = 'dark', events = {}, text = {}, backdrop = true, custom = {} } = prms.props
 
                 const useLight = theme === 'light';
                 const cls = (base) => useLight ? `${base}-light ${base}` : `${base}-dark ${base}`;
@@ -165,6 +165,43 @@ export default class Render
                 const container = document.createElement('div');
                 container.id = id__;
                 container.className = backdrop ? cls('spinner-backdrop') : cls('spinner-container');
+
+                // events
+                const toggle = (show = true) => {
+                        const spinner = document.getElementById(container.id);
+                        if (spinner) {
+                            spinner.classList.toggle('__hiden__', !show);
+                        }
+                    }
+                const destroy = () => {
+                    this.destroy(container.id)
+                }
+
+                if(events)
+                {
+                    if(events.screen_click)
+                    {
+                        if (events.screen_click.hide) {
+                            container.addEventListener('click', () => toggle(false))
+                        }
+
+                        if (events.screen_click.destroy) {
+                            container.addEventListener('click', () => destroy())
+                        }
+                    }
+
+                    if(events.auto__)
+                    {
+                        if (events.auto__.hide) {
+                            setTimeout(() => toggle(false), events.auto__.timer || 3000)
+                        }
+
+                        if (events.auto__.destroy) {
+                            setTimeout(() => destroy(), events.auto__.timer || 3000)
+                        }
+                    }
+                }
+                //________
 
                 const spinnerWrapper = document.createElement('div');
                 spinnerWrapper.className = `spinner ${variant}`;
@@ -234,15 +271,8 @@ export default class Render
 
                 return {
                     __id: container.id,
-                    toggle: (show = true) => {
-                        const spinner = document.getElementById(container.id);
-                        if (spinner) {
-                            spinner.classList.toggle('__hiden__', !show);
-                        }
-                    },
-                    destroy: () => {
-                        this.destroy(container.id)
-                    }
+                    toggle,
+                    destroy
                 }
             }
         }
@@ -258,7 +288,7 @@ export default class Render
         return this.build({ type: 'alert', props: prms })
     }
 
-    spinner(prms = {variant: 'custom', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: null, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { url: 'https://www.svgrepo.com/show/54385/target.svg', animation: 'pulse', color: 'skyblue' }})
+    spinner(prms = {variant: 'custom', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { url: 'https://www.svgrepo.com/show/54385/target.svg', animation: 'pulse', color: 'skyblue' }})
     {
         return this.build({ type: 'spinner', props: prms })
     }
