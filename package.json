@@ -1,14 +1,11 @@
 {
-  "name": "render-utils-module",
+  "name": "techz-render-js",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "type": "module",
   "module": "index.js",
-  "keywords": ["render", "utils", "module", "render-utils-module", "dom", "esm"],
+  "keywords": ["render", "utils", "module", "techz-render-js", "dom", "esm"],
   "author": "Mike DP",
   "license": "MIT"
 }
