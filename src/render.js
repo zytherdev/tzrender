@@ -1,13 +1,39 @@
 
 export default class Render
 {
-    async inject_style(url, id)
-    {
-        const style = document.createElement('style');
-        style.id = `${id}-style`
-        style.textContent = await (await fetch(url)).text();
+    static style_loaded = false
+    static style__ = null
+    static style_promise = null
+    static instance_count = 0
 
-        document.head.appendChild(style)
+    constructor()
+    {
+        Render.instance_count++
+
+        if (!Render.style_promise) {
+            Render.style_promise = this.inject_style()
+        }
+    }
+
+    async inject_style()
+    {
+        if(!Render.style_loaded)
+        {
+            const styles_uri = ['/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css']
+            const style = document.createElement('style');
+            style.id = this.__id()
+            style.textContent = '/*======= techz-render components css =======*/'
+
+            for(let uri of styles_uri)
+            {
+                style.textContent += await (await fetch(uri)).text()
+            }
+
+            document.head.appendChild(style)
+
+            Render.style_loaded = true
+            Render.style__ = style.id
+        }
     }
 
 
@@ -18,8 +44,6 @@ export default class Render
             case 'msg_box':
             {
                 const id__ = this.__id();
-
-                this.inject_style('/src/styles/msg_box.css', id__)
 
                 const theme = prms.props.theme === 'light' ? 'light' : 'dark'
 
@@ -81,8 +105,6 @@ export default class Render
             {
                 const id__ = this.__id();
 
-                this.inject_style('/src/styles/alert.css', id__)
-
                 const useLight = prms.props.theme === 'light';
                 const type = ['info', 'success', 'warning', 'error'].includes(prms.props.variant)
                     ? prms.props.variant
@@ -134,8 +156,6 @@ export default class Render
             case 'spinner':
             {
                 const id__ = this.__id();
-
-                this.inject_style('/src/styles/spinner.css', id__);
 
                 const { variant = 'simple', theme = 'dark', text = {}, backdrop = true, custom = {} } = prms.props
 
@@ -212,7 +232,18 @@ export default class Render
 
                 document.body.appendChild(container);
 
-                return container.id
+                return {
+                    __id: container.id,
+                    toggle: (show = true) => {
+                        const spinner = document.getElementById(container.id);
+                        if (spinner) {
+                            spinner.classList.toggle('__hiden__', !show);
+                        }
+                    },
+                    destroy: () => {
+                        this.destroy(container.id)
+                    }
+                }
             }
         }
     }
@@ -227,7 +258,7 @@ export default class Render
         return this.build({ type: 'alert', props: prms })
     }
 
-    spinner(prms = {variant: 'custom', theme: 'dark', text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { url: 'https://www.svgrepo.com/show/54385/target.svg', animation: 'pulse', color: 'skyblue' }})
+    spinner(prms = {variant: 'custom', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: null, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { url: 'https://www.svgrepo.com/show/54385/target.svg', animation: 'pulse', color: 'skyblue' }})
     {
         return this.build({ type: 'spinner', props: prms })
     }
@@ -258,10 +289,6 @@ export default class Render
     destroy(id)
     {
         const el = document.getElementById(id)
-        if (el)
-        {
-            el.remove()
-            document.getElementById(`${id}-style`).remove()
-        }
+        if (el) el.remove()
     }
 }

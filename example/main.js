@@ -1,38 +1,18 @@
 import Render from '../src/render.js'
 
-const render = new Render();
-
 async function main()
 {
-    render.msg_box({
-        title: 'Message box',
-        msg: 'Do you want to continue?',
-        action: {
-            cancel: {
-                text: 'Cancel',
-                callback: () => {
-                    console.log('Cancel clicked')
-                }
-            },
-            confirm: {
-                text: 'Confirm',
-                callback: () => {
-                    console.log('Confirm clicked')
-                }
-            }
-        },
-        theme: 'dark'
-    })
+    const __1 = new Render()
+    const __2 = new Render()
+    const __3 = new Render()
 
-    render.alert({
-        theme: 'light',
-        variant: 'success',
-        msg: 'This is a success alert, be cheerful, my friend!'
-    })
+    const spinner = __1.spinner()
 
-    render.alert()
+    console.log(spinner)
 
-    render.spinner()
+    setTimeout(() => {
+        spinner.toggle(false)
+    }, 5000)
 }
 
 main()

@@ -1,3 +1,5 @@
+/* ======= techz-render spinner ======= */
+
 /* Base style */
 .spinner-container,
 .spinner-backdrop {
@@ -158,4 +160,9 @@
   font-weight: 600;
   letter-spacing: 5px;
   font-family: 'Courier New', Courier, monospace;
+}
+
+/* Visibility */
+.__hiden__ {
+  display: none;
 }
