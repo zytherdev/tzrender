@@ -1,11 +1,11 @@
 {
-  "name": "techz-render-js",
+  "name": "techz-render",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "module": "index.js",
-  "keywords": ["render", "utils", "module", "techz-render-js", "dom", "esm"],
+  "keywords": ["render", "utils", "module", "techz-render", "dom", "esm", "react", "ts"],
   "author": "Mike DP",
   "license": "MIT"
 }
