@@ -12,9 +12,17 @@ async function main()
                 screen_click: {
                     destroy: true
                 }
+            },
+            variant: 'simple',
+            custom: {
+                animation: 'spin'
             }
         }
     )
+
+    spinner.toggle(false)
+
+    __1.block_ui()
 }
 
 main()

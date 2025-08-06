@@ -19,7 +19,7 @@ export default class Render
     {
         if(!Render.style_loaded)
         {
-            const styles_uri = ['/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css']
+            const styles_uri = ['/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css', '/src/styles/block-ui.css']
             const style = document.createElement('style');
             style.id = this.__id()
             style.textContent = '/*======= techz-render components css =======*/'
@@ -275,7 +275,284 @@ export default class Render
                     destroy
                 }
             }
+            case 'block_ui': 
+            {
+                const id__ = this.__id()
+
+                const { theme = 'dark', animation = 'particles', message = '', count = 40 } = prms.props;
+                const useLight = theme === 'light';
+
+                const backdrop = document.createElement('div');
+                backdrop.id = id__;
+                backdrop.className = `block-ui-backdrop block-ui-backdrop-${useLight ? 'light' : 'dark'}`;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'block-ui-overlay';
+                backdrop.appendChild(overlay);
+
+                const animLayer = document.createElement('div');
+                animLayer.className = `block-ui-anim block-ui-${animation}`;
+                backdrop.appendChild(animLayer);
+
+                const elements = [];
+                for(let i=0; i<count; i++) {
+                    const el = document.createElement('span');
+                    animLayer.appendChild(el);
+                    elements.push(el);
+                }
+
+                if(message) {
+                    const msg = document.createElement('div');
+                    msg.className = 'block-ui-message';
+                    msg.innerText = message;
+                    backdrop.appendChild(msg);
+                }
+
+                document.body.appendChild(backdrop);
+
+                // Estado dos elementos
+                const state = [];
+
+                // Armazena posição do cursor
+                const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+                // Distância para efeito repulsivo
+                const repelRadius = 150;
+
+                // Atualiza posição do cursor ao mover mouse
+                window.addEventListener('mousemove', (e) => {
+                    cursor.x = e.clientX;
+                    cursor.y = e.clientY;
+                });
+
+                // Função lerp para suavização
+                function lerp(start, end, t) {
+                    return start + (end - start) * t;
+                }
+
+                // Checa distância entre dois pontos
+                function dist(x1, y1, x2, y2) {
+                    return Math.hypot(x2 - x1, y2 - y1);
+                }
+
+                // Inicialização dos elementos e estados por animação
+                if(animation === 'particles') {
+                    for(let i=0; i<count; i++) {
+                    state[i] = {
+                        x: Math.random() * window.innerWidth,
+                        y: window.innerHeight + Math.random() * 200,
+                        size: 5 + Math.random() * 10,
+                        speed: 0.3 + Math.random() * 0.7,
+                        opacity: 0,
+                        vx: 0,
+                        vy: - (0.3 + Math.random() * 0.7) // só sobe
+                    };
+                    const el = elements[i];
+                    el.style.width = el.style.height = state[i].size + 'px';
+                    el.style.borderRadius = '50%';
+                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
+                    el.style.position = 'fixed';
+                    el.style.pointerEvents = 'none';
+                    el.style.willChange = 'transform, opacity';
+                    }
+                } else if(animation === 'lines') {
+                    for(let i=0; i<count; i++) {
+                    const angle = Math.random() * 2 * Math.PI; // direção aleatória
+                    const speed = 0.5 + Math.random() * 0.7;
+                    const length = 50 + Math.random() * 100;
+                    state[i] = {
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        length,
+                        speed,
+                        angle,
+                        opacity: 0,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed
+                    };
+                    const el = elements[i];
+                    el.style.width = '2px';
+                    el.style.height = length + 'px';
+                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+                    el.style.position = 'fixed';
+                    el.style.pointerEvents = 'none';
+                    el.style.willChange = 'transform, opacity';
+                    el.style.transformOrigin = 'top center';
+                    }
+                } else if(animation === 'shapes') {
+                    const shapes = ['circle', 'square', 'triangle'];
+                    const colorsLight = ['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.15)'];
+                    const colorsDark = ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)'];
+                    for(let i=0; i<count; i++) {
+                    const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+                    const color = useLight ? colorsLight[Math.floor(Math.random() * colorsLight.length)] : colorsDark[Math.floor(Math.random() * colorsDark.length)];
+                    const size = 20 + Math.random() * 40;
+                    state[i] = {
+                        x: Math.random() * window.innerWidth,
+                        y: window.innerHeight + Math.random() * 200,
+                        size,
+                        speed: 0.2 + Math.random() * 0.5,
+                        rotation: 0,
+                        rotationSpeed: (Math.random() - 0.5) * 1.5,
+                        opacity: 0,
+                        shapeType,
+                        color
+                    };
+                    const el = elements[i];
+                    el.style.position = 'fixed';
+                    el.style.width = size + 'px';
+                    el.style.height = size + 'px';
+                    el.style.pointerEvents = 'none';
+                    el.style.willChange = 'transform, opacity';
+
+                    // Desenhar shape diferente via CSS classes e styles
+                    el.style.background = 'transparent';
+                    el.style.border = 'none';
+
+                    if(shapeType === 'circle') {
+                        el.style.borderRadius = '50%';
+                        el.style.backgroundColor = color;
+                    } else if(shapeType === 'square') {
+                        el.style.borderRadius = '0';
+                        el.style.backgroundColor = color;
+                    } else if(shapeType === 'triangle') {
+                        // Para triângulo, usaremos bordas CSS:
+                        el.style.width = '0';
+                        el.style.height = '0';
+                        el.style.borderLeft = (size/2) + 'px solid transparent';
+                        el.style.borderRight = (size/2) + 'px solid transparent';
+                        el.style.borderBottom = size + 'px solid ' + color;
+                        el.style.backgroundColor = 'transparent';
+                    }
+                    }
+                } else if(animation === 'orbs') {
+                    for(let i=0; i<count; i++) {
+                    state[i] = {
+                        x: window.innerWidth/2,
+                        y: window.innerHeight/2,
+                        targetX: window.innerWidth/2,
+                        targetY: window.innerHeight/2,
+                        size: 14,
+                    };
+                    const el = elements[i];
+                    el.style.width = el.style.height = state[i].size + 'px';
+                    el.style.borderRadius = '50%';
+                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)';
+                    el.style.position = 'fixed';
+                    el.style.pointerEvents = 'none';
+                    el.style.transition = 'transform 0.15s ease-out';
+                    el.style.willChange = 'transform';
+                    }
+                    window.addEventListener('mousemove', e => {
+                    state[0].targetX = e.clientX;
+                    state[0].targetY = e.clientY;
+                    });
+                }
+
+                // Função de repelência suave
+                function applyRepel(obj) {
+                    const dx = obj.x - cursor.x;
+                    const dy = obj.y - cursor.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    if(distance < repelRadius) {
+                    // Repel force: afastar com força proporcional ao inverso da distância
+                    const force = (repelRadius - distance) / repelRadius * 5;
+                    const angle = Math.atan2(dy, dx);
+                    obj.vx += Math.cos(angle) * force;
+                    obj.vy += Math.sin(angle) * force;
+                    }
+                }
+
+                // Loop de animação único e contínuo
+                function animate() {
+                    if(animation === 'particles') {
+                        state.forEach((obj, i) => {
+                            applyRepel(obj);
+
+                            // Atualiza posição com velocidade
+                            obj.x += obj.vx;
+                            obj.y += obj.vy;
+
+                            // Aplica fricção para desacelerar repel
+                            obj.vx *= 0.95;
+                            obj.vy *= 0.95;
+
+                            if(obj.y < -20) obj.y = window.innerHeight + 20;
+                            if(obj.x < -20) obj.x = window.innerWidth + 20;
+                            if(obj.x > window.innerWidth + 20) obj.x = -20;
+
+                            obj.opacity = obj.y > window.innerHeight * 0.5
+                            ? lerp(0,1,(window.innerHeight + 20 - obj.y) / (window.innerHeight * 0.5))
+                            : lerp(1,0,obj.y / (window.innerHeight * 0.5));
+
+                            elements[i].style.transform = `translate(${obj.x}px, ${obj.y}px) scale(${0.5 + (1-obj.opacity)*0.5})`;
+                            elements[i].style.opacity = obj.opacity;
+                        });
+                    } else if(animation === 'lines') {
+                        state.forEach((obj, i) => {
+                            applyRepel(obj);
+
+                            obj.x += obj.vx;
+                            obj.y += obj.vy;
+
+                            obj.vx *= 0.95;
+                            obj.vy *= 0.95;
+
+                            // Loop pela tela nas bordas
+                            if(obj.y < -obj.length) obj.y = window.innerHeight + obj.length;
+                            if(obj.x < -10) obj.x = window.innerWidth + 10;
+                            if(obj.x > window.innerWidth + 10) obj.x = -10;
+
+                            obj.opacity = obj.y > window.innerHeight * 0.5
+                            ? lerp(0,1,(window.innerHeight + obj.length - obj.y) / (window.innerHeight * 0.5))
+                            : lerp(1,0,obj.y / (window.innerHeight * 0.5));
+
+                            elements[i].style.transform = `translate(${obj.x}px, ${obj.y}px) rotate(${obj.angle * 180 / Math.PI}deg)`;
+                            elements[i].style.opacity = obj.opacity;
+                        });
+                    } else if(animation === 'shapes') {
+                        state.forEach((obj, i) => {
+                            applyRepel(obj);
+
+                            obj.x += obj.vx || 0;
+                            obj.y -= obj.speed; // constante para cima
+                            obj.rotation += obj.rotationSpeed;
+
+                            if(obj.y < -obj.size*2) obj.y = window.innerHeight + obj.size*2;
+
+                            obj.opacity = obj.y > window.innerHeight * 0.5
+                            ? lerp(0,1,(window.innerHeight + obj.size*2 - obj.y) / (window.innerHeight * 0.5))
+                            : lerp(1,0,obj.y / (window.innerHeight * 0.5));
+
+                            elements[i].style.transform = `translate(${obj.x}px, ${obj.y}px) rotate(${obj.rotation}deg) scale(${0.6 + 0.6 * obj.opacity})`;
+                            elements[i].style.opacity = obj.opacity;
+                        });
+                    } else if(animation === 'orbs') {
+                        // Orb 0 segue cursor com lerp suave
+                        state[0].x = lerp(state[0].x, state[0].targetX, 0.2);
+                        state[0].y = lerp(state[0].y, state[0].targetY, 0.2);
+                        elements[0].style.transform = `translate(${state[0].x}px, ${state[0].y}px)`;
+
+                        // Outras orbs seguem a anterior com delay e suavização
+                        for(let i=1; i<count; i++) {
+                            state[i].x = lerp(state[i].x, state[i-1].x, 0.15);
+                            state[i].y = lerp(state[i].y, state[i-1].y, 0.15);
+                            elements[i].style.transform = `translate(${state[i].x}px, ${state[i].y}px)`;
+                        }
+                    }
+
+                    requestAnimationFrame(animate);
+                }
+                requestAnimationFrame(animate);
+
+                return id__;
+            }
         }
+    }
+
+    block_ui(prms = {theme: 'dark', animation: 'orbs', message: ''})
+    {
+        return this.build({ type: 'block_ui', props: prms })
     }
 
     msg_box(prms = {theme: 'dark', title: 'Message', msg: 'Something...', action: { cancel: { text: 'Cancel', callback: ()=>{} }, confirm: { text: 'Confirm', callback: ()=>{}} } })

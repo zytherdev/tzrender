@@ -1,0 +1,102 @@
+/* Base backdrop */
+.block-ui-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.block-ui-backdrop-light .block-ui-overlay {
+  background: rgba(255,255,255,0.6);
+}
+.block-ui-backdrop-dark .block-ui-overlay {
+  background: rgba(0,0,0,0.7);
+}
+
+/* Blur overlay */
+.block-ui-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  z-index: 1;
+}
+
+/* Message */
+.block-ui-message {
+  position: relative;
+  z-index: 3;
+  color: white;
+  padding: 1rem 2rem;
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+.block-ui-backdrop-light .block-ui-message {
+  color: #222;
+  background: rgba(255,255,255,0.4);
+}
+
+/* Animation layer */
+.block-ui-anim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* PARTICLES */
+.block-ui-particles span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  will-change: transform;
+}
+.block-ui-backdrop-light .block-ui-particles span {
+  background: rgba(0,0,0,0.3);
+}
+
+/* LINES */
+.block-ui-lines span {
+  position: absolute;
+  width: 2px;
+  height: 80px;
+  background: rgba(255,255,255,0.2);
+  will-change: transform;
+}
+.block-ui-backdrop-light .block-ui-lines span {
+  background: rgba(0,0,0,0.2);
+}
+
+/* SHAPES */
+.block-ui-shapes span {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: transparent;
+  will-change: transform;
+  box-sizing: border-box;
+}
+.block-ui-backdrop-light .block-ui-shapes span {
+  border-color: rgba(0,0,0,0.3);
+}
+
+/* ORBS */
+.block-ui-orbs span {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  will-change: transform;
+  pointer-events: none;
+}
+.block-ui-backdrop-light .block-ui-orbs span {
+  background: rgba(0,0,0,0.2);
+}
+
