@@ -341,7 +341,7 @@ export default class Render
                     state[i] = {
                         x: Math.random() * window.innerWidth,
                         y: window.innerHeight + Math.random() * 200,
-                        size: 5 + Math.random() * 10,
+                        size: 5 + Math.random() * 300,
                         speed: 0.3 + Math.random() * 0.7,
                         opacity: 0,
                         vx: 0,
@@ -357,9 +357,9 @@ export default class Render
                     }
                 } else if(animation === 'lines') {
                     for(let i=0; i<count; i++) {
-                    const angle = Math.random() * 2 * Math.PI; // direção aleatória
-                    const speed = 0.5 + Math.random() * 0.7;
-                    const length = 50 + Math.random() * 100;
+                    const angle = Math.random() * 2 * Math.PI; 
+                    const speed = 1.5 + Math.random() * 0.7;
+                    const length = 70 + Math.random() * 300;
                     state[i] = {
                         x: Math.random() * window.innerWidth,
                         y: Math.random() * window.innerHeight,
@@ -371,7 +371,7 @@ export default class Render
                         vy: Math.sin(angle) * speed
                     };
                     const el = elements[i];
-                    el.style.width = '2px';
+                    el.style.width = '5px';
                     el.style.height = length + 'px';
                     el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
                     el.style.position = 'fixed';
@@ -386,7 +386,7 @@ export default class Render
                     for(let i=0; i<count; i++) {
                     const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
                     const color = useLight ? colorsLight[Math.floor(Math.random() * colorsLight.length)] : colorsDark[Math.floor(Math.random() * colorsDark.length)];
-                    const size = 20 + Math.random() * 40;
+                    const size = 20 + Math.random() * 400;
                     state[i] = {
                         x: Math.random() * window.innerWidth,
                         y: window.innerHeight + Math.random() * 200,
@@ -416,7 +416,6 @@ export default class Render
                         el.style.borderRadius = '0';
                         el.style.backgroundColor = color;
                     } else if(shapeType === 'triangle') {
-                        // Para triângulo, usaremos bordas CSS:
                         el.style.width = '0';
                         el.style.height = '0';
                         el.style.borderLeft = (size/2) + 'px solid transparent';
@@ -432,7 +431,7 @@ export default class Render
                         y: window.innerHeight/2,
                         targetX: window.innerWidth/2,
                         targetY: window.innerHeight/2,
-                        size: 14,
+                        size: 27 + Math.random() * 20,
                     };
                     const el = elements[i];
                     el.style.width = el.style.height = state[i].size + 'px';
@@ -474,12 +473,13 @@ export default class Render
                             obj.y += obj.vy;
 
                             // Aplica fricção para desacelerar repel
-                            obj.vx *= 0.95;
-                            obj.vy *= 0.95;
+                            obj.vx *= 0.995;
+                            obj.vy *= 0.995;
 
                             if(obj.y < -20) obj.y = window.innerHeight + 20;
                             if(obj.x < -20) obj.x = window.innerWidth + 20;
                             if(obj.x > window.innerWidth + 20) obj.x = -20;
+                            if(obj.y > window.innerHeight + 20) obj.y = -20;
 
                             obj.opacity = obj.y > window.innerHeight * 0.5
                             ? lerp(0,1,(window.innerHeight + 20 - obj.y) / (window.innerHeight * 0.5))
@@ -495,8 +495,8 @@ export default class Render
                             obj.x += obj.vx;
                             obj.y += obj.vy;
 
-                            obj.vx *= 0.95;
-                            obj.vy *= 0.95;
+                            obj.vx *= 0.999;
+                            obj.vy *= 0.999;
 
                             // Loop pela tela nas bordas
                             if(obj.y < -obj.length) obj.y = window.innerHeight + obj.length;
@@ -550,7 +550,7 @@ export default class Render
         }
     }
 
-    block_ui(prms = {theme: 'dark', animation: 'orbs', message: ''})
+    block_ui(prms = {theme: 'dark', animation: 'orbs', count: 120, message: 'Please wait...the page is loading.'})
     {
         return this.build({ type: 'block_ui', props: prms })
     }

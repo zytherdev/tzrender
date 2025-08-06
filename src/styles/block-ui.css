@@ -14,14 +14,14 @@
   background: rgba(255,255,255,0.6);
 }
 .block-ui-backdrop-dark .block-ui-overlay {
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.247);
 }
 
 /* Blur overlay */
 .block-ui-overlay {
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(1px);
   z-index: 1;
 }
 
