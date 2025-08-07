@@ -4,18 +4,35 @@ async function main()
 {
     const __1 = new Render()
 
-    const block_ui = __1.block_ui({
+    __1.msg_box({
         theme: 'dark',
-        animation: 'orbs',
-        count: 120,
-        events: {
-            screen_click: {
-                destroy: true
+        title: 'Techz-render',
+        msg: 'Welcome to Techz-render!',
+        action: {
+            cancel: {
+                text: 'Cancel',
+                callback: () => {
+                    __1.alert({
+                        theme: 'dark',
+                        msg: 'You canceled the message box',
+                        variant: 'warning',
+                        timeout: 1000
+                    })
+                }
+            },
+            confirm: {
+                text: 'Confirm',
+                callback: () => {
+                    __1.alert({
+                        theme: 'dark',
+                        msg: 'You confirmed the message box',
+                        variant: 'success',
+                        timeout: 1000
+                    })
+                }
             }
         }
     })
-
-
 }
 
 main()

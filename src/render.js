@@ -50,13 +50,13 @@ export default class Render
 
                 const ntf = document.createElement('div');
                 ntf.id = id__
-                ntf.className = theme === 'light' ? 'backdrop-light' : 'backdrop';
+                ntf.className = theme === 'light' ? 'tchzr-backdrop-light' : 'tchzr-backdrop';
 
                 const ntf_content = document.createElement('div');
-                ntf_content.className = theme === 'light' ? 'msg-box-light' : 'msg-box';
+                ntf_content.className = theme === 'light' ? 'tchzr-b-msg-box-light' : 'tchzr-b-msg-box';
 
                 const ntf_close_btn = document.createElement('button');
-                ntf_close_btn.className = theme === 'light' ? 'close-light close' : 'close';
+                ntf_close_btn.className = theme === 'light' ? 'tchzr-msgb-close-light tchzr-msgb-close' : 'tchzr-msgb-close';
                 ntf_close_btn.innerHTML =  '&times;'
                 ntf_close_btn.addEventListener('click', () => {
                     prms.props.action.cancel.callback()
@@ -70,10 +70,10 @@ export default class Render
                 ntf_msg.innerHTML = prms.props.msg;
 
                 const ntf_actions = document.createElement('div')
-                ntf_actions.className = 'actions'
+                ntf_actions.className = 'tchzr-msgb-actions'
 
                 const ntf_cancel_btn = document.createElement('button')
-                ntf_cancel_btn.className = theme === 'light' ? 'cancel-light cancel' : 'cancel'
+                ntf_cancel_btn.className = theme === 'light' ? 'tchzr-msgba-cancel-light tchzr-msgba-cancel' : 'tchzr-msgba-cancel'
                 ntf_cancel_btn.innerHTML = prms.props.action.cancel.text
                 ntf_cancel_btn.addEventListener('click', () => {
                     prms.props.action.cancel.callback()
@@ -81,7 +81,7 @@ export default class Render
                 })
 
                 const ntf_confirm_btn = document.createElement('button')
-                ntf_confirm_btn.className = theme === 'light' ? 'confirm-light confirm' : 'confirm'
+                ntf_confirm_btn.className = theme === 'light' ? 'tchzr-msgba-confirm-light tchzr-msgba-confirm' : 'tchzr-msgba-confirm'
                 ntf_confirm_btn.innerHTML = prms.props.action.confirm.text
                 ntf_confirm_btn.addEventListener('click', () => {
                     prms.props.action.confirm.callback()

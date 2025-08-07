@@ -3,10 +3,10 @@
 /* ======= techz-render msg-box ======= */
 
 /* ======= DARK THEME ======= */
-.backdrop {
+.tchzr-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.397);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -14,7 +14,7 @@
   padding: 1rem;
   z-index: 9999;
 }
-.msg-box {
+.tchzr-b-msg-box {
   background-color: #1f2937;
   color: #f9fafb;
   max-width: 24rem;
@@ -27,23 +27,23 @@
   animation: fade-in 0.2s ease-in-out;
   font-family: 'Courier New', Courier, monospace;
 }
-.msg-box h2 {
+.tchzr-b-msg-box h2 {
   font-size: 1.25rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #818cf8;
 }
-.msg-box p {
+.tchzr-b-msg-box p {
   font-size: 0.875rem;
   color: #d1d5db;
 }
-.actions {
+.tchzr-msgb-actions {
   margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
 }
-.actions button {
+.tchzr-msgb-actions button {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   border-radius: 0.375rem;
@@ -52,22 +52,22 @@
   border: none;
   font-family: 'Courier New', Courier, monospace;
 }
-.cancel {
+.tchzr-msgba-cancel {
   background-color: #374151;
   color: #f9fafb;
 }
-.cancel:hover {
+.tchzr-msgba-cancel:hover {
   background-color: #4b5563;
 }
-.confirm {
+.tchzr-msgba-confirm {
   background-color: #4f46e5;
   color: white;
   font-weight: 500;
 }
-.confirm:hover {
+.tchzr-msgba-confirm:hover {
   background-color: #6366f1;
 }
-.close {
+.tchzr-msgb-close {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
@@ -77,15 +77,15 @@
   border: none;
   cursor: pointer;
 }
-.close:hover {
+.tchzr-msgb-close:hover {
   color: #ffffff;
 }
 
 /* ======= LIGHT THEME ======= */
-.backdrop-light {
+.tchzr-backdrop-light {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.212);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -93,7 +93,7 @@
   z-index: 9999;
   padding: 1rem;
 }
-.msg-box-light {
+.tchzr-b-msg-box-light {
   background-color: #ffffff;
   color: #111827;
   max-width: 24rem;
@@ -106,35 +106,35 @@
   animation: fade-in 0.2s ease-in-out;
   font-family: 'Courier New', Courier, monospace;
 }
-.msg-box-light h2 {
+.tchzr-b-msg-box-light h2 {
   font-size: 1.25rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #4f46e5;
 }
-.msg-box-light p {
+.tchzr-b-msg-box-light p {
   font-size: 0.875rem;
   color: #4b5563;
 }
-.cancel-light {
+.tchzr-msgba-cancel-light {
   background-color: #e5e7eb;
   color: #374151;
 }
-.cancel-light:hover {
+.tchzr-msgba-cancel-light:hover {
   background-color: #d1d5db;
 }
-.confirm-light {
+.tchzr-msgba-confirm-light {
   background-color: #4f46e5;
   color: white;
   font-weight: 500;
 }
-.confirm-light:hover {
+.tchzr-msgba-confirm-light:hover {
   background-color: #6366f1;
 }
-.close-light {
+.tchzr-msgb-close-light {
   color: #6b7280;
 }
-.close-light:hover {
+.tchzr-msgb-close-light:hover {
   color: #111827;
 }
 
