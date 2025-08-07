@@ -1,11 +1,11 @@
 {
   "name": "techz-render",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Modern, theme-aware, animation-powered JavaScript utility that injects UI components directly into the DOM. No need for pre-existing HTML — everything is created dynamically.",
   "main": "index.js",
   "type": "module",
   "module": "index.js",
-  "keywords": ["render", "ui", "components", "utils", "module", "techz-render", "dom", "esm"],
+  "keywords": ["render", "ui", "components", "utils", "module", "techz-render", "dom", "esm", "html"],
   "author": "Mike DP",
   "license": "MIT"
 }
