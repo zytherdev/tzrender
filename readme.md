@@ -24,7 +24,7 @@ Built for sleek user experiences with built-in support for:
 ## 📦 Installation
 
 ```js
-import Render from './path/to/render.js';
+import Render from "https://cdn.skypack.dev/techz-render"
 ```
 
 ---
