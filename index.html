@@ -13,7 +13,7 @@
             --accent: #4a8fe7;
             --border: #444;
         }
-        
+
         [data-theme="light"] {
             --bg-primary: #f5f5f5;
             --bg-secondary: #e0e0e0;
@@ -22,144 +22,187 @@
             --accent: #1a73e8;
             --border: #ddd;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             margin: 0;
             padding: 0;
             line-height: 1.6;
-            transition: all 0.3s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
-        
+
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 20px;
+            padding: clamp(1rem, 2vw, 2.5rem);
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
+            flex-wrap: wrap;
+            gap: 1rem;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 30px;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
         }
-        
+
         h1 {
             color: var(--accent);
             margin: 0;
+            font-size: 1.75rem;
         }
-        
+
         .theme-toggle {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: background 0.3s;
         }
-        
+
+        .theme-toggle:hover {
+            background: var(--accent);
+            color: white;
+        }
+
         .component-section {
             background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
-        
+
         h2 {
             margin-top: 0;
             color: var(--accent);
         }
-        
+
         .demo-area {
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
+            margin-top: 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            padding: 1.25rem;
             border: 1px dashed var(--border);
         }
-        
+
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
-        
+
         .control-group {
-            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
         }
-        
+
         label {
-            display: block;
-            margin-bottom: 5px;
+            margin-bottom: 0.25rem;
             color: var(--text-secondary);
+            font-size: 0.9rem;
         }
-        
-        input, select, textarea, button {
-            width: 100%;
-            padding: 8px 12px;
+
+        input,
+        select,
+        textarea,
+        button {
+            font-size: 1rem;
+            padding: 0.6rem 0.75rem;
             background: var(--bg-primary);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             color: var(--text-primary);
-            margin-bottom: 10px;
         }
-        
-        button {
-            background: var(--accent);
+
+        button.button {
+            background: linear-gradient(to right, var(--accent), #3a7bd5);
             color: white;
             border: none;
-            cursor: pointer;
-            transition: background 0.2s;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 0.75rem 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
-        
-        button:hover {
-            background: #3a7bd5;
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        
+
+        .button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
         .code-block {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 6px;
             overflow-x: auto;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
-        
-        .tab-container {
-            margin-top: 20px;
-        }
-        
+
         .tabs {
             display: flex;
             border-bottom: 1px solid var(--border);
         }
-        
+
         .tab {
-            padding: 10px 20px;
+            flex: 1;
+            text-align: center;
+            padding: 0.75rem;
             cursor: pointer;
             border-bottom: 3px solid transparent;
+            transition: border-color 0.2s;
         }
-        
+
         .tab.active {
             border-bottom-color: var(--accent);
             font-weight: bold;
         }
-        
+
         .tab-content {
             display: none;
-            padding: 15px 0;
+            padding: 1rem 0;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
+
+        @media (max-width: 600px) {
+        .tabs {
+            flex-direction: column;
+        }
+
+        .tab {
+            border-bottom: none;
+            border-left: 3px solid transparent;
+            text-align: left;
+        }
+
+        .tab.active {
+            border-left-color: var(--accent);
+        }
+        }
+
         .hidden {
             display: none;
         }
@@ -168,8 +211,12 @@
 <body>
     <div class="container">
         <header>
-            <h1>Render.js Documentation</h1>
-            <button class="theme-toggle" id="themeToggle">Toggle Light/Dark</button>
+            <h1>techz-render Documentation</h1>
+            <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                <svg id="iconToggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>
+                </svg>
+            </button>
         </header>
         
         <div class="component-section">
@@ -207,7 +254,7 @@
                     </div>
                 </div>
                 
-                <button id="showMsgBox">Show Message Box</button>
+                <button class="button" id="showMsgBox">Show Message Box</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
@@ -265,7 +312,7 @@
                     </div>
                 </div>
                 
-                <button id="showAlert">Show Alert</button>
+                <button class="button" id="showAlert">Show Alert</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
@@ -343,7 +390,7 @@
                         <select id="spinnerAnimation">
                             <option value="spin">Spin</option>
                             <option value="pulse">Pulse</option>
-                            <option value="bounce">Bounce</option>
+                            <option value="jump">Bounce</option>
                         </select>
                     </div>
                     
@@ -354,9 +401,9 @@
                 </div>
                 
                 <div class="controls">
-                    <button id="showSpinner">Show Spinner</button>
-                    <button id="hideSpinner" class="hidden">Hide Spinner</button>
-                    <button id="destroySpinner" class="hidden">Destroy Spinner</button>
+                    <button class="button" id="showSpinner">Show Spinner</button>
+                    <button class="button hidden" id="hideSpinner">Hide Spinner</button>
+                    <button class="button hidden" id="destroySpinner">Destroy Spinner</button>
                 </div>
                 
                 <div class="tab-container">
@@ -438,7 +485,7 @@
                     </div>
                 </div>
                 
-                <button id="showBlockUI">Show Block UI</button>
+                <button class="button" id="showBlockUI">Show Block UI</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
@@ -465,27 +512,28 @@
     <script type="module">
         import Render from '../src/render.js';
         
-        // Initialize Render instance
         const render = new Render();
         
-        // Theme toggle
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const iconToggle = document.getElementById('iconToggle');
+
+        themeToggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
+            iconToggle.innerHTML = newTheme === 'dark'
+                ? '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>'
+                : '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
         });
         
-        // Tab functionality
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const tabContainer = tab.closest('.tab-container');
                 const tabId = tab.getAttribute('data-tab');
                 
-                // Update active tab
                 tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                // Update active content
                 tabContainer.querySelectorAll('.tab-content').forEach(content => {
                     content.classList.remove('active');
                 });
@@ -513,10 +561,9 @@
             
             render.msg_box(params);
             
-            // Update code example
             document.getElementById('msgBoxCode').textContent = 
-`const render = new Render();
-render.msg_box(${JSON.stringify(params, null, 2)});`;
+            `const render = new Render();
+            render.msg_box(${JSON.stringify(params, null, 2)});`
         });
         
         // Alert
@@ -530,10 +577,9 @@ render.msg_box(${JSON.stringify(params, null, 2)});`;
             
             render.alert(params);
             
-            // Update code example
             document.getElementById('alertCode').textContent = 
-`const render = new Render();
-render.alert(${JSON.stringify(params, null, 2)});`;
+            `const render = new Render();
+            render.alert(${JSON.stringify(params, null, 2)});`;
         });
         
         // Spinner
@@ -558,21 +604,19 @@ render.alert(${JSON.stringify(params, null, 2)});`;
             
             currentSpinner = render.spinner(params);
             
-            // Update UI
             document.getElementById('showSpinner').classList.add('hidden');
             document.getElementById('hideSpinner').classList.remove('hidden');
             document.getElementById('destroySpinner').classList.remove('hidden');
             
-            // Update code example
             document.getElementById('spinnerCode').textContent = 
-`const render = new Render();
-const spinner = render.spinner(${JSON.stringify(params, null, 2)});
+            `const render = new Render();
+            const spinner = render.spinner(${JSON.stringify(params, null, 2)});
 
-// To hide:
-// spinner.toggle(false);
+            // To hide:
+            // spinner.toggle(false);
 
-// To destroy:
-// spinner.destroy();`;
+            // To destroy:
+            // spinner.destroy();`;
         });
         
         document.getElementById('hideSpinner').addEventListener('click', () => {
@@ -621,13 +665,12 @@ const spinner = render.spinner(${JSON.stringify(params, null, 2)});
             
             const block = render.block_ui(params);
             
-            // Update code example
             document.getElementById('blockCode').textContent = 
-`const render = new Render();
-const block = render.block_ui(${JSON.stringify(params, null, 2)});
+            `const render = new Render();
+            const block = render.block_ui(${JSON.stringify(params, null, 2)});
 
-// To destroy:
-// block.destroy();`;
+            // To destroy:
+            // block.destroy();`;
         });
     </script>
 </body>
