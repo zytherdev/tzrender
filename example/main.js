@@ -13,7 +13,7 @@ async function main()
                 text: 'Cancel',
                 callback: () => {
                     __1.alert({
-                        theme: 'dark',
+                        theme: 'light',
                         msg: 'You canceled the message box',
                         variant: 'warning',
                         timeout: 1000
@@ -24,7 +24,7 @@ async function main()
                 text: 'Confirm',
                 callback: () => {
                     __1.alert({
-                        theme: 'dark',
+                        theme: 'light',
                         msg: 'You confirmed the message box',
                         variant: 'success',
                         timeout: 1000
@@ -33,6 +33,9 @@ async function main()
             }
         }
     })
+
+    __1.alert()
+    
 }
 
 main()

@@ -110,15 +110,15 @@ export default class Render
                 const type = ['info', 'success', 'warning', 'error'].includes(prms.props.variant)
                     ? prms.props.variant
                     : 'info';
-                const cls = (base) => useLight ? `${base}-light ${base}` : `${base}-dark ${base}`
+                const cls = (base) => useLight ? `tchzr-_-${base}-light tchzr-_-${base}` : `tchzr-_-${base}-dark tchzr-_-${base}`
 
                 const alert = Object.assign(document.createElement('div'), {
                     id: id__,
-                    className: `${cls('alert')} ${type}`,
+                    className: `${cls('alert')} tchzr-a-${type}`,
                 });
 
                 const alert_msg = Object.assign(document.createElement('span'), {
-                    className: 'alert-msg',
+                    className: 'tchzr-alert-msg',
                     innerHTML: prms.props.msg,
                 });
 
@@ -129,7 +129,7 @@ export default class Render
                 });
 
                 const progress = document.createElement('div');
-                progress.className = 'alert-progress';
+                progress.className = 'tchzr-alert-progress';
 
                 alert.append(alert_msg, close_btn, progress);
                 document.body.appendChild(alert);
