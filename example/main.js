@@ -35,7 +35,6 @@ async function main()
     })
 
     __1.alert()
-    
 }
 
 main()

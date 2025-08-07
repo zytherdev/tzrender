@@ -3,8 +3,8 @@
 /* ======= techz-render spinner ======= */
 
 /* Base style */
-.spinner-container,
-.spinner-backdrop {
+.tchzr-spinner-container,
+.tchzr-spinner-backdrop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -15,25 +15,25 @@
   z-index: 9999;
 }
 
-.spinner-backdrop {
+.tchzr-spinner-backdrop {
   background-color: rgba(0, 0, 0, 0.329);
   pointer-events: auto;
 }
 
-/* Theme support */
-.spinner-container-dark,
-.spinner-backdrop-dark {
+/* Themes */
+.tchzr-spinner-container-dark,
+.tchzr-spinner-backdrop-dark {
   color: #fff;
 }
 
-.spinner-container-light,
-.spinner-backdrop-light {
+.tchzr-spinner-container-light,
+.tchzr-spinner-backdrop-light {
   color: #000;
-  background-color: rgba(255, 255, 255, 0.288);
+  background-color: rgba(255, 255, 255, 0.151);
 }
 
 /* Spinner core styles */
-.spinner {
+.tchzr-spinner {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,7 +41,7 @@
   margin-bottom: 1rem;
 }
 
-.spinner-circle {
+.tchzr-spinner-circle {
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
@@ -49,22 +49,22 @@
   animation: spinner-bounce 0.8s infinite ease-in-out;
 }
 
-.circle-2 {
+.tchzr-spnc-circle-2 {
   animation-delay: 0.2s;
 }
 
-.circle-3 {
+.tchzr-spnc-circle-3 {
   animation-delay: 0.4s;
 }
 
-.spinner-loader {
+.tchzr-spinner-loader {
   position: relative;
   width: 70px;
   height: 70px;
   margin-bottom: 10px;
 }
 
-.spinner-ring {
+.tchzr-spinner-ring {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -74,13 +74,13 @@
   animation: spinner-spin 1s linear infinite;
 }
 
-.spinner-ring:nth-child(2) {
+.tchzr-spinner-ring:nth-child(2) {
   top: 10%;
   left: 10%;
   animation-duration: 1.3s;
 }
 
-.spinner-ring:nth-child(3) {
+.tchzr-spinner-ring:nth-child(3) {
   top: 20%;
   left: 20%;
   animation-duration: 1.6s;
@@ -108,20 +108,20 @@
 }
 
 /* Spinner variants */
-.spinner.simple .spinner-circle {
+.tchzr-spinner.tchzr-spn-simple .tchzr-spinner-circle {
   animation: spinner-bounce 0.8s infinite ease-in-out;
 }
 
-.spinner.dual .spinner-circle {
+.tchzr-spinner.tchzr-spn-dual .tchzr-spinner-circle {
   animation: spinner-bounce 0.8s infinite ease-in-out;
 }
 
-.spinner.triple .spinner-circle {
+.tchzr-spinner.tchzr-spn-triple .tchzr-spinner-circle {
   animation: spinner-bounce 0.8s infinite ease-in-out;
 }
 
 /* Custom image spinner */
-.custom-spinner {
+.tchzr-custom-spinner {
   width: 3.4rem;
   height: 3.4rem;
   border-radius: 50%;
@@ -129,13 +129,13 @@
 }
 
 /* Animations for custom */
-.custom-spinner.spin {
+.tchzr-custom-spinner.tchzr-spn-spin {
   animation: spin 1s linear infinite;
 }
-.custom-spinner.pulse {
+.tchzr-custom-spinner.tchzr-spn-pulse {
   animation: pulse 1.2s ease-in-out infinite;
 }
-.custom-spinner.jump {
+.tchzr-custom-spinner.tchzr-spn-jump {
   animation: jump 0.8s ease-in-out infinite;
 }
 
@@ -155,7 +155,7 @@
 }
 
 /* Text */
-.spinner-text {
+.tchzr-spinner-text {
   font-size: 1rem;
   text-align: center;
   padding: 20px 0px;

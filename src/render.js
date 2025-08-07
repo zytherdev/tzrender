@@ -161,7 +161,7 @@ export default class Render
                 const { variant = 'simple', theme = 'dark', events = {}, text = {}, backdrop = true, custom = {} } = prms.props
 
                 const useLight = theme === 'light';
-                const cls = (base) => useLight ? `${base}-light ${base}` : `${base}-dark ${base}`;
+                const cls = (base) => useLight ? `tchzr-${base}-light tchzr-${base}` : `tchzr-${base}-dark tchzr-${base}`;
 
                 const container = document.createElement('div');
                 container.id = id__;
@@ -205,25 +205,25 @@ export default class Render
                 //________
 
                 const spinnerWrapper = document.createElement('div');
-                spinnerWrapper.className = `spinner ${variant}`;
+                spinnerWrapper.className = `tchzr-spinner tchzr-spn-${variant}`;
 
                 if (variant === 'custom' && custom.url) {
                     const img = document.createElement('img');
                     img.src = custom.url;
                     img.alt = 'spinner';
-                    img.className = `custom-spinner ${custom.animation || ''}`;
+                    img.className = `tchzr-custom-spinner tchzr-spn-${custom.animation || ''}`;
                     spinnerWrapper.appendChild(img);
                 } else {
                     if (variant === 'simple' || variant === 'dual' || variant === 'triple') {
                         if (custom.animation === 'spin') {
                             const loader = document.createElement('div');
-                            loader.className = 'spinner-loader';
+                            loader.className = 'tchzr-spinner-loader';
 
                             const rings = variant === 'dual' ? 2 : variant === 'triple' ? 3 : 1;
 
                             for (let i = 0; i < rings; i++) {
                                 const ring = document.createElement('div');
-                                ring.className = 'spinner-ring';
+                                ring.className = 'tchzr-spinner-ring';
                                 if(custom.color) ring.style.borderColor = `${custom.color} transparent`
                                 loader.appendChild(ring);
                             }
@@ -233,7 +233,7 @@ export default class Render
                             const count = variant === 'dual' ? 2 : variant === 'triple' ? 3 : 1;
                             for (let i = 0; i < count; i++) {
                                 const el = document.createElement('div');
-                                el.className = `spinner-circle circle-${i + 1} ${custom.animation || ''}`
+                                el.className = `tchzr-spinner-circle tchzr-spnc-circle-${i + 1} tchzr-spn-${custom.animation || ''}`
                                 if(custom.color) el.style.backgroundColor = custom.color
                                 spinnerWrapper.appendChild(el);
                             }
@@ -245,7 +245,7 @@ export default class Render
 
                 if (text.content) {
                     const caption = document.createElement('div');
-                    caption.className = 'spinner-text';
+                    caption.className = 'tchzr-spinner-text';
                     caption.innerText = text.content
                     if(text.color) caption.style.color = text.color
 
