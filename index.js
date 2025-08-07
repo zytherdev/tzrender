@@ -1,2 +1,2 @@
 
-export { default } from './render-utils-module.js'
+export { default } from './src/render.js'
