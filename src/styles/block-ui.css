@@ -1,3 +1,7 @@
+
+
+/* ======= techz-render block-ui ======= */
+
 /* Base backdrop */
 .block-ui-backdrop {
   position: fixed;
@@ -11,7 +15,7 @@
 }
 
 .block-ui-backdrop-light .block-ui-overlay {
-  background: rgba(255,255,255,0.6);
+  background: rgba(235, 235, 235, 0.185);
 }
 .block-ui-backdrop-dark .block-ui-overlay {
   background: rgba(0, 0, 0, 0.247);

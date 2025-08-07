@@ -1,3 +1,4 @@
+import colors from '/src/utils/colors.js'
 
 export default class Render
 {
@@ -279,12 +280,31 @@ export default class Render
             {
                 const id__ = this.__id()
 
-                const { theme = 'dark', animation = 'particles', message = '', count = 40 } = prms.props;
+                const { theme = 'dark', animation = 'particles', message, count = 40, events = {}, custom = { __size: { min: 7, max: 100 } } } = prms.props;
+
+                if(custom.__size.min <= 0 || custom.__size.max <= 0 || custom.__size.min >= custom.__size.max) custom.__size = { min: 7, max: 100 }
+
                 const useLight = theme === 'light';
 
                 const backdrop = document.createElement('div');
                 backdrop.id = id__;
                 backdrop.className = `block-ui-backdrop block-ui-backdrop-${useLight ? 'light' : 'dark'}`;
+
+                const destroy = () => {
+                    this.destroy(backdrop.id)
+                }
+
+                backdrop.addEventListener('click', () => {
+                    if(events.screen_click && events.screen_click.destroy)
+                    {
+                        destroy()
+                    }
+                })
+
+                if(events.auto__ && events.auto__.destroy)
+                {
+                    setTimeout(() => destroy(), events.auto__.timer || 3000)
+                }
 
                 const overlay = document.createElement('div');
                 overlay.className = 'block-ui-overlay';
@@ -338,28 +358,29 @@ export default class Render
                 // Inicialização dos elementos e estados por animação
                 if(animation === 'particles') {
                     for(let i=0; i<count; i++) {
-                    state[i] = {
-                        x: Math.random() * window.innerWidth,
-                        y: window.innerHeight + Math.random() * 200,
-                        size: 5 + Math.random() * 300,
-                        speed: 0.3 + Math.random() * 0.7,
-                        opacity: 0,
-                        vx: 0,
-                        vy: - (0.3 + Math.random() * 0.7) // só sobe
-                    };
-                    const el = elements[i];
-                    el.style.width = el.style.height = state[i].size + 'px';
-                    el.style.borderRadius = '50%';
-                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
-                    el.style.position = 'fixed';
-                    el.style.pointerEvents = 'none';
-                    el.style.willChange = 'transform, opacity';
+                        state[i] = {
+                            x: Math.random() * window.innerWidth,
+                            y: window.innerHeight + Math.random() * 200,
+                            size: custom.__size.min + Math.random() * (custom.__size.max - custom.__size.min),
+                            speed: 0.3 + Math.random() * 0.7,
+                            opacity: 0,
+                            vx: 0,
+                            vy: - (0.3 + Math.random() * 0.7) // só sobe
+                        }
+                        
+                        const el = elements[i];
+                        el.style.width = el.style.height = state[i].size + 'px';
+                        el.style.borderRadius = '50%';
+                        el.style.backgroundColor = useLight ? colors.light[Math.floor(Math.random() * colors.light.length)] : colors.dark[Math.floor(Math.random() * colors.dark.length)];
+                        el.style.position = 'fixed';
+                        el.style.pointerEvents = 'none';
+                        el.style.willChange = 'transform, opacity';
                     }
                 } else if(animation === 'lines') {
                     for(let i=0; i<count; i++) {
-                    const angle = Math.random() * 2 * Math.PI; 
-                    const speed = 1.5 + Math.random() * 0.7;
-                    const length = 70 + Math.random() * 300;
+                    const angle = Math.random() * 2 * Math.PI
+                    const speed = 1.5 + Math.random() * 0.7
+                    const length = custom.__size.min + Math.random() * (custom.__size.max - custom.__size.min)
                     state[i] = {
                         x: Math.random() * window.innerWidth,
                         y: Math.random() * window.innerHeight,
@@ -373,75 +394,80 @@ export default class Render
                     const el = elements[i];
                     el.style.width = '5px';
                     el.style.height = length + 'px';
-                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+                    el.style.backgroundColor = useLight ? colors.light[Math.floor(Math.random() * colors.light.length)] : colors.dark[Math.floor(Math.random() * colors.dark.length)];
                     el.style.position = 'fixed';
                     el.style.pointerEvents = 'none';
                     el.style.willChange = 'transform, opacity';
                     el.style.transformOrigin = 'top center';
                     }
                 } else if(animation === 'shapes') {
-                    const shapes = ['circle', 'square', 'triangle'];
-                    const colorsLight = ['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.15)'];
-                    const colorsDark = ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)'];
+                    const shapes = ['circle', 'square', 'triangle']
+                    const colorsLight = colors.light
+                    const colorsDark = colors.dark
+
                     for(let i=0; i<count; i++) {
-                    const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
-                    const color = useLight ? colorsLight[Math.floor(Math.random() * colorsLight.length)] : colorsDark[Math.floor(Math.random() * colorsDark.length)];
-                    const size = 20 + Math.random() * 400;
-                    state[i] = {
-                        x: Math.random() * window.innerWidth,
-                        y: window.innerHeight + Math.random() * 200,
-                        size,
-                        speed: 0.2 + Math.random() * 0.5,
-                        rotation: 0,
-                        rotationSpeed: (Math.random() - 0.5) * 1.5,
-                        opacity: 0,
-                        shapeType,
-                        color
-                    };
-                    const el = elements[i];
-                    el.style.position = 'fixed';
-                    el.style.width = size + 'px';
-                    el.style.height = size + 'px';
-                    el.style.pointerEvents = 'none';
-                    el.style.willChange = 'transform, opacity';
+                        const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+                        const color = useLight ? colorsLight[Math.floor(Math.random() * colorsLight.length)] : colorsDark[Math.floor(Math.random() * colorsDark.length)];
+                        const size = custom.__size.min + Math.random() * (custom.__size.max - custom.__size.min)
+                        
+                        state[i] = {
+                            x: Math.random() * window.innerWidth,
+                            y: window.innerHeight + Math.random() * 200,
+                            size,
+                            speed: 0.2 + Math.random() * 0.5,
+                            rotation: 0,
+                            rotationSpeed: (Math.random() - 0.5) * 1.5,
+                            opacity: 0,
+                            shapeType,
+                            color
+                        }
 
-                    // Desenhar shape diferente via CSS classes e styles
-                    el.style.background = 'transparent';
-                    el.style.border = 'none';
+                        const el = elements[i];
+                        el.style.position = 'fixed';
+                        el.style.width = size + 'px';
+                        el.style.height = size + 'px';
+                        el.style.pointerEvents = 'none';
+                        el.style.willChange = 'transform, opacity';
 
-                    if(shapeType === 'circle') {
-                        el.style.borderRadius = '50%';
-                        el.style.backgroundColor = color;
-                    } else if(shapeType === 'square') {
-                        el.style.borderRadius = '0';
-                        el.style.backgroundColor = color;
-                    } else if(shapeType === 'triangle') {
-                        el.style.width = '0';
-                        el.style.height = '0';
-                        el.style.borderLeft = (size/2) + 'px solid transparent';
-                        el.style.borderRight = (size/2) + 'px solid transparent';
-                        el.style.borderBottom = size + 'px solid ' + color;
-                        el.style.backgroundColor = 'transparent';
-                    }
+                        // Desenhar shape diferente via CSS classes e styles
+                        el.style.background = 'transparent';
+                        el.style.border = 'none';
+
+                        if(shapeType === 'circle') {
+                            el.style.borderRadius = '50%';
+                            el.style.backgroundColor = color;
+                        } else if(shapeType === 'square') {
+                            el.style.borderRadius = '0';
+                            el.style.backgroundColor = color;
+                        } else if(shapeType === 'triangle') {
+                            el.style.width = '0';
+                            el.style.height = '0';
+                            el.style.borderLeft = (size/2) + 'px solid transparent';
+                            el.style.borderRight = (size/2) + 'px solid transparent';
+                            el.style.borderBottom = size + 'px solid ' + color;
+                            el.style.backgroundColor = 'transparent';
+                        }
                     }
                 } else if(animation === 'orbs') {
                     for(let i=0; i<count; i++) {
-                    state[i] = {
-                        x: window.innerWidth/2,
-                        y: window.innerHeight/2,
-                        targetX: window.innerWidth/2,
-                        targetY: window.innerHeight/2,
-                        size: 27 + Math.random() * 20,
-                    };
-                    const el = elements[i];
-                    el.style.width = el.style.height = state[i].size + 'px';
-                    el.style.borderRadius = '50%';
-                    el.style.backgroundColor = useLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)';
-                    el.style.position = 'fixed';
-                    el.style.pointerEvents = 'none';
-                    el.style.transition = 'transform 0.15s ease-out';
-                    el.style.willChange = 'transform';
+                        state[i] = {
+                            x: window.innerWidth/2,
+                            y: window.innerHeight/2,
+                            targetX: window.innerWidth/2,
+                            targetY: window.innerHeight/2,
+                            size: custom.__size.min + Math.random() * (custom.__size.max - custom.__size.min),
+                        }
+
+                        const el = elements[i];
+                        el.style.width = el.style.height = state[i].size + 'px';
+                        el.style.borderRadius = '50%';
+                        el.style.backgroundColor = useLight ? colors.light[Math.floor(Math.random() * colors.light.length)] : colors.dark[Math.floor(Math.random() * colors.dark.length)];
+                        el.style.position = 'fixed';
+                        el.style.pointerEvents = 'none';
+                        el.style.transition = 'transform 0.15s ease-out';
+                        el.style.willChange = 'transform';
                     }
+                    // Armazena posição do cursor
                     window.addEventListener('mousemove', e => {
                     state[0].targetX = e.clientX;
                     state[0].targetY = e.clientY;
@@ -462,7 +488,7 @@ export default class Render
                     }
                 }
 
-                // Loop de animação único e contínuo
+                // Loop de animação
                 function animate() {
                     if(animation === 'particles') {
                         state.forEach((obj, i) => {
@@ -545,12 +571,15 @@ export default class Render
                 }
                 requestAnimationFrame(animate);
 
-                return id__;
+                return {
+                    __id: backdrop.id,
+                    destroy
+                }
             }
         }
     }
 
-    block_ui(prms = {theme: 'dark', animation: 'orbs', count: 120, message: 'Please wait...the page is loading.'})
+    block_ui(prms = {theme: 'dark', animation: 'shapes', count: 120, message: '', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, custom: { __size: { min: 7, max: 100 } }})
     {
         return this.build({ type: 'block_ui', props: prms })
     }
