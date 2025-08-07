@@ -2,6 +2,9 @@
 
 /* ======= techz-render msg-box ======= */
 
+.tchzr-backdrop *, .tchzr-backdrop-light * {
+  width: auto;
+}
 /* ======= DARK THEME ======= */
 .tchzr-backdrop {
   position: fixed;

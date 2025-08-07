@@ -3,6 +3,9 @@
 /* ======= techz-render block-ui ======= */
 
 /* Base backdrop */
+.block-ui-backdrop *{
+  width: auto;
+}
 .block-ui-backdrop {
   position: fixed;
   inset: 0;

@@ -3,6 +3,10 @@
 /* ======= techz-render spinner ======= */
 
 /* Base style */
+.tchzr-spinner-container *,
+.tchzr-spinner-backdrop *{
+  width: auto;
+}
 .tchzr-spinner-container,
 .tchzr-spinner-backdrop {
   position: fixed;

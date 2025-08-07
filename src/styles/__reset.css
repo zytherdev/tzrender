@@ -1,0 +1,26 @@
+
+
+/* ===== tech-render css reset ===== */
+
+button {
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+button{
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

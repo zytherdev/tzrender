@@ -20,7 +20,7 @@ export default class Render
     {
         if(!Render.style_loaded)
         {
-            const styles_uri = ['/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css', '/src/styles/block-ui.css']
+            const styles_uri = ['/src/styles/__reset.css','/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css', '/src/styles/block-ui.css']
             const style = document.createElement('style');
             style.id = this.__id()
             style.textContent = '/*======= techz-render components css =======*/'

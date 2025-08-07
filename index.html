@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Render.js Documentation</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b0b0b0;
+            --accent: #4a8fe7;
+            --border: #444;
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #e0e0e0;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --accent: #1a73e8;
+            --border: #ddd;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--accent);
+            margin: 0;
+        }
+        
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .component-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+        
+        .demo-area {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            border: 1px dashed var(--border);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+        }
+        
+        input, select, textarea, button {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #3a7bd5;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 15px 0;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 15px 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Render.js Documentation</h1>
+            <button class="theme-toggle" id="themeToggle">Toggle Light/Dark</button>
+        </header>
+        
+        <div class="component-section">
+            <h2>Message Box</h2>
+            <p>Create modal dialogs with confirm/cancel actions.</p>
+            
+            <div class="demo-area">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="msgBoxTheme">Theme</label>
+                        <select id="msgBoxTheme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="msgBoxTitle">Title</label>
+                        <input type="text" id="msgBoxTitle" value="Confirmation">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="msgBoxMessage">Message</label>
+                        <textarea id="msgBoxMessage" rows="3">Are you sure you want to proceed with this action?</textarea>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="msgBoxCancelText">Cancel Button Text</label>
+                        <input type="text" id="msgBoxCancelText" value="Cancel">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="msgBoxConfirmText">Confirm Button Text</label>
+                        <input type="text" id="msgBoxConfirmText" value="Confirm">
+                    </div>
+                </div>
+                
+                <button id="showMsgBox">Show Message Box</button>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="msgbox-js">JavaScript</div>
+                        <div class="tab" data-tab="msgbox-html">HTML</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="msgbox-js">
+                        <div class="code-block" id="msgBoxCode">
+                            // Code will appear here
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="msgbox-html">
+                        <div class="code-block">
+                            &lt;!-- No HTML required - pure JavaScript --&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="component-section">
+            <h2>Alert</h2>
+            <p>Show temporary notification messages.</p>
+            
+            <div class="demo-area">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="alertTheme">Theme</label>
+                        <select id="alertTheme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="alertVariant">Variant</label>
+                        <select id="alertVariant">
+                            <option value="info">Info</option>
+                            <option value="success">Success</option>
+                            <option value="warning">Warning</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="alertMessage">Message</label>
+                        <textarea id="alertMessage" rows="3">This is an alert message!</textarea>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="alertTimeout">Timeout (ms)</label>
+                        <input type="number" id="alertTimeout" value="3000">
+                    </div>
+                </div>
+                
+                <button id="showAlert">Show Alert</button>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="alert-js">JavaScript</div>
+                        <div class="tab" data-tab="alert-html">HTML</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="alert-js">
+                        <div class="code-block" id="alertCode">
+                            // Code will appear here
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="alert-html">
+                        <div class="code-block">
+                            &lt;!-- No HTML required - pure JavaScript --&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="component-section">
+            <h2>Spinner</h2>
+            <p>Show loading indicators with various styles.</p>
+            
+            <div class="demo-area">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="spinnerTheme">Theme</label>
+                        <select id="spinnerTheme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerVariant">Variant</label>
+                        <select id="spinnerVariant">
+                            <option value="simple">Simple</option>
+                            <option value="dual">Dual</option>
+                            <option value="triple">Triple</option>
+                            <option value="custom" selected>Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerText">Text</label>
+                        <input type="text" id="spinnerText" value="Loading...">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerAnimated">Animate Text</label>
+                        <select id="spinnerAnimated">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerBackdrop">Show Backdrop</label>
+                        <select id="spinnerBackdrop">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerCustomUrl">Custom Image URL</label>
+                        <input type="text" id="spinnerCustomUrl" value="https://www.svgrepo.com/show/54385/target.svg">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerAnimation">Animation</label>
+                        <select id="spinnerAnimation">
+                            <option value="spin">Spin</option>
+                            <option value="pulse">Pulse</option>
+                            <option value="bounce">Bounce</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="spinnerColor">Color</label>
+                        <input type="text" id="spinnerColor" value="skyblue">
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="showSpinner">Show Spinner</button>
+                    <button id="hideSpinner" class="hidden">Hide Spinner</button>
+                    <button id="destroySpinner" class="hidden">Destroy Spinner</button>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="spinner-js">JavaScript</div>
+                        <div class="tab" data-tab="spinner-html">HTML</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="spinner-js">
+                        <div class="code-block" id="spinnerCode">
+                            // Code will appear here
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="spinner-html">
+                        <div class="code-block">
+                            &lt;!-- No HTML required - pure JavaScript --&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="component-section">
+            <h2>Block UI</h2>
+            <p>Create animated overlays that block user interaction.</p>
+            
+            <div class="demo-area">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="blockTheme">Theme</label>
+                        <select id="blockTheme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockAnimation">Animation</label>
+                        <select id="blockAnimation">
+                            <option value="particles">Particles</option>
+                            <option value="lines">Lines</option>
+                            <option value="shapes" selected>Shapes</option>
+                            <option value="orbs">Orbs</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockMessage">Message</label>
+                        <input type="text" id="blockMessage" value="Processing...">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockCount">Element Count</label>
+                        <input type="number" id="blockCount" value="120">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockMinSize">Min Size</label>
+                        <input type="number" id="blockMinSize" value="7">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockMaxSize">Max Size</label>
+                        <input type="number" id="blockMaxSize" value="100">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockClickDestroy">Destroy on Click</label>
+                        <select id="blockClickDestroy">
+                            <option value="true">Yes</option>
+                            <option value="false" selected>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="blockAutoDestroy">Auto Destroy (ms)</label>
+                        <input type="number" id="blockAutoDestroy" value="0" placeholder="0 = disabled">
+                    </div>
+                </div>
+                
+                <button id="showBlockUI">Show Block UI</button>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="block-js">JavaScript</div>
+                        <div class="tab" data-tab="block-html">HTML</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="block-js">
+                        <div class="code-block" id="blockCode">
+                            // Code will appear here
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="block-html">
+                        <div class="code-block">
+                            &lt;!-- No HTML required - pure JavaScript --&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import Render from '../src/render.js';
+        
+        // Initialize Render instance
+        const render = new Render();
+        
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+        });
+        
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabContainer = tab.closest('.tab-container');
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update active content
+                tabContainer.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Message Box
+        document.getElementById('showMsgBox').addEventListener('click', () => {
+            const params = {
+                theme: document.getElementById('msgBoxTheme').value,
+                title: document.getElementById('msgBoxTitle').value,
+                msg: document.getElementById('msgBoxMessage').value,
+                action: {
+                    cancel: {
+                        text: document.getElementById('msgBoxCancelText').value,
+                        callback: () => console.log('Message box cancelled')
+                    },
+                    confirm: {
+                        text: document.getElementById('msgBoxConfirmText').value,
+                        callback: () => console.log('Message box confirmed')
+                    }
+                }
+            };
+            
+            render.msg_box(params);
+            
+            // Update code example
+            document.getElementById('msgBoxCode').textContent = 
+`const render = new Render();
+render.msg_box(${JSON.stringify(params, null, 2)});`;
+        });
+        
+        // Alert
+        document.getElementById('showAlert').addEventListener('click', () => {
+            const params = {
+                theme: document.getElementById('alertTheme').value,
+                variant: document.getElementById('alertVariant').value,
+                msg: document.getElementById('alertMessage').value,
+                timeout: parseInt(document.getElementById('alertTimeout').value) || 0
+            };
+            
+            render.alert(params);
+            
+            // Update code example
+            document.getElementById('alertCode').textContent = 
+`const render = new Render();
+render.alert(${JSON.stringify(params, null, 2)});`;
+        });
+        
+        // Spinner
+        let currentSpinner = null;
+        
+        document.getElementById('showSpinner').addEventListener('click', () => {
+            const params = {
+                variant: document.getElementById('spinnerVariant').value,
+                theme: document.getElementById('spinnerTheme').value,
+                text: {
+                    content: document.getElementById('spinnerText').value,
+                    animated: document.getElementById('spinnerAnimated').value === 'true',
+                    color: document.getElementById('spinnerColor').value
+                },
+                backdrop: document.getElementById('spinnerBackdrop').value === 'true',
+                custom: {
+                    url: document.getElementById('spinnerCustomUrl').value,
+                    animation: document.getElementById('spinnerAnimation').value,
+                    color: document.getElementById('spinnerColor').value
+                }
+            };
+            
+            currentSpinner = render.spinner(params);
+            
+            // Update UI
+            document.getElementById('showSpinner').classList.add('hidden');
+            document.getElementById('hideSpinner').classList.remove('hidden');
+            document.getElementById('destroySpinner').classList.remove('hidden');
+            
+            // Update code example
+            document.getElementById('spinnerCode').textContent = 
+`const render = new Render();
+const spinner = render.spinner(${JSON.stringify(params, null, 2)});
+
+// To hide:
+// spinner.toggle(false);
+
+// To destroy:
+// spinner.destroy();`;
+        });
+        
+        document.getElementById('hideSpinner').addEventListener('click', () => {
+            if (currentSpinner) {
+                currentSpinner.toggle(false);
+                document.getElementById('hideSpinner').classList.add('hidden');
+                document.getElementById('showSpinner').classList.remove('hidden');
+            }
+        });
+        
+        document.getElementById('destroySpinner').addEventListener('click', () => {
+            if (currentSpinner) {
+                currentSpinner.destroy();
+                currentSpinner = null;
+                document.getElementById('hideSpinner').classList.add('hidden');
+                document.getElementById('destroySpinner').classList.add('hidden');
+                document.getElementById('showSpinner').classList.remove('hidden');
+            }
+        });
+        
+        // Block UI
+        document.getElementById('showBlockUI').addEventListener('click', () => {
+            const autoDestroy = parseInt(document.getElementById('blockAutoDestroy').value) || 0;
+            
+            const params = {
+                theme: document.getElementById('blockTheme').value,
+                animation: document.getElementById('blockAnimation').value,
+                message: document.getElementById('blockMessage').value,
+                count: parseInt(document.getElementById('blockCount').value) || 120,
+                events: {
+                    screen_click: {
+                        destroy: document.getElementById('blockClickDestroy').value === 'true'
+                    },
+                    auto__: {
+                        destroy: autoDestroy > 0,
+                        timer: autoDestroy
+                    }
+                },
+                custom: {
+                    __size: {
+                        min: parseInt(document.getElementById('blockMinSize').value) || 7,
+                        max: parseInt(document.getElementById('blockMaxSize').value) || 100
+                    }
+                }
+            };
+            
+            const block = render.block_ui(params);
+            
+            // Update code example
+            document.getElementById('blockCode').textContent = 
+`const render = new Render();
+const block = render.block_ui(${JSON.stringify(params, null, 2)});
+
+// To destroy:
+// block.destroy();`;
+        });
+    </script>
+</body>
+</html>
