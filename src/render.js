@@ -1,4 +1,4 @@
-import colors from '/src/utils/colors.js'
+import colors from 'https://cdn.jsdelivr.net/npm/techz-render/src/utils/colors.js'
 
 export default class Render
 {
@@ -20,7 +20,7 @@ export default class Render
     {
         if(!Render.style_loaded)
         {
-            const styles_uri = ['/src/styles/__reset.css','/src/styles/msg_box.css', '/src/styles/alert.css', '/src/styles/spinner.css', '/src/styles/block-ui.css']
+            const styles_uri = ['https://cdn.jsdelivr.net/npm/techz-render/src/styles/__reset.css','https://cdn.jsdelivr.net/npm/techz-render/src/styles/msg_box.css', 'https://cdn.jsdelivr.net/npm/techz-render/src/styles/alert.css', 'https://cdn.jsdelivr.net/npm/techz-render/src/styles/spinner.css', 'https://cdn.jsdelivr.net/npm/techz-render/src/styles/block-ui.css']
             const style = document.createElement('style');
             style.id = this.__id()
             style.textContent = '/*======= techz-render components css =======*/'
