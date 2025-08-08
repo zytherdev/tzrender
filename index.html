@@ -189,24 +189,73 @@
         }
 
         @media (max-width: 600px) {
-        .tabs {
-            flex-direction: column;
-        }
+           .tabs {
+               flex-direction: column;
+           }
 
-        .tab {
-            border-bottom: none;
-            border-left: 3px solid transparent;
-            text-align: left;
-        }
+           .tab {
+               border-bottom: none;
+               border-left: 3px solid transparent;
+               text-align: left;
+           }
 
-        .tab.active {
-            border-left-color: var(--accent);
-        }
+           .tab.active {
+               border-left-color: var(--accent);
+           }
         }
 
         .hidden {
             display: none;
         }
+        .intro {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: clamp(1rem, 2vw, 2rem);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .intro-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .import-code {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            display: inline-block;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .intro-links {
+           margin: 1rem 0;
+           display: flex;
+           justify-content: center;
+           gap: 1.5rem;
+           flex-wrap: wrap;
+        }
+
+        .link {
+           color: var(--accent);
+           font-weight: bold;
+           text-decoration: none;
+           transition: color 0.2s;
+        }
+
+        .link:hover {
+           color: #3a7bd5;
+        }
+
+        .intro-message {
+           color: var(--text-secondary);
+           font-size: 0.95rem;
+         }
     </style>
 </head>
 <body>
@@ -219,6 +268,21 @@
                 </svg>
             </button>
         </header>
+
+        <section class="intro">
+           <div class="intro-content">
+              <pre class="import-code"><code>import Render from 'https://cdn.skypack.dev/techz-render'</code></pre>
+
+              <div class="intro-links">
+                 <a href="https://www.npmjs.com/package/techz-render" target="_blank" rel="noopener" class="link">📦 View on NPM</a>
+                 <a href="https://github.com/Mikeprogrammer973/techz-render" target="_blank" rel="noopener" class="link">⭐ GitHub Repo</a>
+              </div>
+
+              <p class="intro-message">
+                If you find this library useful, please <strong>leave a star</strong>, <strong>share it</strong> with others, and <strong>contribute</strong> to make it even better!
+              </p>
+          </div>
+       </section>
         
         <div class="component-section">
             <h2>Message Box</h2>
@@ -560,8 +624,7 @@
                 }
             };
             
-            render.msg_box(params);
-            
+            render.msg_box(params)
             document.getElementById('msgBoxCode').textContent = 
             `const render = new Render();
             render.msg_box(${JSON.stringify(params, null, 2)});`
