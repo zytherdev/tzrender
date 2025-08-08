@@ -4,274 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="https://lh3.googleusercontent.com/a/ACg8ocLWUmqhoTGJ2NKtu_omBv1kj6MpmZZ9ySKn1WkAtkpfgWRt8tY=s288-c-no" type="image/x-icon">
-    <title>techz-render Documentation</title>
-    <style>
-        :root {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --text-primary: #f0f0f0;
-            --text-secondary: #b0b0b0;
-            --accent: #4a8fe7;
-            --border: #444;
-        }
-
-        [data-theme="light"] {
-            --bg-primary: #f5f5f5;
-            --bg-secondary: #e0e0e0;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --accent: #1a73e8;
-            --border: #ddd;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: clamp(1rem, 2vw, 2.5rem);
-        }
-
-        header {
-            display: flex;
-            position: sticky;
-            top: -1px;
-            left: 0px;
-            background-color: var(--bg-secondary);
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 0.5rem;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            color: var(--accent);
-            margin: 0;
-            font-size: 1.75rem;
-        }
-
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 0.5rem;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .theme-toggle:hover {
-            background: var(--accent);
-            color: white;
-        }
-
-        .component-section {
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        h2 {
-            margin-top: 0;
-            color: var(--accent);
-        }
-
-        .demo-area {
-            margin-top: 1rem;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
-            padding: 1.25rem;
-            border: 1px dashed var(--border);
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin-bottom: 0.25rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        input,
-        select,
-        textarea,
-        button {
-            font-size: 1rem;
-            padding: 0.6rem 0.75rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-primary);
-        }
-
-        button.button {
-            background: linear-gradient(to right, var(--accent), #3a7bd5);
-            color: white;
-            border: none;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            padding: 0.75rem 1.25rem;
-            margin: 1.5rem 0;
-            border-radius: 6px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .button:focus-visible {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        .code-block {
-            background: rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 0.75rem;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: border-color 0.2s;
-        }
-
-        .tab.active {
-            border-bottom-color: var(--accent);
-            font-weight: bold;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 1rem 0;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @media (max-width: 600px) {
-           .tabs {
-               flex-direction: column;
-           }
-
-           .tab {
-               border-bottom: none;
-               border-left: 3px solid transparent;
-               text-align: left;
-           }
-
-           .tab.active {
-               border-left-color: var(--accent);
-           }
-        }
-
-        .hidden {
-            display: none;
-        }
-        .intro {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: clamp(1rem, 2vw, 2rem);
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .intro-content {
-            max-width: 1000px;
-            margin: 0 auto;
-            text-align: center;
-            overflow-x: auto;
-        }
-
-        .import-code {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px dashed var(--border);
-            border-radius: 6px;
-            display: inline-block;
-            padding: 0.75rem 1.25rem;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-        }
-
-        .intro-links {
-           margin: 1rem 0;
-           display: flex;
-           justify-content: center;
-           gap: 1.5rem;
-           flex-wrap: wrap;
-        }
-
-        .link {
-           color: var(--accent);
-           font-weight: bold;
-           text-decoration: none;
-           transition: color 0.2s;
-        }
-
-        .link:hover {
-           color: #3a7bd5;
-        }
-
-        .intro-message {
-           color: var(--text-secondary);
-           font-size: 0.95rem;
-         }
-    </style>
+    <title>techz-render docs</title>
+    <link rel="stylesheet" href="./utils/app.css">
+    <script defer src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
+    <script defer src="./utils/main.js" type="module"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>techz-render Documentation</h1>
-            <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                <svg id="iconToggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
-                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>
-                </svg>
-            </button>
+            <h1>techz-render</h1>
+            <div class="header-actions">
+                <select id="langSelect" class="lang-select" title="Select Language">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="pt">🇧🇷 Português</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                </select>
+                <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                    <svg id="iconToggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
+                    <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <section class="intro">
@@ -279,67 +33,67 @@
               <pre class="import-code"><code>import Render from 'https://cdn.skypack.dev/techz-render'</code></pre>
 
               <div class="intro-links">
-                 <a href="https://www.npmjs.com/package/techz-render" target="_blank" rel="noopener" class="link">📦 View on NPM</a>
-                 <a href="https://github.com/Mikeprogrammer973/techz-render" target="_blank" rel="noopener" class="link">⭐ GitHub Repo</a>
+                 <a data-i18n="intro_npm" href="https://www.npmjs.com/package/techz-render" target="_blank" rel="noopener" class="link">📦 View on NPM</a>
+                 <a data-i18n="intro_github" href="https://github.com/Mikeprogrammer973/techz-render" target="_blank" rel="noopener" class="link">⭐ GitHub Repo</a>
               </div>
 
-              <p class="intro-message">
+              <p data-i18n="intro_msg" class="intro-message">
                 If you find this library useful, please <strong>leave a star</strong>, <strong>share it</strong> with others, and <strong>contribute</strong> to make it even better!
               </p>
           </div>
        </section>
         
         <div class="component-section">
-            <h2>Message Box</h2>
-            <p>Create modal dialogs with confirm/cancel actions.</p>
+            <h2 data-i18n="msgbox_title">Message Box</h2>
+            <p data-i18n="msgbox_desc">Create modal dialogs with confirm/cancel actions.</p>
             
             <div class="demo-area">
                 <div class="controls">
                     <div class="control-group">
-                        <label for="msgBoxTheme">Theme</label>
+                        <label data-i18n="msgbox_theme" for="msgBoxTheme">Theme</label>
                         <select id="msgBoxTheme">
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
+                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
+                            <option data-i18n="theme_op_light" value="light">Light</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="msgBoxTitle">Title</label>
+                        <label data-i18n="msgbox_label_title" for="msgBoxTitle">Title</label>
                         <input type="text" id="msgBoxTitle" value="Confirmation">
                     </div>
                     
                     <div class="control-group">
-                        <label for="msgBoxMessage">Message</label>
+                        <label data-i18n="msgbox_label_message" for="msgBoxMessage">Message</label>
                         <textarea id="msgBoxMessage" rows="3">Are you sure you want to proceed with this action?</textarea>
                     </div>
                     
                     <div class="control-group">
-                        <label for="msgBoxCancelText">Cancel Button Text</label>
+                        <label data-i18n="msgbox_label_cancel" for="msgBoxCancelText">Cancel Button Text</label>
                         <input type="text" id="msgBoxCancelText" value="Cancel">
                     </div>
                     
                     <div class="control-group">
-                        <label for="msgBoxConfirmText">Confirm Button Text</label>
+                        <label data-i18n="msgbox_label_confirm" for="msgBoxConfirmText">Confirm Button Text</label>
                         <input type="text" id="msgBoxConfirmText" value="Confirm">
                     </div>
                 </div>
                 
-                <button class="button" id="showMsgBox">Show Message Box</button>
+                <button data-i18n="msgbox_button_show" class="button" id="showMsgBox">Show Message Box</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
-                        <div class="tab active" data-tab="msgbox-js">JavaScript</div>
-                        <div class="tab" data-tab="msgbox-html">HTML</div>
+                        <div data-i18n="msgbox_tab_js" class="tab active" data-tab="msgbox-js">JavaScript</div>
+                        <div data-i18n="msgbox_tab_html" class="tab" data-tab="msgbox-html">HTML</div>
                     </div>
                     
                     <div class="tab-content active" id="msgbox-js">
                         <div class="code-block" id="msgBoxCode">
-                            // Code will appear here
+                            //...........
                         </div>
                     </div>
                     
                     <div class="tab-content" id="msgbox-html">
-                        <div class="code-block">
+                        <div data-i18n="msgbox_nohtml" class="code-block">
                             &lt;!-- No HTML required - pure JavaScript --&gt;
                         </div>
                     </div>
@@ -348,56 +102,56 @@
         </div>
         
         <div class="component-section">
-            <h2>Alert</h2>
-            <p>Show temporary notification messages.</p>
+            <h2 data-i18n="alert_title">Alert</h2>
+            <p data-i18n="alert_desc">Show temporary notification messages.</p>
             
             <div class="demo-area">
                 <div class="controls">
                     <div class="control-group">
-                        <label for="alertTheme">Theme</label>
+                        <label data-i18n="alert_theme" for="alertTheme">Theme</label>
                         <select id="alertTheme">
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
+                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
+                            <option data-i18n="theme_op_light" value="light">Light</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="alertVariant">Variant</label>
+                        <label data-i18n="alert_variant" for="alertVariant">Variant</label>
                         <select id="alertVariant">
-                            <option value="info">Info</option>
-                            <option value="success">Success</option>
-                            <option value="warning">Warning</option>
-                            <option value="error">Error</option>
+                            <option data-i18n="alert_v_info" value="info">Info</option>
+                            <option data-i18n="alert_v_success" value="success">Success</option>
+                            <option data-i18n="alert_v_warning" value="warning">Warning</option>
+                            <option data-i18n="alert_v_error" value="error">Error</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="alertMessage">Message</label>
+                        <label data-i18n="alert_message" for="alertMessage">Message</label>
                         <textarea id="alertMessage" rows="3">This is an alert message!</textarea>
                     </div>
                     
                     <div class="control-group">
-                        <label for="alertTimeout">Timeout (ms)</label>
+                        <label data-i18n="alert_timeout" for="alertTimeout">Timeout (ms)</label>
                         <input type="number" id="alertTimeout" value="3000">
                     </div>
                 </div>
                 
-                <button class="button" id="showAlert">Show Alert</button>
+                <button data-i18n="alert_button_show" class="button" id="showAlert">Show Alert</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
-                        <div class="tab active" data-tab="alert-js">JavaScript</div>
-                        <div class="tab" data-tab="alert-html">HTML</div>
+                        <div data-i18n="alert_tab_js" class="tab active" data-tab="alert-js">JavaScript</div>
+                        <div data-i18n="alert_tab_html" class="tab" data-tab="alert-html">HTML</div>
                     </div>
                     
                     <div class="tab-content active" id="alert-js">
                         <div class="code-block" id="alertCode">
-                            // Code will appear here
+                            //...........
                         </div>
                     </div>
                     
                     <div class="tab-content" id="alert-html">
-                        <div class="code-block">
+                        <div data-i18n="msgbox_nohtml" class="code-block">
                             &lt;!-- No HTML required - pure JavaScript --&gt;
                         </div>
                     </div>
@@ -406,90 +160,90 @@
         </div>
         
         <div class="component-section">
-            <h2>Spinner</h2>
-            <p>Show loading indicators with various styles.</p>
+            <h2 data-i18n="spinner_title">Spinner</h2>
+            <p data-i18n="spinner_desc">Show loading indicators with various styles.</p>
             
             <div class="demo-area">
                 <div class="controls">
                     <div class="control-group">
-                        <label for="spinnerTheme">Theme</label>
+                        <label data-i18n="spinner_theme" for="spinnerTheme">Theme</label>
                         <select id="spinnerTheme">
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
+                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
+                            <option data-i18n="theme_op_light" value="light">Light</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerVariant">Variant</label>
+                        <label data-i18n="spinner_variant" for="spinnerVariant">Variant</label>
                         <select id="spinnerVariant">
-                            <option value="simple">Simple</option>
-                            <option value="dual">Dual</option>
-                            <option value="triple">Triple</option>
-                            <option value="custom" selected>Custom</option>
+                            <option data-i18n="spinner_v_simple" value="simple">Simple</option>
+                            <option data-i18n="spinner_v_dual" value="dual">Dual</option>
+                            <option data-i18n="spinner_v_triple" value="triple">Triple</option>
+                            <option data-i18n="spinner_v_custom" value="custom" selected>Custom</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerText">Text</label>
+                        <label data-i18n="spinner_text" for="spinnerText">Text</label>
                         <input type="text" id="spinnerText" value="Loading...">
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerAnimated">Animate Text</label>
+                        <label data-i18n="spinner_animate" for="spinnerAnimated">Animate Text</label>
                         <select id="spinnerAnimated">
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
+                            <option data-i18n="choice_yes" value="true">Yes</option>
+                            <option data-i18n="choice_no" value="false">No</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerBackdrop">Show Backdrop</label>
+                        <label data-i18n="spinner_backdrop" for="spinnerBackdrop">Show Backdrop</label>
                         <select id="spinnerBackdrop">
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
+                            <option data-i18n="choice_yes" value="true">Yes</option>
+                            <option data-i18n="choice_no" value="false">No</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerCustomUrl">Custom Image URL</label>
+                        <label data-i18n="spinner_custom_url" for="spinnerCustomUrl">Custom Image URL</label>
                         <input type="text" id="spinnerCustomUrl" value="https://www.svgrepo.com/show/54385/target.svg">
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerAnimation">Animation</label>
+                        <label data-i18n="spinner_animation" for="spinnerAnimation">Animation</label>
                         <select id="spinnerAnimation">
-                            <option value="spin">Spin</option>
-                            <option value="pulse">Pulse</option>
-                            <option value="jump">Bounce</option>
+                            <option data-i18n="spinner_a_spin" value="spin">Spin</option>
+                            <option data-i18n="spinner_a_pulse" value="pulse">Pulse</option>
+                            <option data-i18n="spinner_a_bounce" value="jump">Bounce</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="spinnerColor">Color</label>
+                        <label data-i18n="spinner_color" for="spinnerColor">Color</label>
                         <input type="text" id="spinnerColor" value="skyblue">
                     </div>
                 </div>
                 
                 <div class="controls">
-                    <button class="button" id="showSpinner">Show Spinner</button>
-                    <button class="button hidden" id="hideSpinner">Hide Spinner</button>
-                    <button class="button hidden" id="destroySpinner">Destroy Spinner</button>
+                    <button data-i18n="spinner_button_show" class="button" id="showSpinner">Show Spinner</button>
+                    <button data-i18n="spinner_button_hide" class="button hidden" id="hideSpinner">Hide Spinner</button>
+                    <button data-i18n="spinner_button_destroy" class="button hidden" id="destroySpinner">Destroy Spinner</button>
                 </div>
                 
                 <div class="tab-container">
                     <div class="tabs">
-                        <div class="tab active" data-tab="spinner-js">JavaScript</div>
-                        <div class="tab" data-tab="spinner-html">HTML</div>
+                        <div data-i18n="spinner_tab_js" class="tab active" data-tab="spinner-js">JavaScript</div>
+                        <div data-i18n="spinner_tab_html" class="tab" data-tab="spinner-html">HTML</div>
                     </div>
                     
                     <div class="tab-content active" id="spinner-js">
                         <div class="code-block" id="spinnerCode">
-                            // Code will appear here
+                            //...........
                         </div>
                     </div>
                     
                     <div class="tab-content" id="spinner-html">
-                        <div class="code-block">
+                        <div data-i18n="msgbox_nohtml" class="code-block">
                             &lt;!-- No HTML required - pure JavaScript --&gt;
                         </div>
                     </div>
@@ -498,79 +252,79 @@
         </div>
         
         <div class="component-section">
-            <h2>Block UI</h2>
-            <p>Create animated overlays that block user interaction.</p>
+            <h2 data-i18n="block_title">Block UI</h2>
+            <p data-i18n="block_desc">Create animated overlays that block user interaction.</p>
             
             <div class="demo-area">
                 <div class="controls">
                     <div class="control-group">
-                        <label for="blockTheme">Theme</label>
+                        <label data-i18n="block_theme" for="blockTheme">Theme</label>
                         <select id="blockTheme">
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
+                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
+                            <option data-i18n="theme_op_light" value="light">Light</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockAnimation">Animation</label>
+                        <label data-i18n="block_animation" for="blockAnimation">Animation</label>
                         <select id="blockAnimation">
-                            <option value="particles">Particles</option>
-                            <option value="lines">Lines</option>
-                            <option value="shapes" selected>Shapes</option>
-                            <option value="orbs">Orbs</option>
+                            <option data-i18n="block_a_particles" value="particles">Particles</option>
+                            <option data-i18n="block_a_lines" value="lines">Lines</option>
+                            <option data-i18n="block_a_shapes" value="shapes" selected>Shapes</option>
+                            <option data-i18n="block_a_orbs" value="orbs">Orbs</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockMessage">Message</label>
+                        <label data-i18n="block_message" for="blockMessage">Message</label>
                         <input type="text" id="blockMessage" value="Processing...">
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockCount">Element Count</label>
+                        <label data-i18n="block_count" for="blockCount">Element Count</label>
                         <input type="number" id="blockCount" value="120">
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockMinSize">Min Size</label>
+                        <label data-i18n="block_min_size" for="blockMinSize">Min Size</label>
                         <input type="number" id="blockMinSize" value="7">
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockMaxSize">Max Size</label>
+                        <label data-i18n="block_max_size" for="blockMaxSize">Max Size</label>
                         <input type="number" id="blockMaxSize" value="100">
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockClickDestroy">Destroy on Click</label>
+                        <label data-i18n="block_click_destroy" for="blockClickDestroy">Destroy on Click</label>
                         <select id="blockClickDestroy">
-                            <option value="true">Yes</option>
-                            <option value="false" selected>No</option>
+                            <option data-i18n="choice_yes" value="true">Yes</option>
+                            <option data-i18n="choice_no" value="false" selected>No</option>
                         </select>
                     </div>
                     
                     <div class="control-group">
-                        <label for="blockAutoDestroy">Auto Destroy (ms)</label>
+                        <label data-i18n="block_auto_destroy" for="blockAutoDestroy">Auto Destroy (ms)</label>
                         <input type="number" id="blockAutoDestroy" value="0" placeholder="0 = disabled">
                     </div>
                 </div>
                 
-                <button class="button" id="showBlockUI">Show Block UI</button>
+                <button data-i18n="block_button_show" class="button" id="showBlockUI">Show Block UI</button>
                 
                 <div class="tab-container">
                     <div class="tabs">
-                        <div class="tab active" data-tab="block-js">JavaScript</div>
-                        <div class="tab" data-tab="block-html">HTML</div>
+                        <div data-i18n="block_tab_js" class="tab active" data-tab="block-js">JavaScript</div>
+                        <div data-i18n="block_tab_html" class="tab" data-tab="block-html">HTML</div>
                     </div>
                     
                     <div class="tab-content active" id="block-js">
                         <div class="code-block" id="blockCode">
-                            // Code will appear here
+                            //...........
                         </div>
                     </div>
                     
                     <div class="tab-content" id="block-html">
-                        <div class="code-block">
+                        <div data-i18n="msgbox_nohtml" class="code-block">
                             &lt;!-- No HTML required - pure JavaScript --&gt;
                         </div>
                     </div>
@@ -578,169 +332,5 @@
             </div>
         </div>
     </div>
-
-    <script type="module">
-        import Render from "https://cdn.skypack.dev/techz-render"
-        
-        const render = new Render();
-        
-        const themeToggleBtn = document.getElementById('themeToggle');
-        const iconToggle = document.getElementById('iconToggle');
-
-        themeToggleBtn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            iconToggle.innerHTML = newTheme === 'dark'
-                ? '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>'
-                : '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-        });
-        
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabContainer = tab.closest('.tab-container');
-                const tabId = tab.getAttribute('data-tab');
-                
-                tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                tabContainer.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-        
-        // Message Box
-        document.getElementById('showMsgBox').addEventListener('click', () => {
-            const params = {
-                theme: document.getElementById('msgBoxTheme').value,
-                title: document.getElementById('msgBoxTitle').value,
-                msg: document.getElementById('msgBoxMessage').value,
-                action: {
-                    cancel: {
-                        text: document.getElementById('msgBoxCancelText').value,
-                        callback: () => console.log('Message box cancelled')
-                    },
-                    confirm: {
-                        text: document.getElementById('msgBoxConfirmText').value,
-                        callback: () => console.log('Message box confirmed')
-                    }
-                }
-            };
-            
-            render.msg_box(params)
-            document.getElementById('msgBoxCode').textContent = 
-            `const render = new Render();
-            render.msg_box(${JSON.stringify(params, null, 2)});`
-        });
-        
-        // Alert
-        document.getElementById('showAlert').addEventListener('click', () => {
-            const params = {
-                theme: document.getElementById('alertTheme').value,
-                variant: document.getElementById('alertVariant').value,
-                msg: document.getElementById('alertMessage').value,
-                timeout: parseInt(document.getElementById('alertTimeout').value) || 0
-            };
-            
-            render.alert(params);
-            
-            document.getElementById('alertCode').textContent = 
-            `const render = new Render();
-            render.alert(${JSON.stringify(params, null, 2)});`;
-        });
-        
-        // Spinner
-        let currentSpinner = null;
-        
-        document.getElementById('showSpinner').addEventListener('click', () => {
-            const params = {
-                variant: document.getElementById('spinnerVariant').value,
-                theme: document.getElementById('spinnerTheme').value,
-                text: {
-                    content: document.getElementById('spinnerText').value,
-                    animated: document.getElementById('spinnerAnimated').value === 'true',
-                    color: document.getElementById('spinnerColor').value
-                },
-                backdrop: document.getElementById('spinnerBackdrop').value === 'true',
-                custom: {
-                    url: document.getElementById('spinnerCustomUrl').value,
-                    animation: document.getElementById('spinnerAnimation').value,
-                    color: document.getElementById('spinnerColor').value
-                }
-            };
-            
-            currentSpinner = render.spinner(params);
-            
-            document.getElementById('showSpinner').classList.add('hidden');
-            document.getElementById('hideSpinner').classList.remove('hidden');
-            document.getElementById('destroySpinner').classList.remove('hidden');
-            
-            document.getElementById('spinnerCode').textContent = 
-            `const render = new Render();
-            const spinner = render.spinner(${JSON.stringify(params, null, 2)});
-
-            // To hide:
-            // spinner.toggle(false);
-
-            // To destroy:
-            // spinner.destroy();`;
-        });
-        
-        document.getElementById('hideSpinner').addEventListener('click', () => {
-            if (currentSpinner) {
-                currentSpinner.toggle(false);
-                document.getElementById('hideSpinner').classList.add('hidden');
-                document.getElementById('showSpinner').classList.remove('hidden');
-            }
-        });
-        
-        document.getElementById('destroySpinner').addEventListener('click', () => {
-            if (currentSpinner) {
-                currentSpinner.destroy();
-                currentSpinner = null;
-                document.getElementById('hideSpinner').classList.add('hidden');
-                document.getElementById('destroySpinner').classList.add('hidden');
-                document.getElementById('showSpinner').classList.remove('hidden');
-            }
-        });
-        
-        // Block UI
-        document.getElementById('showBlockUI').addEventListener('click', () => {
-            const autoDestroy = parseInt(document.getElementById('blockAutoDestroy').value) || 0;
-            
-            const params = {
-                theme: document.getElementById('blockTheme').value,
-                animation: document.getElementById('blockAnimation').value,
-                message: document.getElementById('blockMessage').value,
-                count: parseInt(document.getElementById('blockCount').value) || 120,
-                events: {
-                    screen_click: {
-                        destroy: document.getElementById('blockClickDestroy').value === 'true'
-                    },
-                    auto__: {
-                        destroy: autoDestroy > 0,
-                        timer: autoDestroy
-                    }
-                },
-                custom: {
-                    __size: {
-                        min: parseInt(document.getElementById('blockMinSize').value) || 7,
-                        max: parseInt(document.getElementById('blockMaxSize').value) || 100
-                    }
-                }
-            };
-            
-            const block = render.block_ui(params);
-            
-            document.getElementById('blockCode').textContent = 
-            `const render = new Render();
-            const block = render.block_ui(${JSON.stringify(params, null, 2)});
-
-            // To destroy:
-            // block.destroy();`;
-        });
-    </script>
 </body>
 </html>
