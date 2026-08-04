@@ -1,5 +1,5 @@
 {
-  "name": "techz-render",
+  "name": "@technopro/techz-render",
   "version": "1.0.6",
   "description": "Modern, theme-aware, animation-powered JavaScript utility that injects UI components directly into the DOM. No need for pre-existing HTML — everything is created dynamically.",
   "main": "index.js",
