@@ -1,4 +1,4 @@
-import colors from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/utils/colors.js'
+import colors from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/utils/colors.js'
 
 export default class Render
 {
@@ -20,10 +20,10 @@ export default class Render
     {
         if(!Render.style_loaded)
         {
-            const styles_uri = ['https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/styles/__reset.css','https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/styles/msg_box.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/styles/alert.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/styles/spinner.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/styles/block-ui.css']
+            const styles_uri = ['https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/__reset.css','https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/msg_box.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/alert.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/spinner.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/block-ui.css']
             const style = document.createElement('style');
             style.id = this.__id()
-            style.textContent = '/*======= @zyther/tzrender components css =======*/'
+            style.textContent = '/*======= @zyther/tzrender@latest components css =======*/'
 
             for(let uri of styles_uri)
             {
