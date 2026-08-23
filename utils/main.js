@@ -1,4 +1,4 @@
-import Render from "https://cdn.skypack.dev/@zyther/tzrender"
+import Render from "https://cdn.jsdelivr.net/npm/@zyther/tzrender"
 import { translations } from "/utils/translations.js";
         
 const render = new Render();
