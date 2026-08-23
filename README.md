@@ -1,6 +1,6 @@
-# 🧩 techz-render - Dynamic UI Components
+# 🧩 tzrender - Dynamic UI Components
 
-**techz-render** is a modern, theme-aware, animation-powered JavaScript utility that injects UI components directly into the DOM. No need for pre-existing HTML — everything is created dynamically.
+**tzrender** is a modern, theme-aware, animation-powered JavaScript utility that injects UI components directly into the DOM. No need for pre-existing HTML — everything is created dynamically.
 
 Built for sleek user experiences with built-in support for:
 - Alerts
@@ -24,7 +24,7 @@ Built for sleek user experiences with built-in support for:
 ## 📦 Installation
 
 ```js
-import Render from "https://cdn.skypack.dev/techz-render"
+import Render from "https://cdn.skypack.dev/@zyther/tzrender"
 ```
 
 ---
