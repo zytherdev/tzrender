@@ -24,7 +24,7 @@ Built for sleek user experiences with built-in support for:
 ## 📦 Installation
 
 ```js
-import Render from "https://cdn.skypack.dev/@zyther/tzrender"
+import Render from "https://cdn.jsdelivr.net/npm/@zyther/tzrender"
 ```
 
 ---
