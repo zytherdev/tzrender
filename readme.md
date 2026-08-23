@@ -184,7 +184,7 @@ destroy();
 
 ## 🧑‍💻 Author
 
-Made by **Mike DP**  
+Made by **zytherdev**  
 Feel free to customize and integrate into your modern JavaScript applications.
 
 ---
