@@ -1,2 +1,2 @@
 
-export { default } from './src/render.js'
+export { default } from "https://cdn.jsdelivr.net/npm/@zyther/tzrender/src/render.js"
