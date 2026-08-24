@@ -150,7 +150,7 @@ ui.block_ui({
 
 ---
 
-## 🌍 Load Page (Optional Utility)
+## 🌍 Load Page
 
 Loads HTML content into a container and optionally runs a callback.
 
