@@ -392,7 +392,7 @@ export default class Render
                         vy: Math.sin(angle) * speed
                     };
                     const el = elements[i];
-                    el.style.width = '5px';
+                    el.style.width = '3px';
                     el.style.height = length + 'px';
                     el.style.backgroundColor = useLight ? colors.light[Math.floor(Math.random() * colors.light.length)] : colors.dark[Math.floor(Math.random() * colors.dark.length)];
                     el.style.position = 'fixed';
