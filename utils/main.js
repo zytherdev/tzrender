@@ -37,6 +37,7 @@ document.getElementById("langSelect").addEventListener("change", (e) => {
     const lang = e.target.value
     i18next.changeLanguage(lang, updateTexts)
     localStorage.setItem("lang", lang)
+    document.documentElement.setAttribute("lang", lang)
 });
 
 document.getElementById("langSelect").value = i18next.language
