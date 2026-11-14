@@ -1,4 +1,5 @@
-import colors from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/utils/colors.js'
+import colors from './utils/colors.js';
+import { createAccordion, createProgress, createSkeleton, createTabs, createToast, createTooltip } from './components.js';
 
 export default class Render
 {
@@ -9,32 +10,33 @@ export default class Render
 
     constructor()
     {
+        this.cleanups = new Map()
         Render.instance_count++
 
         if (!Render.style_promise) {
-            Render.style_promise = this.inject_style()
+            Render.style_promise = this.inject_style().catch((error) => {
+                Render.style_promise = null
+                console.error('tzrender: could not load component styles.', error)
+            })
         }
+        this.ready = Render.style_promise
     }
 
     async inject_style()
     {
-        if(!Render.style_loaded)
-        {
-            const styles_uri = ['https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/__reset.css','https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/msg_box.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/alert.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/spinner.css', 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/src/styles/block-ui.css']
-            const style = document.createElement('style');
-            style.id = this.__id()
-            style.textContent = '/*======= @zyther/tzrender@latest components css =======*/'
-
-            for(let uri of styles_uri)
-            {
-                style.textContent += await (await fetch(uri)).text()
-            }
-
-            document.head.appendChild(style)
-
-            Render.style_loaded = true
-            Render.style__ = style.id
-        }
+        if (Render.style_loaded || document.getElementById('tzrender-styles')) return
+        const styleFiles = ['__reset.css', 'msg_box.css', 'alert.css', 'spinner.css', 'block-ui.css', 'components.css']
+        const css = await Promise.all(styleFiles.map(async (file) => {
+            const response = await fetch(new URL(`./styles/${file}`, import.meta.url))
+            if (!response.ok) throw new Error(`Could not load ${file} (${response.status})`)
+            return response.text()
+        }))
+        const style = document.createElement('style')
+        style.id = 'tzrender-styles'
+        style.textContent = `/* tzrender component styles */\n${css.join('\n')}`
+        document.head.appendChild(style)
+        Render.style_loaded = true
+        Render.style__ = style.id
     }
 
 
@@ -54,39 +56,69 @@ export default class Render
 
                 const ntf_content = document.createElement('div');
                 ntf_content.className = theme === 'light' ? 'tchzr-b-msg-box-light' : 'tchzr-b-msg-box';
+                ntf_content.setAttribute('role', 'dialog');
+                ntf_content.setAttribute('aria-modal', 'true');
 
                 const ntf_close_btn = document.createElement('button');
                 ntf_close_btn.className = theme === 'light' ? 'tchzr-msgb-close-light tchzr-msgb-close' : 'tchzr-msgb-close';
-                ntf_close_btn.innerHTML =  '&times;'
+                ntf_close_btn.type = 'button';
+                ntf_close_btn.setAttribute('aria-label', prms.props.closeLabel || 'Close dialog');
+                ntf_close_btn.textContent = '×';
                 ntf_close_btn.addEventListener('click', () => {
                     prms.props.action.cancel.callback()
                     this.destroy(ntf.id)
                 })
 
                 const ntf_title = document.createElement('h2')
-                ntf_title.innerHTML = prms.props.title
+                ntf_title.id = `${id__}-title`;
+                ntf_title.textContent = String(prms.props.title ?? 'Message');
 
                 const ntf_msg = document.createElement('p')
-                ntf_msg.innerHTML = prms.props.msg;
+                ntf_msg.id = `${id__}-message`;
+                ntf_msg.textContent = String(prms.props.msg ?? '');
+                ntf_content.setAttribute('aria-labelledby', ntf_title.id);
+                ntf_content.setAttribute('aria-describedby', ntf_msg.id);
 
                 const ntf_actions = document.createElement('div')
                 ntf_actions.className = 'tchzr-msgb-actions'
 
                 const ntf_cancel_btn = document.createElement('button')
                 ntf_cancel_btn.className = theme === 'light' ? 'tchzr-msgba-cancel-light tchzr-msgba-cancel' : 'tchzr-msgba-cancel'
-                ntf_cancel_btn.innerHTML = prms.props.action.cancel.text
-                ntf_cancel_btn.addEventListener('click', () => {
-                    prms.props.action.cancel.callback()
-                    this.destroy(ntf.id)
-                })
+                ntf_cancel_btn.type = 'button';
+                ntf_cancel_btn.textContent = String(prms.props.action?.cancel?.text ?? 'Cancel');
 
                 const ntf_confirm_btn = document.createElement('button')
                 ntf_confirm_btn.className = theme === 'light' ? 'tchzr-msgba-confirm-light tchzr-msgba-confirm' : 'tchzr-msgba-confirm'
-                ntf_confirm_btn.innerHTML = prms.props.action.confirm.text
-                ntf_confirm_btn.addEventListener('click', () => {
-                    prms.props.action.confirm.callback()
-                    this.destroy(ntf.id)
-                })
+                ntf_confirm_btn.type = 'button';
+                ntf_confirm_btn.textContent = String(prms.props.action?.confirm?.text ?? 'Confirm');
+                const cancel = () => {
+                    try { prms.props.action?.cancel?.callback?.() }
+                    finally { this.destroy(ntf.id) }
+                };
+                const confirm = () => {
+                    try { prms.props.action?.confirm?.callback?.() }
+                    finally { this.destroy(ntf.id) }
+                };
+                ntf_close_btn.addEventListener('click', cancel);
+                ntf_cancel_btn.addEventListener('click', cancel);
+                ntf_confirm_btn.addEventListener('click', confirm);
+                const previousFocus = document.activeElement;
+                const onKeyDown = (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancel();
+                    } else if (event.key === 'Tab') {
+                        const focusable = [ntf_close_btn, ntf_cancel_btn, ntf_confirm_btn];
+                        if (event.shiftKey && document.activeElement === focusable[0]) {
+                            event.preventDefault();
+                            focusable.at(-1).focus();
+                        } else if (!event.shiftKey && document.activeElement === focusable.at(-1)) {
+                            event.preventDefault();
+                            focusable[0].focus();
+                        }
+                    }
+                };
+                ntf_content.addEventListener('keydown', onKeyDown);
 
                 ntf_actions.appendChild(ntf_cancel_btn)
                 ntf_actions.appendChild(ntf_confirm_btn)
@@ -99,6 +131,11 @@ export default class Render
                 ntf.appendChild(ntf_content)
 
                 document.body.appendChild(ntf)
+                this.__registerCleanup(id__, () => {
+                    ntf_content.removeEventListener('keydown', onKeyDown);
+                    if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+                });
+                ntf_confirm_btn.focus();
 
                 return ntf.id
             }
@@ -116,17 +153,21 @@ export default class Render
                     id: id__,
                     className: `${cls('alert')} tchzr-a-${type}`,
                 });
+                alert.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+                alert.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
 
                 const alert_msg = Object.assign(document.createElement('span'), {
                     className: 'tchzr-alert-msg',
-                    innerHTML: prms.props.msg,
+                    textContent: String(prms.props.msg ?? ''),
                 });
 
                 const close_btn = Object.assign(document.createElement('button'), {
                     className: cls('close'),
-                    innerHTML: '&times;',
+                    type: 'button',
+                    textContent: '×',
                     onclick: () => this.destroy(id__)
                 });
+                close_btn.setAttribute('aria-label', prms.props.closeLabel || 'Dismiss notification');
 
                 const progress = document.createElement('div');
                 progress.className = 'tchzr-alert-progress';
@@ -134,22 +175,12 @@ export default class Render
                 alert.append(alert_msg, close_btn, progress);
                 document.body.appendChild(alert);
 
-                if (prms.props.timeout) {
-                    const timeout = prms.props.timeout;
-                    progress.style.width = '100%'
-
-                    const step = 100 / (timeout / 2)
-                    let currentWidth = 100
-
-                    const interval = setInterval(() => {
-                        if (currentWidth <= 0) {
-                            clearInterval(interval)
-                            this.destroy(id__)
-                            return
-                        }
-                        currentWidth -= step
-                        progress.style.width = `${currentWidth}%`
-                    }, step)
+                const timeout = Number(prms.props.timeout);
+                if (Number.isFinite(timeout) && timeout > 0) {
+                    progress.style.animationDuration = `${timeout}ms`;
+                    progress.style.animationDirection = 'reverse';
+                    const timer = window.setTimeout(() => this.destroy(id__), timeout);
+                    this.__registerCleanup(id__, () => window.clearTimeout(timer));
                 }
 
                 return alert.id
@@ -166,6 +197,8 @@ export default class Render
                 const container = document.createElement('div');
                 container.id = id__;
                 container.className = backdrop ? cls('spinner-backdrop') : cls('spinner-container');
+                const timers = new Set();
+                let textInterval = null;
 
                 // events
                 const toggle = (show = true) => {
@@ -194,11 +227,13 @@ export default class Render
                     if(events.auto__)
                     {
                         if (events.auto__.hide) {
-                            setTimeout(() => toggle(false), events.auto__.timer || 3000)
+                            const timer = window.setTimeout(() => toggle(false), events.auto__.timer || 3000);
+                            timers.add(timer);
                         }
 
                         if (events.auto__.destroy) {
-                            setTimeout(() => destroy(), events.auto__.timer || 3000)
+                            const timer = window.setTimeout(() => destroy(), events.auto__.timer || 3000);
+                            timers.add(timer);
                         }
                     }
                 }
@@ -255,7 +290,7 @@ export default class Render
 
                         let i = 0
 
-                        setInterval(()=>{
+                        textInterval = window.setInterval(()=>{
                             if(i === text.content.length){
                                 i = 0
                                 caption.innerText = ''
@@ -269,6 +304,10 @@ export default class Render
                 }
 
                 document.body.appendChild(container);
+                this.__registerCleanup(id__, () => {
+                    timers.forEach((timer) => window.clearTimeout(timer));
+                    if (textInterval !== null) window.clearInterval(textInterval);
+                });
 
                 return {
                     __id: container.id,
@@ -280,19 +319,35 @@ export default class Render
             {
                 const id__ = this.__id()
 
-                const { theme = 'dark', animation = 'particles', message, count = 40, events = {}, custom = { __size: { min: 7, max: 100 } } } = prms.props;
-
-                if(custom.__size.min <= 0 || custom.__size.max <= 0 || custom.__size.min >= custom.__size.max) custom.__size = { min: 7, max: 100 }
+                const { theme = 'dark', animation = 'particles', message, events = {}, custom: customOptions = {} } = prms.props;
+                const count = Math.max(1, Math.min(250, Math.floor(Number(prms.props.count) || 40)));
+                const requestedSize = customOptions?.__size || {};
+                const custom = {
+                    ...customOptions,
+                    __size: Number(requestedSize.min) > 0 && Number(requestedSize.max) > Number(requestedSize.min)
+                        ? { min: Number(requestedSize.min), max: Number(requestedSize.max) }
+                        : { min: 7, max: 100 }
+                };
 
                 const useLight = theme === 'light';
 
                 const backdrop = document.createElement('div');
                 backdrop.id = id__;
                 backdrop.className = `block-ui-backdrop block-ui-backdrop-${useLight ? 'light' : 'dark'}`;
+                let destroyed = false;
+                let animationFrameId = null;
+                let autoDestroyTimer = null;
+                const eventCleanups = [];
 
                 const destroy = () => {
                     this.destroy(backdrop.id)
                 }
+                this.__registerCleanup(id__, () => {
+                    destroyed = true;
+                    if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+                    if (autoDestroyTimer !== null) window.clearTimeout(autoDestroyTimer);
+                    eventCleanups.forEach((cleanup) => cleanup());
+                });
 
                 backdrop.addEventListener('click', () => {
                     if(events.screen_click && events.screen_click.destroy)
@@ -303,7 +358,7 @@ export default class Render
 
                 if(events.auto__ && events.auto__.destroy)
                 {
-                    setTimeout(() => destroy(), events.auto__.timer || 3000)
+                    autoDestroyTimer = window.setTimeout(() => destroy(), events.auto__.timer || 3000)
                 }
 
                 const overlay = document.createElement('div');
@@ -340,10 +395,12 @@ export default class Render
                 const repelRadius = 150;
 
                 // Atualiza posição do cursor ao mover mouse
-                window.addEventListener('mousemove', (e) => {
+                const cursorMove = (e) => {
                     cursor.x = e.clientX;
                     cursor.y = e.clientY;
-                });
+                };
+                window.addEventListener('mousemove', cursorMove);
+                eventCleanups.push(() => window.removeEventListener('mousemove', cursorMove));
 
                 // Função lerp para suavização
                 function lerp(start, end, t) {
@@ -468,10 +525,13 @@ export default class Render
                         el.style.willChange = 'transform';
                     }
                     // Armazena posição do cursor
-                    window.addEventListener('mousemove', e => {
-                    state[0].targetX = e.clientX;
-                    state[0].targetY = e.clientY;
-                    });
+                    const orbMove = (e) => {
+                        if (!state[0]) return;
+                        state[0].targetX = e.clientX;
+                        state[0].targetY = e.clientY;
+                    };
+                    window.addEventListener('mousemove', orbMove);
+                    eventCleanups.push(() => window.removeEventListener('mousemove', orbMove));
                 }
 
                 // Função de repelência suave
@@ -490,6 +550,7 @@ export default class Render
 
                 // Loop de animação
                 function animate() {
+                    if (destroyed || !backdrop.isConnected) return;
                     if(animation === 'particles') {
                         state.forEach((obj, i) => {
                             applyRepel(obj);
@@ -567,9 +628,9 @@ export default class Render
                         }
                     }
 
-                    requestAnimationFrame(animate);
+                    animationFrameId = requestAnimationFrame(animate);
                 }
-                requestAnimationFrame(animate);
+                animationFrameId = requestAnimationFrame(animate);
 
                 return {
                     __id: backdrop.id,
@@ -594,9 +655,39 @@ export default class Render
         return this.build({ type: 'alert', props: prms })
     }
 
-    spinner(prms = {variant: 'custom', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { url: 'https://www.svgrepo.com/show/54385/target.svg', animation: 'pulse', color: 'skyblue' }})
+    spinner(prms = {variant: 'simple', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { animation: 'spin', color: 'skyblue' }})
     {
         return this.build({ type: 'spinner', props: prms })
+    }
+
+    toast(options = {})
+    {
+        return createToast(this, options)
+    }
+
+    tooltip(target, options = {})
+    {
+        return createTooltip(this, target, options)
+    }
+
+    accordion(options = {})
+    {
+        return createAccordion(this, options)
+    }
+
+    tabs(options = {})
+    {
+        return createTabs(this, options)
+    }
+
+    progress(options = {})
+    {
+        return createProgress(this, options)
+    }
+
+    skeleton(options = {})
+    {
+        return createSkeleton(this, options)
     }
 
     async page(url, host = document.body, util = () => {})
@@ -622,8 +713,22 @@ export default class Render
         return id;
     }
 
+    __registerCleanup(id, callback)
+    {
+        if (!this.cleanups.has(id)) this.cleanups.set(id, new Set())
+        this.cleanups.get(id).add(callback)
+    }
+
     destroy(id)
     {
+        const callbacks = this.cleanups.get(id)
+        if (callbacks) {
+            this.cleanups.delete(id)
+            callbacks.forEach((callback) => {
+                try { callback() }
+                catch (error) { console.error('tzrender: component cleanup failed.', error) }
+            })
+        }
         const el = document.getElementById(id)
         if (el) el.remove()
     }

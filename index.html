@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="https://lh3.googleusercontent.com/a/ACg8ocLWUmqhoTGJ2NKtu_omBv1kj6MpmZZ9ySKn1WkAtkpfgWRt8tY=s288-c-no" type="image/x-icon">
-    <title>tzrender Documentation</title>
+    <title>tzrender — Front-end UI Components</title>
     <link rel="stylesheet" href="./utils/app.css">
     <script defer src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
     <script defer src="./utils/main.js" type="module"></script>
@@ -18,7 +18,6 @@
                     <option value="en">🇺🇸 English</option>
                     <option value="pt">🇧🇷 Português</option>
                     <option value="es">🇪🇸 Español</option>
-                    <option value="fr">🇫🇷 Français</option>
                 </select>
                 <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
                     <svg id="iconToggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
@@ -30,9 +29,14 @@
 
         <section class="intro">
            <div class="intro-content">
+              <p class="eyebrow" data-tool-copy="eyebrow">UM ESPAÇO AMIGÁVEL PARA SUA PRÓXIMA IDEIA</p>
+              <h2 class="hero-title" data-tool-copy="heroTitle">Crie para a web, uma pequena vitória por vez.</h2>
+              <p class="hero-description" data-tool-copy="heroDescription">Geradores úteis, prévias instantâneas e código pronto para copiar — aprenda fazendo.</p>
               <pre class="import-code"><code>import Render from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest'</code></pre>
 
               <div class="intro-links">
+                 <a href="#toolbox" class="link" data-tool-copy="jumpTools">Explorar ferramentas ↓</a>
+                 <a href="#components" class="link" data-tool-copy="jumpComponents">Ver componentes ↓</a>
                  <a data-i18n="intro_npm" href="https://www.npmjs.com/package/@zyther/tzrender" target="_blank" rel="noopener" class="link">📦 View on NPM</a>
                  <a data-i18n="intro_github" href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener" class="link">⭐ GitHub Repo</a>
               </div>
@@ -43,7 +47,9 @@
           </div>
        </section>
         
-        <div class="component-section">
+        <div id="libraryDemosMount"></div>
+        <div id="toolboxMount"></div>
+        <div class="component-section" id="components">
             <h2 data-i18n="msgbox_title">Message Box</h2>
             <p data-i18n="msgbox_desc">Create modal dialogs with confirm/cancel actions.</p>
             

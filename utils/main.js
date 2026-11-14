@@ -1,9 +1,13 @@
-import Render from "https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest"
+import Render from "../index.js";
 import { translations } from "/utils/translations.js";
+import { mountToolbox, setToolboxLanguage } from "./toolbox.js";
+import { mountLibraryDemos } from "./library-demos.js";
+await mountToolbox().catch((error) => console.error("Could not load Dev Toolbox:", error));
         
 const render = new Render();
+await mountLibraryDemos(render).catch((error) => console.error("Could not load tzrender component demos:", error));
 
-// temas
+// Theme controls
 const themeToggleBtn = document.getElementById('themeToggle');
 const iconToggle = document.getElementById('iconToggle');
 
@@ -14,15 +18,17 @@ const newTheme = current === 'dark' ? 'light' : 'dark';
     iconToggle.innerHTML = newTheme === 'dark'
         ? '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>'
         : '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    window.dispatchEvent(new CustomEvent('tzrender:theme-change'));
 });
 
-// supporte multi-idiomas
+// Language support
 i18next.init({
-    lng: localStorage.getItem("lang") || "pt",
+    lng: localStorage.getItem("lang") || "en",
     debug: false,
     resources: translations
 }, function(err, t) {
     updateTexts();
+    setToolboxLanguage(i18next.language);
 });
 
 function updateTexts() {
@@ -36,6 +42,7 @@ function updateTexts() {
 document.getElementById("langSelect").addEventListener("change", (e) => {
     const lang = e.target.value
     i18next.changeLanguage(lang, updateTexts)
+    setToolboxLanguage(lang)
     localStorage.setItem("lang", lang)
     document.documentElement.setAttribute("lang", lang)
 });

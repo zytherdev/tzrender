@@ -169,6 +169,7 @@
 }
 
 /* Visibility */
-.__hiden__ {
+.tchzr-spinner-container .__hiden__,
+.tchzr-spinner-backdrop .__hiden__ {
   display: none;
 }

@@ -1,0 +1,86 @@
+<section class="toolbox-section" id="toolbox" aria-labelledby="toolboxTitle">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow" data-tool-copy="toolboxEyebrow">START HERE · MAKE SOMETHING</p>
+      <h2 id="toolboxTitle" data-tool-copy="toolboxTitle">Your front-end toolbox</h2>
+      <p class="section-description" data-tool-copy="toolboxDescription">Tweak, preview and copy. No setup, no guesswork.</p>
+    </div>
+    <span class="tool-count" data-tool-copy="toolCount">5 free tools</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card playground-card" id="playgroundTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">⌘</span><div><p class="tool-kicker" data-tool-copy="playgroundKicker">LEARN BY DOING</p><h3 data-tool-copy="playgroundTitle">Live code playground</h3></div></div>
+      <p class="tool-description" data-tool-copy="playgroundDescription">Edit HTML, CSS and JavaScript. Your preview updates as you type.</p>
+      <div class="playground-layout">
+        <div class="editor-stack">
+          <label class="editor-label" for="playgroundHtml">HTML</label>
+          <textarea class="code-editor" id="playgroundHtml" spellcheck="false"><main class="card"><span class="badge">HELLO, WEB</span><h1>Your idea starts here.</h1><p>Change this code and watch it come alive.</p><button id="helloButton">Try me</button></main></textarea>
+          <label class="editor-label" for="playgroundCss">CSS</label>
+          <textarea class="code-editor short-editor" id="playgroundCss" spellcheck="false">body { font-family: system-ui; background: #f4f2ff; padding: 2rem; color: #211b38; }
+ .card { max-width: 420px; margin: 2rem auto; padding: 2rem; border-radius: 24px; background: white; box-shadow: 0 18px 45px #34246a22; }
+ .badge { color: #7454df; font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
+ button { padding: .8rem 1rem; border: 0; border-radius: 12px; color: white; background: #7454df; cursor: pointer; }</textarea>
+          <label class="editor-label" for="playgroundJs">JavaScript</label>
+          <textarea class="code-editor short-editor" id="playgroundJs" spellcheck="false">document.querySelector('#helloButton').addEventListener('click', () => {
+  alert('You just made your first interaction!');
+});</textarea>
+        </div>
+        <div class="preview-column">
+          <div class="preview-toolbar"><span class="preview-dot"></span><span class="preview-dot"></span><span class="preview-dot"></span><span data-tool-copy="previewLabel">LIVE PREVIEW</span></div>
+          <iframe id="playgroundPreview" title="Live website preview" sandbox="allow-scripts" loading="lazy"></iframe>
+          <p class="hint" data-tool-copy="sandboxHint">Runs in a sandboxed preview. Your code stays in this browser tab.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="tool-card" id="starterTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">&lt;/&gt;</span><div><p class="tool-kicker" data-tool-copy="starterKicker">START CLEAN</p><h3 data-tool-copy="starterTitle">HTML page starter</h3></div></div>
+      <p class="tool-description" data-tool-copy="starterDescription">Generate a ready-to-edit HTML5 file with the essentials included.</p>
+      <div class="controls compact-controls">
+        <div class="control-group"><label for="starterName" data-tool-copy="siteNameLabel">Page title</label><input id="starterName" value="My first website" maxlength="60"></div>
+        <div class="control-group"><label for="starterLang" data-tool-copy="pageLanguageLabel">Page language</label><select id="starterLang"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></div>
+      </div>
+      <div class="output-heading"><span data-tool-copy="yourCode">YOUR CODE</span><button class="copy-button" data-copy-target="starterOutput" data-tool-copy="copyButton">Copy code</button></div>
+      <pre class="code-output"><code id="starterOutput"></code></pre>
+      <p class="hint" data-tool-copy="starterHint">Save it as index.html, then open it in your browser.</p>
+    </article>
+
+    <article class="tool-card" id="gradientTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">◒</span><div><p class="tool-kicker" data-tool-copy="gradientKicker">COLOR PLAY</p><h3 data-tool-copy="gradientTitle">CSS gradient maker</h3></div></div>
+      <p class="tool-description" data-tool-copy="gradientDescription">Mix two colors, set the angle and copy the CSS.</p>
+      <div class="gradient-preview" id="gradientPreview" aria-label="Gradient preview"></div>
+      <div class="controls compact-controls two-columns">
+        <div class="control-group"><label for="gradientStart" data-tool-copy="startColor">Start color</label><input type="color" id="gradientStart" value="#7657e8"></div>
+        <div class="control-group"><label for="gradientEnd" data-tool-copy="endColor">End color</label><input type="color" id="gradientEnd" value="#28c5b7"></div>
+        <div class="control-group range-group"><label for="gradientAngle"><span data-tool-copy="angleLabel">Angle</span> <output id="gradientAngleValue">135°</output></label><input type="range" id="gradientAngle" min="0" max="360" value="135"></div>
+      </div>
+      <div class="output-heading"><span data-tool-copy="yourCode">YOUR CODE</span><button class="copy-button" data-copy-target="gradientOutput" data-tool-copy="copyButton">Copy code</button></div>
+      <pre class="code-output"><code id="gradientOutput"></code></pre>
+    </article>
+
+    <article class="tool-card" id="shadowTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">▧</span><div><p class="tool-kicker" data-tool-copy="shadowKicker">ADD SOME DEPTH</p><h3 data-tool-copy="shadowTitle">Box shadow designer</h3></div></div>
+      <p class="tool-description" data-tool-copy="shadowDescription">Use sliders to shape a shadow and see it instantly.</p>
+      <div class="shadow-stage"><div class="shadow-sample" id="shadowSample"><span data-tool-copy="sampleCard">Your card</span></div></div>
+      <div class="controls compact-controls two-columns">
+        <div class="control-group range-group"><label for="shadowX"><span data-tool-copy="horizontalOffset">Horizontal</span> <output id="shadowXValue">0px</output></label><input type="range" id="shadowX" min="-30" max="30" value="0"></div>
+        <div class="control-group range-group"><label for="shadowY"><span data-tool-copy="verticalOffset">Vertical</span> <output id="shadowYValue">16px</output></label><input type="range" id="shadowY" min="0" max="50" value="16"></div>
+        <div class="control-group range-group"><label for="shadowBlur"><span data-tool-copy="blurLabel">Blur</span> <output id="shadowBlurValue">32px</output></label><input type="range" id="shadowBlur" min="0" max="80" value="32"></div>
+        <div class="control-group range-group"><label for="shadowSpread"><span data-tool-copy="spreadLabel">Spread</span> <output id="shadowSpreadValue">0px</output></label><input type="range" id="shadowSpread" min="-10" max="20" value="0"></div>
+      </div>
+      <div class="output-heading"><span data-tool-copy="yourCode">YOUR CODE</span><button class="copy-button" data-copy-target="shadowOutput" data-tool-copy="copyButton">Copy code</button></div>
+      <pre class="code-output"><code id="shadowOutput"></code></pre>
+    </article>
+
+    <article class="tool-card" id="contrastTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">◐</span><div><p class="tool-kicker" data-tool-copy="contrastKicker">DESIGN FOR EVERYONE</p><h3 data-tool-copy="contrastTitle">Color contrast check</h3></div></div>
+      <p class="tool-description" data-tool-copy="contrastDescription">Check if your text is readable and accessible.</p>
+      <div class="contrast-preview" id="contrastPreview"><strong data-tool-copy="sampleText">Readable text matters.</strong><span data-tool-copy="sampleSubtext">A quick accessibility check.</span></div>
+      <div class="controls compact-controls two-columns">
+        <div class="control-group"><label for="contrastText" data-tool-copy="textColor">Text color</label><input type="color" id="contrastText" value="#211b38"></div>
+        <div class="control-group"><label for="contrastBg" data-tool-copy="backgroundColor">Background color</label><input type="color" id="contrastBg" value="#ffffff"></div>
+      </div>
+      <div class="contrast-result" aria-live="polite"><strong id="contrastRatio">16.42:1</strong><span id="contrastBadge" class="contrast-badge">AA + AAA</span><span class="hint" data-tool-copy="contrastHint">WCAG AA requires 4.5:1 for normal text.</span></div>
+    </article>
+  </div>
+</section>

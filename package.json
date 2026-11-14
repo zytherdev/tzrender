@@ -1,7 +1,7 @@
 {
   "name": "@zyther/tzrender",
   "version": "0.1.4",
-  "description": "Modern, theme-aware, animation-powered JavaScript utility that injects UI components directly into the DOM. No need for pre-existing HTML — everything is created dynamically.",
+  "description": "Lightweight vanilla JavaScript UI components: accessible notifications, dialogs, tooltips, tabs, accordions, progress indicators and skeleton loaders.",
   "main": "index.js",
   "type": "module",
   "module": "index.js",
@@ -10,7 +10,7 @@
     "index.js",
     "README.md"
   ],
-  "keywords": ["render", "ui", "ui-design", "component", "utility", "module", "tzrender", "dom", "esm", "html", "javascript"],
+  "keywords": ["render", "ui", "ui-design", "component", "components", "toast", "tooltip", "accordion", "tabs", "dialog", "progress", "skeleton", "loading", "accessibility", "vanilla-javascript", "utility", "module", "tzrender", "dom", "esm", "html", "javascript"],
   "author": "zytherdev <zyther.dev@outlook.com>",
   "homepage": "https://github.com/zytherdev/tzrender#readme",
   "bugs": {

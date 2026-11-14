@@ -1,0 +1,43 @@
+<section class="component-section library-components" id="libraryComponents" aria-labelledby="libraryComponentsTitle">
+  <p class="tool-kicker" data-tool-copy="libraryKicker">REUSABLE UI COMPONENTS</p>
+  <h2 id="libraryComponentsTitle" data-tool-copy="libraryTitle">Ready to use in your project</h2>
+  <p class="tool-description" data-tool-copy="libraryDescription">These examples call the public tzrender API—not page-only effects.</p>
+  <div class="library-demo-grid">
+    <article class="library-demo-card">
+      <h3 data-tool-copy="toastDemoTitle">Toast notifications</h3>
+      <p data-tool-copy="toastDemoDescription">Show quick, accessible feedback.</p>
+      <button class="button" id="demoToast" type="button" data-tool-copy="toastDemoButton">Show toast</button>
+      <pre class="code-block"><code>render.toast({ variant: 'success', title: 'Saved!', message: 'Your changes are ready.' });</code></pre>
+    </article>
+    <article class="library-demo-card">
+      <h3 data-tool-copy="tooltipDemoTitle">Accessible tooltips</h3>
+      <p data-tool-copy="tooltipDemoDescription">Hover over or focus this button.</p>
+      <button class="button" id="demoTooltip" type="button" data-tool-copy="tooltipDemoButton">Hover or focus me</button>
+      <pre class="code-block"><code>render.tooltip('#saveButton', { content: 'Saves your work', placement: 'top' });</code></pre>
+    </article>
+    <article class="library-demo-card">
+      <h3 data-tool-copy="accordionDemoTitle">Accordion</h3>
+      <div id="demoAccordion"></div>
+      <pre class="code-block"><code>render.accordion({ items: [{ title: 'Question', content: 'Answer' }] });</code></pre>
+    </article>
+    <article class="library-demo-card">
+      <h3 data-tool-copy="tabsDemoTitle">Keyboard-accessible tabs</h3>
+      <div id="demoTabs"></div>
+      <pre class="code-block"><code>render.tabs({ items: [{ label: 'HTML', content: 'Structure' }] });</code></pre>
+    </article>
+    <article class="library-demo-card">
+      <h3 data-tool-copy="progressDemoTitle">Progress indicators</h3>
+      <p data-tool-copy="progressDemoDescription">Update a bar or ring as work completes.</p>
+      <div id="demoProgress"></div>
+      <button class="button" id="demoProgressUpdate" type="button" data-tool-copy="progressDemoButton">Advance progress</button>
+      <pre class="code-block"><code>const progress = render.progress({ label: 'Uploading', value: 0, showValue: true });
+progress.set(65);</code></pre>
+    </article>
+    <article class="library-demo-card">
+      <h3 data-tool-copy="skeletonDemoTitle">Skeleton placeholders</h3>
+      <p id="demoSkeletonStatus" role="status" data-tool-copy="skeletonStatus">Loading preview content…</p>
+      <div id="demoSkeletons" class="demo-skeletons"></div>
+      <pre class="code-block"><code>const placeholder = render.skeleton({ variant: 'card', container: '#profile' });</code></pre>
+    </article>
+  </div>
+</section>

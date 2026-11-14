@@ -1,26 +1,35 @@
+/* tzrender reset: scoped to library-owned UI only */
+.tchzr-backdrop *,
+.tchzr-backdrop-light *,
+.tchzr-_-alert *,
+.tchzr-spinner-container *,
+.tchzr-spinner-backdrop *,
+.block-ui-backdrop *,
+.tzr-toast *,
+.tzr-accordion *,
+.tzr-tabs * {
+  box-sizing: border-box;
+}
 
-
-/* ===== tzrender css reset ===== */
-
-button {
-  background: none;
-  border: none;
+.tchzr-backdrop button,
+.tchzr-backdrop-light button,
+.tchzr-_-alert button,
+.tchzr-spinner-container button,
+.tchzr-spinner-backdrop button,
+.block-ui-backdrop button,
+.tzr-toast button,
+.tzr-accordion button,
+.tzr-tabs button {
   font: inherit;
-  color: inherit;
-  outline: none;
-  box-shadow: none;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-button{
   -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
 }
 
-img, picture, video, canvas, svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
+.tchzr-backdrop button:focus-visible,
+.tchzr-backdrop-light button:focus-visible,
+.tchzr-_-alert button:focus-visible,
+.tzr-toast button:focus-visible,
+.tzr-accordion button:focus-visible,
+.tzr-tabs button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
