@@ -1,6 +1,6 @@
 {
   "name": "@zyther/tzrender",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "description": "Lightweight vanilla JavaScript UI components: accessible notifications, dialogs, tooltips, tabs, accordions, progress indicators and skeleton loaders.",
   "main": "index.js",
   "type": "module",
