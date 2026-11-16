@@ -191,3 +191,56 @@ describe('lifecycle management', () => {
     expect(document.getElementById(secondAlert)).toBeNull();
   });
 });
+
+
+describe('expanded component library', () => {
+  it('exposes all twelve new components with usable handles, safe defaults and cleanup', async () => {
+    const ui = new Render();
+    await ui.ready;
+    const changed = vi.fn();
+    const toggle = ui.switch({ container: '#host', label: 'Email updates', onChange: changed });
+    const checks = ui.checkboxGroup({ container: '#host', label: 'Topics', items: [{ value: 'html', label: 'HTML' }, { value: 'css', label: 'CSS' }] });
+    const radios = ui.radioGroup({ container: '#host', label: 'Layout', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }] });
+    const segments = ui.segmentedControl({ container: '#host', label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'mobile', label: 'Mobile' }] });
+    const combo = ui.combobox({ container: '#host', label: 'Color', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }] });
+    const popover = ui.popover('#menuTrigger', { title: 'Details', content: '<img src=x onerror=alert(1)>' });
+    const pages = ui.pagination({ container: '#host', totalPages: 5, currentPage: 2 });
+    const crumbs = ui.breadcrumb({ container: '#host', items: [{ label: 'Home', href: '/' }, { label: 'Current', current: true }] });
+    const rating = ui.rating({ container: '#host', label: 'Rate this', value: 2, allowClear: true });
+    const copy = ui.copyButton({ container: '#host', text: 'safe text' });
+    const avatar = ui.avatar({ container: '#host', name: 'Taylor Zane', src: 'javascript:alert(1)' });
+    const badge = ui.badge({ container: '#host', text: 'Ready', variant: 'success' });
+    const handles = [toggle, checks, radios, segments, combo, popover, pages, crumbs, rating, copy, avatar, badge];
+
+    expect(handles).toHaveLength(12);
+    expect(handles.every((handle) => handle.element instanceof HTMLElement && typeof handle.destroy === 'function')).toBe(true);
+    expect(toggle.element.querySelector('[role="switch"]')?.getAttribute('aria-checked')).toBe('false');
+    toggle.element.querySelector('button').click();
+    expect(toggle.value).toBe(true);
+    expect(changed.mock.calls[0][0]).toBe(true);
+    expect(changed.mock.calls[0][1].__id).toBe(toggle.__id);
+    expect(changed.mock.calls[0][1].destroy).toBeTypeOf('function');
+    expect(checks.element.querySelector('legend')?.textContent).toBe('Topics');
+    expect(radios.value).toBe('wide');
+    expect(segments.element.getAttribute('role')).toBe('radiogroup');
+    expect(combo.element.querySelector('[role="combobox"]')?.getAttribute('aria-expanded')).toBe('false');
+    expect(popover.element.textContent).toContain('<img src=x onerror=alert(1)>');
+    expect(popover.element.querySelector('img')).toBeNull();
+    expect(pages.setPage(3)).toBe(true);
+    expect(pages.page).toBe(3);
+    expect(crumbs.element.querySelector('[aria-current="page"]')?.textContent).toBe('Current');
+    expect(rating.setValue(4)).toBe(true);
+    expect(rating.element.dataset.value).toBe('4');
+    expect(copy.text).toBe('safe text');
+    expect(avatar.src).toBeNull();
+    expect(avatar.element.getAttribute('aria-label')).toBe('Taylor Zane');
+    expect(badge.setVariant('warning')).toBe('warning');
+
+    popover.open();
+    expect(popover.isOpen).toBe(true);
+    popover.close();
+    for (const handle of handles) handle.destroy();
+    expect(handles.every((handle) => !handle.element.isConnected)).toBe(true);
+    ui.destroyAll();
+  });
+});

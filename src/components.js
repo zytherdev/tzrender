@@ -6,7 +6,7 @@ function themeClass(theme) {
   return VALID_THEMES.has(theme) ? theme : 'dark';
 }
 
-function resolveMount(target) {
+export function resolveMount(target) {
   if (!target) return document.body;
   if (typeof target === 'string') {
     const element = document.querySelector(target);

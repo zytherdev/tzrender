@@ -1,4 +1,4 @@
-export const PREVIEW_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob: https:; font-src data: https:; media-src data: blob: https:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
+export const PREVIEW_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
 
 export function buildPreviewDocument({ html = '', css = '', javascript = '', maxLength = 100_000 } = {}) {
   const limit = Number.isFinite(Number(maxLength)) ? Math.max(0, Number(maxLength)) : 100_000;
@@ -6,7 +6,7 @@ export function buildPreviewDocument({ html = '', css = '', javascript = '', max
   const stylesheet = String(css).slice(0, limit);
   const scriptText = String(javascript).slice(0, limit);
   const parsed = new DOMParser().parseFromString(markup, 'text/html');
-  parsed.querySelectorAll('base, meta[http-equiv="Content-Security-Policy" i], meta[http-equiv="refresh" i]').forEach((node) => node.remove());
+  parsed.querySelectorAll('base, script[src], link[rel~="stylesheet" i], meta[http-equiv="Content-Security-Policy" i], meta[http-equiv="refresh" i]').forEach((node) => node.remove());
 
   const policy = document.createElement('meta');
   policy.httpEquiv = 'Content-Security-Policy';
@@ -17,7 +17,7 @@ export function buildPreviewDocument({ html = '', css = '', javascript = '', max
   style.textContent = stylesheet.replace(/<\/style/gi, '<\\/style');
   parsed.head.append(style);
 
-  const bridge = `\n(() => {\n  const send = (data) => { try { parent.postMessage({ channel: 'tzrender-preview', ...data }, '*'); } catch {} };\n  const printable = (value) => { if (typeof value === 'string') return value; if (value instanceof Error) return value.stack || value.message; try { const result = JSON.stringify(value); return result === undefined ? String(value) : result; } catch { return String(value); } };\n  for (const level of ['log', 'info', 'warn', 'error']) {\n    const original = console[level].bind(console);\n    console[level] = (...args) => { original(...args); send({ type: 'console', level, message: args.map(printable).join(' ') }); };\n  }\n  addEventListener('error', (event) => send({ type: 'error', message: event.message || 'Script error', line: event.lineno || 0 }));\n  addEventListener('unhandledrejection', (event) => send({ type: 'error', message: printable(event.reason) }));\n  addEventListener('load', () => send({ type: 'ready' }), { once: true });\n})();\n`;
+  const bridge = `\n(() => {\n  const send = (data) => { try { parent.postMessage({ channel: 'tzrender-preview', ...data }, '*'); } catch {} };\n  const printable = (value) => { if (typeof value === 'string') return value; if (value instanceof Error) return value.stack || value.message; try { const result = JSON.stringify(value); return result === undefined ? String(value) : result; } catch { return String(value); } };\n  for (const level of ['log', 'info', 'warn', 'error']) {\n    const original = console[level].bind(console);\n    console[level] = (...args) => { original(...args); send({ type: 'console', level, message: args.map(printable).join(' ') }); };\n  }\n  addEventListener('error', (event) => send({ type: 'error', message: event.message || 'Script error', line: event.lineno || 0 }));\n  addEventListener('unhandledrejection', (event) => send({ type: 'error', message: printable(event.reason) }));\n  addEventListener('securitypolicyviolation', (event) => send({ type: 'console', level: 'warn', message: 'Preview blocked external resource: ' + (event.violatedDirective || 'network policy') }));\n  addEventListener('load', () => send({ type: 'ready' }), { once: true });\n})();\n`;
   const script = document.createElement('script');
   script.textContent = `${bridge}\n${scriptText.replace(/<\/script/gi, '<\\/script')}`;
   parsed.body.append(script);

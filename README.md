@@ -1,6 +1,6 @@
 # tzrender
 
-`@zyther/tzrender` is a small vanilla JavaScript UI library for everyday interface patterns: alerts, dialogs, loading states, notifications, tooltips, accordions, tabs, drawers and menus. It is designed for projects built with ordinary HTML, CSS and JavaScript. It does not require a framework or CSS library.
+`@zyther/tzrender` is a small vanilla JavaScript UI library for everyday interface patterns: alerts, dialogs, loading states, notifications, tooltips, accordions, tabs, form controls, navigation, avatars and status badges. It is designed for projects built with ordinary HTML, CSS and JavaScript. It does not require a framework or CSS library.
 
 > **Package vs. website:** The package is the reusable UI library described below. This repository also contains a separate learning website with a [browser code editor](editor.html) and [front-end tools](tools.html). Those website features are not imported from the npm package.
 
@@ -381,6 +381,188 @@ const actionsMenu = ui.menu('#moreButton', {
 });
 ```
 
+### Form controls
+
+#### `ui.switch(options)`
+
+Creates a labeled switch button with `role="switch"` and an `aria-checked` state. Returns `{ __id, element, set(value), toggle(), value, disabled, destroy() }`.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `container` | `document.body` | CSS selector or `Element` mount point. |
+| `label` | `'Enable option'` | Visible, accessible label. |
+| `description` | — | Optional supporting text associated with the switch. |
+| `checked` / `value` | `false` | Initial on/off value; `checked` takes precedence. |
+| `disabled` | `false` | Disable user interaction. |
+| `theme` | `'dark'` | `'dark'` or `'light'`. |
+| `onChange(value, handle)` | — | Called when a user toggles the switch. |
+
+```js
+const emailUpdates = ui.switch({
+  container: '#settings',
+  label: 'Email updates',
+  description: 'Get occasional project tips.',
+  checked: true,
+  onChange: (enabled) => console.log({ enabled })
+});
+```
+
+#### `ui.checkboxGroup(options)` and `ui.radioGroup(options)`
+
+Both methods render native labeled inputs inside a `fieldset` with a visible `legend`. Options are `{ value, label, description, disabled }`; values must be unique non-empty strings. Both return `{ __id, element, setValue(value), clear(), value, disabled, destroy() }`.
+
+Common options are `container` (`document.body`), `theme` (`'dark'`), `label` (`'Choose options'` for checkboxes; `'Choose an option'` for radios), `description`, `name`, `items` (required, 1–100 options), `disabled` and `onChange(value, handle)`. Checkbox `value` is an array of selected strings and defaults to `[]`. Radio `value` defaults to the first enabled option; set `required: true` to make a choice required. The radio value is a string or `null`. Native inputs support standard keyboard and assistive-technology behavior.
+
+```js
+const topics = ui.checkboxGroup({
+  container: '#preferences',
+  label: 'Topics to explore',
+  value: ['css'],
+  items: [
+    { value: 'html', label: 'HTML', description: 'Page structure' },
+    { value: 'css', label: 'CSS', description: 'Page styles' }
+  ],
+  onChange: (selected) => console.log(selected)
+});
+topics.setValue(['html', 'css']);
+```
+
+#### `ui.segmentedControl(options)`
+
+Creates a compact single-choice radiogroup. Returns `{ __id, element, setValue(value), select(value), value, disabled, destroy() }`. Use Left/Right or Up/Down Arrow to change options, or Home/End to move to the first/last enabled option.
+
+Options: `container` (`document.body`), `theme` (`'dark'`), `label` (`'Choose a view'`), `items` (required, 1–100 unique `{ value, label, disabled }` options), `value` (defaults to the first enabled item), `disabled` (`false`) and `onChange(value, handle)`.
+
+```js
+const view = ui.segmentedControl({
+  container: '#preview-controls',
+  label: 'Preview size',
+  value: 'desktop',
+  items: [{ value: 'desktop', label: 'Desktop' }, { value: 'mobile', label: 'Mobile' }]
+});
+```
+
+#### `ui.combobox(options)`
+
+Creates an editable, filterable combobox with an associated listbox and optional hidden form value. Returns `{ __id, element, input, setValue(value), open(), close(), focus(), value, disabled, destroy() }`. Type to filter; use Arrow keys to move, Enter to select, Escape to close, and Tab to leave.
+
+Options: `container` (`document.body`), `theme` (`'dark'`), `label` (`'Search options'`), `items` (required, 1–100 unique `{ value, label, disabled }` options), `value` (optional initial enabled value), `name` (optional hidden form field), `placeholder` (`'Type to filter…'`), `emptyLabel` (`'No matching options.'`), `openOnFocus` (`false`), `disabled` (`false`) and `onChange(value, handle)`. Labels and filter results are text; options are not interpreted as HTML.
+
+```js
+const color = ui.combobox({
+  container: '#theme-form',
+  label: 'Choose a color',
+  name: 'accent',
+  items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }]
+});
+```
+
+### Navigation and display
+
+#### `ui.popover(target, options)`
+
+Attaches a toggleable, non-modal dialog panel to a CSS selector or `Element` trigger. It updates `aria-expanded`, `aria-controls`, and `aria-haspopup`, opens on trigger activation, closes on outside click or Escape, and restores focus when closed. Returns `{ __id, element, open(), close(), toggle(), isOpen, destroy() }`.
+
+Options: `container` (`document.body`), `title` (optional; otherwise `label`, default `'Popover'`), `content` (text by default, or a DOM `Node` cloned into the panel), `theme` (`'dark'`), `placement` (`'bottom'`; also `'top'`, `'left'`, `'right'`), `offset` (`8`, clamped to 0–32), `closeLabel` (`'Close popover'`) and `closeOnEscape` (`true`).
+
+```js
+const details = ui.popover('#detailsButton', {
+  title: 'A helpful note',
+  content: 'Popover strings are inserted as text.'
+});
+```
+
+#### `ui.pagination(options)`
+
+Creates labeled page-navigation buttons and returns `{ __id, element, setPage(page), setTotalPages(total), page, totalPages, pageSize, destroy() }`. Buttons support standard Tab/Enter/Space interaction and identify the current page with `aria-current="page"`.
+
+Options: `container` (`document.body`), `theme` (`'light'`), `label` (`'Pagination'`), `totalPages` (or `totalItems` with `pageSize`; minimum one page), `pageSize` (`10`), `currentPage` (or `page`, defaults to 1), `boundaryCount` (`1`, up to 3), `siblingCount` (`1`, up to 3), `showFirstLast` (`false`), optional `firstLabel`, `previousLabel`, `nextLabel`, `lastLabel`, and `onChange(page, handle)`.
+
+```js
+const pages = ui.pagination({
+  container: '#results-navigation',
+  totalItems: 96,
+  pageSize: 12,
+  currentPage: 3,
+  onChange: (page) => showResults(page)
+});
+```
+
+#### `ui.breadcrumb(options)`
+
+Renders an ordered breadcrumb trail and marks the current location with `aria-current="page"`. Returns `{ __id, element, setItems(items), items, destroy() }`. Provide 1–20 items with `{ label, href, current }`. If none is marked current, the last item is current. Labels are always text; unsafe URL protocols and protocol-relative URLs are omitted.
+
+Options: `container` (`document.body`), `theme` (`'light'`), `label` (`'Breadcrumb'`) and `separator` (`'/'`). Relative and HTTP(S) links are supported.
+
+```js
+const trail = ui.breadcrumb({
+  container: '#breadcrumbs',
+  items: [
+    { label: 'Home', href: '/' },
+    { label: 'Guides', href: '/guides' },
+    { label: 'Getting started', current: true }
+  ]
+});
+```
+
+#### `ui.rating(options)`
+
+Creates a labeled star rating using native radio inputs. Returns `{ __id, element, setValue(value), clear(), value, disabled, destroy() }`. User changes call `onChange(value, handle)`; programmatic setters update state without invoking that callback.
+
+Options: `container` (`document.body`), `theme` (`'dark'`), `label` (`'Rate this item'`), `max` (`5`, clamped to 1–10), `value` (`0`, clamped to the available range), `name` (defaults to the component ID), `disabled` (`false`), `allowClear` (`false`), `clearLabel` (`'Clear rating'`) and `onChange(value, handle)`.
+
+```js
+const guideRating = ui.rating({
+  container: '#guide-feedback',
+  label: 'Rate this guide',
+  value: 4,
+  allowClear: true
+});
+```
+
+#### `ui.copyButton(options)`
+
+Creates a button that copies text through the browser Clipboard API and announces success or failure with a polite live region. Clipboard access generally requires HTTPS or localhost and may be denied by the browser. Returns `{ __id, element, copy(), setText(text), text, copied, disabled, destroy() }`.
+
+Options: `container` (`document.body`), `theme` (`'light'`), `text` (or `value`, default `''`), `label` (`'Copy'`), `ariaLabel` (defaults to `Copy ${description || 'text'}`), `description` (`'text'`), `copiedLabel` (`'Copied'`), `errorLabel` (`'Could not copy.'`), `resetAfter` (`1800` ms; `0` keeps success state), `disabled` (`false`), `onCopy(text, handle)` and `onError(error, handle)`.
+
+```js
+const copyInstall = ui.copyButton({
+  container: '#install-command',
+  text: 'npm install @zyther/tzrender',
+  label: 'Copy install command'
+});
+```
+
+#### `ui.avatar(options)`
+
+Creates an image avatar with initials fallback and an accessible name. Returns `{ __id, element, setName(name), setSource(url), name, src, destroy() }`. An invalid or disallowed source is rejected by `setSource()` without replacing the current image. The image uses `referrerPolicy="no-referrer"`.
+
+Options: `container` (`document.body`), `name` (or `alt`, default `'Avatar'`), `src` (optional HTTP(S) URL), `size` (`48` px, clamped to 24–256), `shape` (`'circle'`; or `'square'`) and `allowCrossOrigin` (`false`; by default only same-origin images load).
+
+```js
+const profileAvatar = ui.avatar({
+  container: '#profile-header',
+  name: 'Taylor Zane',
+  size: 56
+});
+```
+
+#### `ui.badge(options)`
+
+Creates a compact text badge. Returns `{ __id, element, setText(text), setVariant(variant), setSize(size), setVisible(visible), text, variant, size, visible, destroy() }`.
+
+Options: `container` (`document.body`), `text` (or `label`, default `'Status'`), `variant` (`'neutral'`; also `'primary'`, `'success'`, `'warning'`, `'danger'`, `'info'`), `size` (`'medium'`; also `'small'`, `'large'`), `announce` (`false`; adds a polite `status` role) and `assertive` (`false`; with `announce`, uses an assertive `alert` role).
+
+```js
+const status = ui.badge({
+  container: '#publish-state',
+  text: 'Ready to publish',
+  variant: 'success',
+  announce: true
+});
+```
+
 ### Content safety and HTML loading
 
 For `accordion`, `tabs`, and `drawer`, string content is inserted as text. You may pass a DOM `Node` when your app intentionally builds markup; tzrender clones that node rather than moving it. Notification, tooltip, modal, and menu labels are also text. Do not pass a string containing HTML expecting it to render.
@@ -465,7 +647,7 @@ The original snake_case methods remain supported. These camelCase aliases call t
 
 The repository's learning website is separate from the npm API:
 
-- [Browser code editor](https://github.com/zytherdev/tzrender/blob/main/editor.html): Monaco-based HTML, CSS, and JavaScript editor with a sandboxed preview. It edits three local static files only; it does not provide a shell, Git, extensions, npm package installs, or remote project execution. Editing is designed for desktop browsers; smaller touch screens are best-effort. Drafts stay in this browser only, are not cloud-synced, and can be lost if you clear site data. Preview JavaScript still runs on your device and may use significant resources, so avoid secrets and infinite loops.
+- [Browser code editor](https://github.com/zytherdev/tzrender/blob/main/editor.html): the dedicated Monaco-based tzrender Studio workspace supports HTML, CSS, JavaScript, TypeScript compilation and Python execution in a local worker, plus Markdown, JSON and YAML views. Website previews run in a sandboxed iframe with network access blocked. Python runs through Pyodide in a separate worker with the standard library only; network access, interactive `input()`, and package installs are unavailable. The integrated terminal accepts only documented commands against the browser-local project; it is not an OS shell and does not provide Git, arbitrary commands, package installs, credentials or remote project execution. Editing is designed for desktop browsers; smaller touch screens are best-effort. Drafts stay in this browser only, are not cloud-synced, and can be lost if you clear site data. Browser-run JavaScript and Python use device resources, so avoid secrets and untrusted or non-terminating code.
 - [Front-end tools](https://github.com/zytherdev/tzrender/blob/main/tools.html): eight focused utilities for starter HTML, color and contrast, CSS layout and visual effects.
 
 ## Troubleshooting

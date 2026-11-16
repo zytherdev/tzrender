@@ -1,5 +1,8 @@
 import colors from './utils/colors.js';
 import { createAccordion, createDrawer, createMenu, createProgress, createSkeleton, createTabs, createToast, createTooltip } from './components.js';
+import { createCheckboxGroup, createCombobox, createRadioGroup, createRating, createSegmentedControl, createSwitch } from './components/forms.js';
+import { createAvatar, createBadge, createCopyButton } from './components/display.js';
+import { createBreadcrumb, createPagination, createPopover } from './components/navigation.js';
 
 const SAFE_PAGE_ELEMENTS = new Set(['a','abbr','article','aside','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h1','h2','h3','h4','h5','h6','hr','i','img','kbd','li','main','mark','ol','p','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul']);
 const SAFE_PAGE_ATTRIBUTES = new Set(['alt','aria-label','aria-hidden','class','colspan','dir','height','href','id','lang','role','rowspan','src','target','title','width']);
@@ -66,7 +69,8 @@ export default class Render
             ['alert.css', new URL('./styles/alert.css', import.meta.url)],
             ['spinner.css', new URL('./styles/spinner.css', import.meta.url)],
             ['block-ui.css', new URL('./styles/block-ui.css', import.meta.url)],
-            ['components.css', new URL('./styles/components.css', import.meta.url)]
+            ['components.css', new URL('./styles/components.css', import.meta.url)],
+            ['new-components.css', new URL('./styles/new-components.css', import.meta.url)]
         ]
         const css = await Promise.all(styleFiles.map(async ([file, url]) => {
             const response = await fetch(url)
@@ -775,6 +779,66 @@ export default class Render
     menu(target, options = {})
     {
         return createMenu(this, target, options)
+    }
+
+    switch(options = {})
+    {
+        return createSwitch(this, options)
+    }
+
+    checkboxGroup(options = {})
+    {
+        return createCheckboxGroup(this, options)
+    }
+
+    radioGroup(options = {})
+    {
+        return createRadioGroup(this, options)
+    }
+
+    segmentedControl(options = {})
+    {
+        return createSegmentedControl(this, options)
+    }
+
+    combobox(options = {})
+    {
+        return createCombobox(this, options)
+    }
+
+    popover(target, options = {})
+    {
+        return createPopover(this, target, options)
+    }
+
+    pagination(options = {})
+    {
+        return createPagination(this, options)
+    }
+
+    breadcrumb(options = {})
+    {
+        return createBreadcrumb(this, options)
+    }
+
+    rating(options = {})
+    {
+        return createRating(this, options)
+    }
+
+    copyButton(options = {})
+    {
+        return createCopyButton(this, options)
+    }
+
+    avatar(options = {})
+    {
+        return createAvatar(this, options)
+    }
+
+    badge(options = {})
+    {
+        return createBadge(this, options)
     }
 
     messageBox(options = {})

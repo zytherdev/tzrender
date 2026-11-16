@@ -1,7 +1,7 @@
 {
   "name": "@zyther/tzrender",
   "version": "0.1.7",
-  "description": "Lightweight vanilla JavaScript UI components: accessible dialogs, notifications, navigation, menus, drawers, progress indicators and skeleton loaders.",
+  "description": "Dependency-free vanilla JavaScript UI components for accessible feedback, navigation, display and form controls.",
   "main": "index.js",
   "type": "module",
   "module": "index.js",
@@ -23,6 +23,18 @@
     "ui-design",
     "component",
     "components",
+    "switch",
+    "checkbox-group",
+    "radio-group",
+    "segmented-control",
+    "combobox",
+    "popover",
+    "pagination",
+    "breadcrumb",
+    "rating",
+    "copy-button",
+    "avatar",
+    "badge",
     "toast",
     "tooltip",
     "accordion",
@@ -56,9 +68,13 @@
   "devDependencies": {
     "dompurify": "3.4.18",
     "jsdom": "31.0.1",
+    "marked": "18.2.0",
     "monaco-editor": "0.57.0",
+    "pyodide": "314.0.8",
+    "typescript": "5.9.3",
     "vite": "8.3.8",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "yaml": "2.9.1"
   },
   "overrides": {
     "monaco-editor": {

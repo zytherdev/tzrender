@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Write HTML, CSS and JavaScript in a browser editor and run your work in an isolated live preview.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="description" content="A browser IDE for HTML, CSS, JavaScript, TypeScript and Python, with local drafts and safe live previews.">
   <title>Editor — tzrender</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/site/site.css">
@@ -13,54 +14,124 @@
 </head>
 <body class="editor-shell">
   <header class="editor-topbar">
-    <a class="brand editor-brand" href="/" aria-label="Back to tzrender home"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span><span class="brand-divider"></span><span class="product-label">Editor</span></a>
+    <a class="brand editor-brand" href="/" aria-label="Back to tzrender home"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span><span class="brand-divider"></span><span class="product-label">Studio</span></a>
     <div class="project-controls">
-      <label class="visually-hidden" for="projectName">Project name</label><input id="projectName" class="project-name" value="My first website" maxlength="48" aria-label="Project name">
-      <label class="visually-hidden" for="starterSelect">Choose a starter</label><select id="starterSelect" class="toolbar-select" aria-label="Choose a starter"><option value="landing">Landing page starter</option><option value="profile">Profile card starter</option><option value="blank">Blank project</option></select>
+      <label class="visually-hidden" for="projectName">Project name</label>
+      <input id="projectName" class="project-name" value="My first website" maxlength="48" autocomplete="off">
+      <label class="visually-hidden" for="starterSelect">Choose a starter</label>
+      <select id="starterSelect" class="toolbar-select" aria-label="Load a starter project">
+        <option value="landing">Landing page</option>
+        <option value="profile">Profile card</option>
+        <option value="typescript">TypeScript</option>
+        <option value="python">Python</option>
+        <option value="blank">Blank project</option>
+      </select>
     </div>
     <div class="editor-actions">
       <span class="save-state" id="saveState" role="status" aria-live="polite"><i></i> Ready</span>
-      <label class="auto-run"><input type="checkbox" id="autoRun" checked><span>Auto-run</span></label>
-      <button class="toolbar-button" id="downloadFile" type="button" title="Download the active file">Download file</button>
-      <button class="toolbar-button toolbar-export" id="exportProject" type="button" title="Export your browser-local project">Export project</button>
-      <button class="toolbar-button toolbar-run" id="runProject" type="button"><span aria-hidden="true">▶</span> Run</button>
+      <label class="auto-run" title="Python runs only when you start it; web previews update automatically"><input type="checkbox" id="autoRun" checked><span>Auto-run</span></label>
+      <button class="toolbar-button" id="downloadFile" type="button" title="Download the active file">Download</button>
+      <button class="toolbar-button toolbar-export" id="importProject" type="button" title="Import a .tzrender.json project">Import</button>
+      <button class="toolbar-button toolbar-export" id="exportProject" type="button" title="Export all project files as JSON">Export</button>
+      <button class="toolbar-button toolbar-run" id="runProject" type="button"><span aria-hidden="true">▶</span> <span id="runLabel">Run</span></button>
     </div>
   </header>
 
-  <main class="editor-workspace" id="editorWorkspace" data-panel="editor">
+  <div class="toolstrip" role="toolbar" aria-label="Editor tools">
+    <div class="tool-group">
+      <label for="editorTheme">Theme</label>
+      <select id="editorTheme" class="toolbar-select" aria-label="Editor color theme"><option value="tzrender-night">Night</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select>
+      <label for="fontSize">Size</label>
+      <select id="fontSize" class="toolbar-select" aria-label="Editor font size"><option>12</option><option selected>14</option><option>16</option><option>18</option><option>20</option></select>
+      <label for="tabSize">Indent</label>
+      <select id="tabSize" class="toolbar-select" aria-label="Indent size"><option value="2" selected>2 spaces</option><option value="4">4 spaces</option><option value="8">8 spaces</option></select>
+    </div>
+    <div class="tool-group tool-toggles">
+      <label class="tool-check"><input id="minimapToggle" type="checkbox"><span>Minimap</span></label>
+      <label class="tool-check"><input id="wordWrapToggle" type="checkbox" checked><span>Wrap</span></label>
+      <button class="tool-button" id="findCode" type="button" title="Find or replace (Ctrl/Cmd+F)">Find</button>
+      <button class="tool-button" id="goToLine" type="button" title="Go to line (Ctrl/Cmd+G)">Go to line</button>
+      <button class="tool-button" id="commandPalette" type="button" title="Command palette (Ctrl/Cmd+Shift+P)">Commands</button>
+      <button class="tool-button" id="formatCode" type="button" title="Format the active file">Format</button>
+      <button class="tool-button" id="insertColor" type="button" title="Insert a color at the cursor">Color</button>
+      <input class="visually-hidden" id="colorPicker" type="color" value="#8067f7" aria-label="Choose an editor color">
+    </div>
+    <div class="tool-group tool-view-actions">
+      <button class="tool-button" id="focusCode" type="button" title="Focus the code editor">Focus code</button>
+      <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Full-screen</button>
+    </div>
+  </div>
+
+  <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
     <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
-      <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button><button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-panel-tab="console">Console <span class="console-count" id="consoleCount">0</span></button>
+      <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
+      <button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button>
+      <button type="button" role="tab" aria-selected="false" data-panel-tab="output">Output <span class="console-count" id="problemCount">0</span></button>
     </nav>
-    <aside class="file-sidebar" aria-label="Project files">
-      <div class="sidebar-heading"><span>EXPLORER</span><button id="resetProject" class="subtle-icon-button" type="button" title="Reset this project to the selected starter">↺</button></div>
-      <div class="project-tree-label"><span class="tree-chevron">⌄</span> <span id="treeProjectName">MY FIRST WEBSITE</span></div>
-      <div class="file-list" role="tablist" aria-label="Project files">
-        <button class="file-tab active" type="button" role="tab" aria-selected="true" data-file="html"><span class="file-symbol file-html">5</span><span>index.html</span></button>
-        <button class="file-tab" type="button" role="tab" aria-selected="false" data-file="css"><span class="file-symbol file-css">#</span><span>styles.css</span></button>
-        <button class="file-tab" type="button" role="tab" aria-selected="false" data-file="js"><span class="file-symbol file-js">JS</span><span>script.js</span></button>
+
+    <aside class="file-sidebar" aria-label="Project explorer">
+      <div class="sidebar-heading"><span>EXPLORER</span><button id="resetProject" class="subtle-icon-button" type="button" title="Restore the selected starter; unsaved files will be replaced">↺</button></div>
+      <div class="project-tree-label"><span class="tree-chevron" aria-hidden="true">⌄</span><span id="treeProjectName">MY FIRST WEBSITE</span></div>
+      <div class="file-actions">
+        <label class="visually-hidden" for="newFileType">New file type</label>
+        <select id="newFileType" class="toolbar-select" aria-label="New file type">
+          <option value="html">HTML</option><option value="css">CSS</option><option value="js">JavaScript</option><option value="ts">TypeScript</option><option value="py">Python</option><option value="md">Markdown</option><option value="json">JSON</option><option value="yaml">YAML</option>
+        </select>
+        <button id="addFile" class="subtle-icon-button" type="button" aria-label="Create a new file" title="Create a new file">+</button>
       </div>
-      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Static HTML, CSS, and JavaScript only. No shell, Git, extensions, npm packages, or remote execution; drafts stay on this device.</p></div>
-      <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Saved only on this device</span></div>
+      <div class="file-list" id="fileList" role="list" aria-label="Project files"></div>
+      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Syntax colors cover common web and data files. Only HTML, CSS, JavaScript, TypeScript and Python run here. No OS shell, Git, npm/pip installs or remote project execution.</p></div>
+      <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Drafts saved only in this browser</span></div>
     </aside>
 
-    <section class="code-pane editor-panel" aria-label="Code editor">
-      <div class="pane-titlebar"><div class="open-file-tab"><span class="file-symbol file-html" id="activeFileSymbol">5</span><span id="activeFileLabel">index.html</span><span class="dirty-indicator" id="dirtyIndicator" hidden>●</span></div><div class="pane-tools"><span class="editor-language-label" id="languageLabel">HTML</span><button class="subtle-icon-button" id="formatCode" type="button" title="Format this file">⇥</button></div></div>
-      <div id="codeEditor" class="monaco-mount" aria-label="Source code"></div>
-      <div class="editor-statusbar"><span id="cursorStatus">Ln 1, Col 1</span><span><span class="status-dot"></span> HTML · CSS · JavaScript</span><span>UTF-8</span></div>
+    <section class="code-pane editor-panel" id="codePane" aria-label="Code editor">
+      <div class="pane-titlebar">
+        <div class="open-file-tab"><span class="file-symbol file-html" id="activeFileSymbol" aria-hidden="true">5</span><span id="activeFileLabel">index.html</span><span class="dirty-indicator" id="dirtyIndicator" hidden aria-label="Unsaved changes">●</span></div>
+        <div class="pane-tools"><span class="editor-language-label" id="languageLabel">HTML</span><button class="subtle-icon-button" id="renameFile" type="button" title="Rename the active file">Rename</button><button class="subtle-icon-button" id="deleteFile" type="button" title="Delete the active file">Delete</button></div>
+      </div>
+      <div id="codeEditor" class="monaco-mount" aria-label="Source code editor"></div>
+      <div class="editor-statusbar"><span id="cursorStatus">Ln 1, Col 1</span><span id="languageStatus"><span class="status-dot"></span> HTML · CSS · JavaScript</span><span id="encodingStatus">UTF-8 · LF</span></div>
     </section>
 
-    <section class="preview-pane editor-panel" aria-label="Website preview">
-      <div class="pane-titlebar preview-titlebar"><div class="pane-title"><span class="pane-icon preview-pane-icon" aria-hidden="true">◉</span><strong>Preview</strong><span class="preview-url">/index.html</span></div><div class="preview-toolbar"><label class="visually-hidden" for="viewportSize">Preview size</label><select id="viewportSize" class="viewport-select"><option value="responsive">Responsive</option><option value="desktop">Desktop · 1280px</option><option value="tablet">Tablet · 768px</option><option value="mobile">Mobile · 390px</option></select><button class="subtle-icon-button" id="reloadPreview" type="button" title="Run preview again">↻</button></div></div>
-      <div class="preview-stage" id="previewStage"><div class="preview-canvas-wrap" id="previewCanvasWrap"><iframe id="previewFrame" title="Sandboxed website preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><div class="preview-empty" id="previewEmpty" hidden><span class="empty-orbit" aria-hidden="true">&lt;/&gt;</span><p>Run your page to see it here.</p></div></div>
-      <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="Static HTML, CSS, and JavaScript only. No shell, Git, extensions, npm packages, or remote project execution. Drafts stay in this browser and are not cloud-synced. Remote scripts and API calls are blocked, but user code still runs locally in the sandbox; avoid secrets and infinite loops." title="This is a local static front-end workspace: no shell, Git, extensions, npm packages, or remote project execution. Drafts stay in this browser and are not cloud-synced. Remote scripts and API calls are blocked, but user code still runs locally in the sandbox; avoid secrets and infinite loops.">Sandboxed · static files · local drafts · no shell/Git/npm</span></div>
+    <div class="pane-divider" id="paneDivider" role="separator" aria-label="Resize code and preview panels" aria-orientation="vertical" tabindex="0"></div>
+
+    <section class="preview-pane editor-panel" id="previewPane" aria-label="Live preview">
+      <div class="pane-titlebar preview-titlebar">
+        <div class="pane-title"><span class="pane-icon preview-pane-icon" aria-hidden="true">◉</span><strong>Preview</strong><span class="preview-url" id="previewUrl">/index.html</span></div>
+        <div class="preview-toolbar">
+          <label class="visually-hidden" for="viewportSize">Preview device size</label>
+          <select id="viewportSize" class="viewport-select"><option value="responsive">Responsive</option><option value="desktop">Desktop · 1280</option><option value="tablet">Tablet · 768</option><option value="mobile">Mobile · 390</option></select>
+          <button class="subtle-icon-button" id="reloadPreview" type="button" title="Run preview again">↻</button>
+          <button class="subtle-icon-button" id="focusPreview" type="button" title="Focus the preview">Focus</button>
+          <button class="subtle-icon-button" id="fullscreenPreview" type="button" title="Make the preview full-screen">⛶</button>
+        </div>
+      </div>
+      <div class="preview-stage" id="previewStage"><div class="preview-canvas-wrap" id="previewCanvasWrap" data-size="responsive"><iframe id="previewFrame" title="Sandboxed project preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><div class="preview-empty" id="previewEmpty" hidden><span class="empty-orbit" aria-hidden="true">&lt;/&gt;</span><p>Run a file to see it here.</p></div></div>
+      <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="Only local project files run. External scripts, network requests and navigation are blocked in the website preview. Python code runs separately in a worker with network access disabled. Avoid running code you do not trust.">Sandboxed · network blocked</span></div>
     </section>
 
-    <section class="console-pane editor-panel" aria-label="Preview console">
-      <div class="console-heading"><div class="console-tabs"><button class="console-tab active" type="button" aria-pressed="true">Console</button><span class="console-tab-label">Output from your preview</span></div><div class="console-actions"><button id="clearConsole" class="subtle-icon-button" type="button" title="Clear messages">Clear</button></div></div>
-      <div class="console-output" id="consoleOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="console-placeholder">Your preview messages will appear here.</div></div>
+    <section class="output-pane editor-panel" id="outputPane" aria-label="Editor output and terminal">
+      <div class="output-heading">
+        <div class="output-tabs" role="tablist" aria-label="Output panels">
+          <button class="output-tab active" type="button" role="tab" aria-selected="true" data-output="terminal">Terminal</button>
+          <button class="output-tab" type="button" role="tab" aria-selected="false" data-output="console">Console <span id="consoleCount" class="console-count">0</span></button>
+          <button class="output-tab" type="button" role="tab" aria-selected="false" data-output="problems">Problems <span id="problemsBadge" class="console-count">0</span></button>
+          <span class="console-tab-label" id="outputDescription">Local project commands only — type help</span>
+        </div>
+        <div class="console-actions"><button id="stopPython" class="subtle-icon-button" type="button" title="Stop Python execution">Stop</button><button id="clearOutput" class="subtle-icon-button" type="button" title="Clear the active output panel">Clear</button></div>
+      </div>
+      <div class="output-body" id="terminalPanel" data-output-panel="terminal">
+        <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>
+        <form class="terminal-form" id="terminalForm" autocomplete="off"><label for="terminalInput" id="terminalPrompt">project $</label><input id="terminalInput" name="command" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Enter a local project command" placeholder="help"><button class="terminal-run" type="submit">Run</button></form>
+        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python runs in a separate worker; standard library only.</p>
+      </div>
+      <div class="output-body console-output" id="consolePanel" data-output-panel="console" role="log" aria-live="polite" aria-relevant="additions text" hidden><div class="console-placeholder">Console output from the sandboxed website preview appears here.</div></div>
+      <div class="output-body problems-output" id="problemsPanel" data-output-panel="problems" role="log" aria-live="polite" hidden><div class="console-placeholder">No editor problems to show.</div></div>
     </section>
   </main>
-  <div class="editor-mobile-notice" id="mobileEditorNotice" hidden><span><strong>Best with a keyboard.</strong> Monaco is designed for desktop browsers. On smaller touch screens, code editing may feel limited.</span><button id="closeMobileNotice" type="button" aria-label="Dismiss editor support notice">×</button></div>
+
+  <input class="visually-hidden" id="projectFileInput" type="file" accept="application/json,.tzrender.json,.json" aria-label="Import a project file">
+  <div class="editor-mobile-notice" id="mobileEditorNotice" hidden><span><strong>Best with a keyboard.</strong> Monaco is designed for desktop browsers. On smaller touch screens, editing may feel limited.</span><button id="closeMobileNotice" type="button" aria-label="Dismiss editor support notice">×</button></div>
   <div class="toast-region" id="siteToast" role="status" aria-live="polite"></div>
 </body>
 </html>

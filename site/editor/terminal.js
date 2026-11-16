@@ -1,0 +1,91 @@
+const HELP_TEXT = `tzrender project terminal — local commands only
+
+  help             Show these commands
+  pwd              Show the virtual project path
+  ls               List project files
+  cat <file>        Print a text file
+  run               Run the active file or refresh the website preview
+  python [file.py]  Run a Python file in the local worker
+  preview           Switch to the live preview
+  clear             Clear terminal output
+  stop              Stop a running Python worker
+
+This is not an operating-system shell. Git, npm/pip installs, pipes, redirection,
+network commands and arbitrary host commands are not available.`;
+
+const SHELL_OPERATORS = /[;&|<>`$\\]/;
+const SIMPLE_TOKENS = /"([^"\\]|\\.)*"|'[^']*'|[^\s]+/g;
+
+export function parseTerminalCommand(value) {
+  const source = String(value ?? '').trim();
+  if (!source) return { command: '', args: [] };
+  if (source.length > 180) return { error: 'Commands are limited to 180 characters.' };
+  if (SHELL_OPERATORS.test(source)) {
+    return { error: 'Shell operators are disabled. Run one local project command at a time.' };
+  }
+  const tokens = source.match(SIMPLE_TOKENS) || [];
+  if (tokens.join(' ') !== source && tokens.length > 1) {
+    // Whitespace is normalized below; this branch only rejects unmatched quoting.
+    const compact = source.replace(/\s+/g, ' ').trim();
+    if (tokens.join(' ') !== compact) return { error: 'Use simple command names and file names; shell quoting is not supported.' };
+  }
+  const values = tokens.map((token) => token.replace(/^(?:"(.*)"|'(.*)')$/, (_match, doubleQuoted, singleQuoted) => doubleQuoted ?? singleQuoted));
+  return { command: (values.shift() || '').toLowerCase(), args: values };
+}
+
+export function getTerminalHelp() {
+  return HELP_TEXT;
+}
+
+export async function executeTerminalCommand(source, context) {
+  const parsed = parseTerminalCommand(source);
+  if (parsed.error) return { type: 'error', text: parsed.error };
+  const [target] = parsed.args;
+  const files = context.files();
+
+  switch (parsed.command) {
+    case '':
+      return { type: 'empty', text: '' };
+    case 'help':
+      return { type: 'info', text: HELP_TEXT };
+    case 'pwd':
+      return { type: 'info', text: `/workspace/${context.projectName() || 'untitled'}` };
+    case 'ls':
+      return { type: 'info', text: files.map((file) => file.name).join('  ') || '(no files)' };
+    case 'cat': {
+      if (!target) return { type: 'error', text: 'Usage: cat <file>' };
+      const file = files.find((item) => item.name === target);
+      return file ? { type: 'info', text: file.content } : { type: 'error', text: `File not found: ${target}` };
+    }
+    case 'run':
+      await context.runActive();
+      return { type: 'info', text: 'Run request sent.' };
+    case 'python': {
+      const fileName = target || context.activeFile();
+      const file = files.find((item) => item.name === fileName);
+      if (!file || !/\.py$/i.test(file.name)) return { type: 'error', text: `Python file not found: ${fileName || 'select a .py file first'}` };
+      await context.runPython(file.name, file.content);
+      return { type: 'info', text: `Running ${file.name} in the local Python worker…` };
+    }
+    case 'preview':
+      context.showPreview();
+      return { type: 'info', text: 'Switched to the live preview.' };
+    case 'clear':
+      context.clear();
+      return { type: 'empty', text: '' };
+    case 'stop':
+      return context.stopPython() ? { type: 'info', text: 'Python worker stopped.' } : { type: 'info', text: 'No Python program is running.' };
+    case 'npm':
+    case 'npx':
+    case 'pnpm':
+    case 'yarn':
+    case 'pip':
+    case 'git':
+    case 'node':
+    case 'bash':
+    case 'sh':
+      return { type: 'error', text: `${parsed.command} is not available here. This terminal can only run the documented local project commands shown by help.` };
+    default:
+      return { type: 'error', text: `Unknown local command: ${parsed.command}. Type help for available commands.` };
+  }
+}

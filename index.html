@@ -106,6 +106,12 @@
             <div class="component-actions"><button class="button button-small" id="demoSpinner" type="button">Show spinner</button><button class="button button-small" id="demoBlocker" type="button">Show blocker</button><button class="button button-small button-quiet" id="demoSkeleton" type="button">Try skeleton</button><button class="button button-small button-quiet" type="button" data-copy="const progress = ui.progress({ label: 'Uploading', value: 25, showValue: true });" aria-label="Copy progress example">Copy example</button></div>
             <div class="demo-progress"><div><span>Uploading your first build</span><strong id="demoProgressValue">68%</strong></div><div class="demo-progress-track" id="demoProgressTrack"></div><button class="text-link" id="demoProgress" type="button">Advance progress <span aria-hidden="true">→</span></button></div>
           </div>
+          <div class="component-card component-wide component-lab">
+            <div class="component-card-top"><span class="component-mark mark-sky">06</span><div><h3>More building blocks</h3><p>Choose a component to try its real package API, then copy the beginner-ready example.</p></div></div>
+            <div class="new-component-controls"><label for="newComponentSelect">Component</label><select id="newComponentSelect" class="toolbar-select"><option value="switch">Switch</option><option value="checkboxGroup">Checkbox group</option><option value="radioGroup">Radio group</option><option value="segmentedControl">Segmented control</option><option value="combobox">Combobox</option><option value="popover">Popover</option><option value="pagination">Pagination</option><option value="breadcrumb">Breadcrumb</option><option value="rating">Rating</option><option value="copyButton">Copy button</option><option value="avatar">Avatar</option><option value="badge">Badge</option></select></div>
+            <div class="new-component-live" id="newComponentMount"></div>
+            <div class="new-component-example"><pre><code id="newComponentCode">ui.switch({ label: 'Email updates', checked: true });</code></pre><button class="button button-small button-quiet" id="copyNewComponentExample" type="button" data-copy="ui.switch({ label: 'Email updates', checked: true });" aria-label="Copy the selected component example">Copy example</button></div>
+          </div>
           <p class="component-feedback" id="componentFeedback" role="status" aria-live="polite">Interactive examples are ready after the component styles load.</p>
         </div>
       </div>

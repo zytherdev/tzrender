@@ -174,6 +174,83 @@ try {
     announce(progress === 100 ? 'The upload is complete.' : `Progress updated to ${progress} percent.`);
   });
 
+  const newComponentSelect = document.querySelector('#newComponentSelect');
+  const newComponentMount = document.querySelector('#newComponentMount');
+  const newComponentCode = document.querySelector('#newComponentCode');
+  const copyNewComponentExample = document.querySelector('#copyNewComponentExample');
+  let newComponentHandle;
+  const examples = {
+    switch: {
+      code: "ui.switch({ container: '#newComponentMount', label: 'Email updates', checked: true });",
+      render: (container) => ui.switch({ container, label: 'Email updates', description: 'Get occasional project tips.', checked: true, onChange: (value) => announce(`Email updates ${value ? 'on' : 'off'}.`) })
+    },
+    checkboxGroup: {
+      code: "ui.checkboxGroup({ container: '#newComponentMount', label: 'Topics', items: [{ value: 'html', label: 'HTML' }, { value: 'css', label: 'CSS' }] });",
+      render: (container) => ui.checkboxGroup({ container, label: 'Topics to explore', value: ['css'], items: [{ value: 'html', label: 'HTML', description: 'Page structure' }, { value: 'css', label: 'CSS', description: 'Page styles' }, { value: 'js', label: 'JavaScript', description: 'Page behavior' }], onChange: (values) => announce(`Selected topics: ${values.join(', ') || 'none'}.`) })
+    },
+    radioGroup: {
+      code: "ui.radioGroup({ container: '#newComponentMount', label: 'Layout', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }] });",
+      render: (container) => ui.radioGroup({ container, label: 'Preview layout', value: 'wide', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }, { value: 'stacked', label: 'Stacked' }], onChange: (value) => announce(`Preview layout: ${value}.`) })
+    },
+    segmentedControl: {
+      code: "ui.segmentedControl({ container: '#newComponentMount', label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'mobile', label: 'Mobile' }] });",
+      render: (container) => ui.segmentedControl({ container, label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'tablet', label: 'Tablet' }, { value: 'mobile', label: 'Mobile' }], onChange: (value) => announce(`Preview size: ${value}. Use arrow keys to switch.`) })
+    },
+    combobox: {
+      code: "ui.combobox({ container: '#newComponentMount', label: 'Choose a color', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }] });",
+      render: (container) => ui.combobox({ container, label: 'Choose a starter color', placeholder: 'Type to filter…', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }, { value: 'amber', label: 'Amber' }], onChange: (value) => announce(`Selected color: ${value}.`) })
+    },
+    popover: {
+      code: "ui.popover('#demoPopoverTrigger', { title: 'A helpful note', content: 'Popover content is inserted as text.' });",
+      render: () => {
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.id = 'demoPopoverTrigger';
+        trigger.className = 'button button-small';
+        trigger.textContent = 'Open helpful note';
+        newComponentMount.append(trigger);
+        return ui.popover(trigger, { title: 'A helpful note', content: 'Popover content is inserted as text. Press Escape to close it.', theme: currentTheme() });
+      }
+    },
+    pagination: {
+      code: "ui.pagination({ container: '#newComponentMount', totalPages: 8, currentPage: 3 });",
+      render: (container) => ui.pagination({ container, totalPages: 8, currentPage: 3, label: 'Example pages', onChange: (page) => announce(`Showing example page ${page}.`) })
+    },
+    breadcrumb: {
+      code: "ui.breadcrumb({ container: '#newComponentMount', items: [{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: 'Getting started', current: true }] });",
+      render: (container) => ui.breadcrumb({ container, items: [{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: 'Getting started', current: true }] })
+    },
+    rating: {
+      code: "ui.rating({ container: '#newComponentMount', label: 'Rate this guide', value: 4, allowClear: true });",
+      render: (container) => ui.rating({ container, label: 'Rate this guide', value: 4, allowClear: true, onChange: (value) => announce(`Guide rating: ${value} of 5.`) })
+    },
+    copyButton: {
+      code: "ui.copyButton({ container: '#newComponentMount', text: 'npm install @zyther/tzrender', label: 'Copy install command' });",
+      render: (container) => ui.copyButton({ container, text: 'npm install @zyther/tzrender', label: 'Copy install command', onCopy: () => announce('Install command copied.'), onError: () => announce('Clipboard unavailable in this browser context.') })
+    },
+    avatar: {
+      code: "ui.avatar({ container: '#newComponentMount', name: 'Taylor Zane', size: 56 });",
+      render: (container) => ui.avatar({ container, name: 'Taylor Zane', size: 56, shape: 'circle' })
+    },
+    badge: {
+      code: "ui.badge({ container: '#newComponentMount', text: 'Ready', variant: 'success' });",
+      render: (container) => ui.badge({ container, text: 'Ready to publish', variant: 'success', size: 'medium', announce: true })
+    }
+  };
+
+  function showNewComponent(name) {
+    const example = examples[name] || examples.switch;
+    newComponentHandle?.destroy();
+    newComponentMount.replaceChildren();
+    newComponentHandle = example.render('#newComponentMount');
+    newComponentCode.textContent = example.code;
+    copyNewComponentExample.dataset.copy = example.code;
+    announce(`${name} example is ready. Try it, then copy the code.`);
+  }
+
+  newComponentSelect?.addEventListener('change', (event) => showNewComponent(event.target.value));
+  showNewComponent(newComponentSelect?.value || 'switch');
+
   window.addEventListener('tzrender:theme-change', (event) => {
     const theme = event.detail?.theme;
     if (theme === 'light' || theme === 'dark') {
