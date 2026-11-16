@@ -1,6 +1,6 @@
 {
   "name": "@zyther/tzrender",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Dependency-free vanilla JavaScript UI components for accessible feedback, navigation, display and form controls.",
   "main": "index.js",
   "type": "module",
