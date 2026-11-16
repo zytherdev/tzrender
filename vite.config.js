@@ -62,6 +62,7 @@ export default defineConfig({
     ]
   },
   optimizeDeps: { include: ['typescript', 'pyodide'] },
+  worker: { format: 'es' },
   build: {
     rolldownOptions: {
       input: {
