@@ -5,8 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <meta name="description" content="A browser IDE for HTML, CSS, JavaScript, TypeScript and Python, with local drafts and safe live previews.">
-  <title>Editor — tzrender</title>
+  <meta name="description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <link rel="canonical" href="https://tzrender.zyther.dev/editor.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="tzrender">
+  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender">
+  <meta property="og:description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <meta property="og:url" content="https://tzrender.zyther.dev/editor.html">
+  <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender">
+  <meta name="twitter:description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
+  <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
+  <title>Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/site/site.css">
   <link rel="stylesheet" href="/site/editor.css">
@@ -63,6 +80,7 @@
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
+    <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python</h1>
     <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
       <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
       <button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button>
