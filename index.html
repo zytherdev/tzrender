@@ -1,342 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="https://lh3.googleusercontent.com/a/ACg8ocLWUmqhoTGJ2NKtu_omBv1kj6MpmZZ9ySKn1WkAtkpfgWRt8tY=s288-c-no" type="image/x-icon">
-    <title>tzrender — Front-end UI Components</title>
-    <link rel="stylesheet" href="./utils/app.css">
-    <script defer src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
-    <script defer src="./utils/main.js" type="module"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Learn HTML, CSS and JavaScript by building real pages in the tzrender browser workbench.">
+  <meta property="og:title" content="tzrender — Build for the web">
+  <meta property="og:description" content="A focused code editor, useful front-end tools, and reusable vanilla JavaScript UI components.">
+  <title>tzrender — Build for the web</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/site/site.css">
+  <script type="module" src="/site/home.js"></script>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>tzrender</h1>
-            <div class="header-actions">
-                <select id="langSelect" class="lang-select" title="Select Language">
-                    <option value="en">🇺🇸 English</option>
-                    <option value="pt">🇧🇷 Português</option>
-                    <option value="es">🇪🇸 Español</option>
-                </select>
-                <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                    <svg id="iconToggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
-                    <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"></path>
-                    </svg>
-                </button>
-            </div>
-        </header>
+<body class="site-shell">
+  <div class="site-noise" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="tzrender home"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/editor.html">Editor</a>
+      <a href="/tools.html">Tools</a>
+      <a href="#components">Components</a>
+      <a href="https://www.npmjs.com/package/@zyther/tzrender" target="_blank" rel="noopener">npm ↗</a>
+    </nav>
+    <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch to light theme" title="Toggle theme">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+    </button>
+  </header>
 
-        <section class="intro">
-           <div class="intro-content">
-              <p class="eyebrow" data-tool-copy="eyebrow">UM ESPAÇO AMIGÁVEL PARA SUA PRÓXIMA IDEIA</p>
-              <h2 class="hero-title" data-tool-copy="heroTitle">Crie para a web, uma pequena vitória por vez.</h2>
-              <p class="hero-description" data-tool-copy="heroDescription">Geradores úteis, prévias instantâneas e código pronto para copiar — aprenda fazendo.</p>
-              <pre class="import-code"><code>import Render from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest'</code></pre>
-
-              <div class="intro-links">
-                 <a href="#toolbox" class="link" data-tool-copy="jumpTools">Explorar ferramentas ↓</a>
-                 <a href="#components" class="link" data-tool-copy="jumpComponents">Ver componentes ↓</a>
-                 <a data-i18n="intro_npm" href="https://www.npmjs.com/package/@zyther/tzrender" target="_blank" rel="noopener" class="link">📦 View on NPM</a>
-                 <a data-i18n="intro_github" href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener" class="link">⭐ GitHub Repo</a>
-              </div>
-
-              <p data-i18n="intro_msg" class="intro-message">
-                If you find this library useful, please <strong>leave a star</strong>, <strong>share it</strong> with others, and <strong>contribute</strong> to make it even better!
-              </p>
+  <main>
+    <section class="home-hero wrap">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot"></span> A practical bench for the open web</p>
+        <h1>Edit the page.<br><span>See it come alive.</span></h1>
+        <p class="hero-lede">A real code editor, hands-on CSS tools, and small reusable components — all made for learning by building.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="/editor.html">Open the editor <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" href="/tools.html">Explore all tools <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="hero-footnote"><span class="keycap">HTML</span><span class="keycap">CSS</span><span class="keycap">JS</span><span>Start in your browser. No account or setup.</span></p>
+      </div>
+      <div class="hero-visual" aria-label="A preview of the tzrender coding workbench">
+        <div class="visual-glow" aria-hidden="true"></div>
+        <div class="mini-window">
+          <div class="mini-window-bar"><span class="window-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>your-first-page.html</span><span class="mini-live"><i></i> PREVIEW</span></div>
+          <div class="mini-window-body">
+            <div class="mini-code" aria-hidden="true"><div><b>1</b><span class="code-purple">&lt;main</span> class=<span class="code-mint">"card"</span><span class="code-purple">&gt;</span></div><div><b>2</b>  <span class="code-purple">&lt;h1&gt;</span>Hello, web.<span class="code-purple">&lt;/h1&gt;</span></div><div><b>3</b>  <span class="code-purple">&lt;p&gt;</span>Your idea starts here.<span class="code-purple">&lt;/p&gt;</span></div><div><b>4</b>  <span class="code-purple">&lt;button&gt;</span>Try it<span class="code-purple">&lt;/button&gt;</span></div><div><b>5</b><span class="code-purple">&lt;/main&gt;</span></div></div>
+            <div class="mini-preview"><span class="preview-badge">A FIRST BUILD</span><strong>Hello, web.</strong><p>Your idea starts here.</p><button type="button" tabindex="-1">Try it <span>↗</span></button><div class="preview-orbit" aria-hidden="true"></div></div>
           </div>
-       </section>
-        
-        <div id="libraryDemosMount"></div>
-        <div id="toolboxMount"></div>
-        <div class="component-section" id="components">
-            <h2 data-i18n="msgbox_title">Message Box</h2>
-            <p data-i18n="msgbox_desc">Create modal dialogs with confirm/cancel actions.</p>
-            
-            <div class="demo-area">
-                <div class="controls">
-                    <div class="control-group">
-                        <label data-i18n="msgbox_theme" for="msgBoxTheme">Theme</label>
-                        <select id="msgBoxTheme">
-                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
-                            <option data-i18n="theme_op_light" value="light">Light</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="msgbox_label_title" for="msgBoxTitle">Title</label>
-                        <input type="text" id="msgBoxTitle" value="Confirmation">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="msgbox_label_message" for="msgBoxMessage">Message</label>
-                        <textarea id="msgBoxMessage" rows="3">Are you sure you want to proceed with this action?</textarea>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="msgbox_label_cancel" for="msgBoxCancelText">Cancel Button Text</label>
-                        <input type="text" id="msgBoxCancelText" value="Cancel">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="msgbox_label_confirm" for="msgBoxConfirmText">Confirm Button Text</label>
-                        <input type="text" id="msgBoxConfirmText" value="Confirm">
-                    </div>
-                </div>
-                
-                <button data-i18n="msgbox_button_show" class="button" id="showMsgBox">Show Message Box</button>
-                
-                <div class="tab-container">
-                    <div class="tabs">
-                        <div data-i18n="msgbox_tab_js" class="tab active" data-tab="msgbox-js">JavaScript</div>
-                        <div data-i18n="msgbox_tab_html" class="tab" data-tab="msgbox-html">HTML</div>
-                    </div>
-                    
-                    <div class="tab-content active" id="msgbox-js">
-                        <div class="code-block" id="msgBoxCode">
-                            //...........
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="msgbox-html">
-                        <div data-i18n="msgbox_nohtml" class="code-block">
-                            &lt;!-- No HTML required - pure JavaScript --&gt;
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <div class="mini-window-footer"><span><i class="status-dot"></i> Saved in this browser</span><span>index.html&nbsp; · &nbsp;Ln 2, Col 8</span></div>
         </div>
-        
-        <div class="component-section">
-            <h2 data-i18n="alert_title">Alert</h2>
-            <p data-i18n="alert_desc">Show temporary notification messages.</p>
-            
-            <div class="demo-area">
-                <div class="controls">
-                    <div class="control-group">
-                        <label data-i18n="alert_theme" for="alertTheme">Theme</label>
-                        <select id="alertTheme">
-                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
-                            <option data-i18n="theme_op_light" value="light">Light</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="alert_variant" for="alertVariant">Variant</label>
-                        <select id="alertVariant">
-                            <option data-i18n="alert_v_info" value="info">Info</option>
-                            <option data-i18n="alert_v_success" value="success">Success</option>
-                            <option data-i18n="alert_v_warning" value="warning">Warning</option>
-                            <option data-i18n="alert_v_error" value="error">Error</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="alert_message" for="alertMessage">Message</label>
-                        <textarea id="alertMessage" rows="3">This is an alert message!</textarea>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="alert_timeout" for="alertTimeout">Timeout (ms)</label>
-                        <input type="number" id="alertTimeout" value="3000">
-                    </div>
-                </div>
-                
-                <button data-i18n="alert_button_show" class="button" id="showAlert">Show Alert</button>
-                
-                <div class="tab-container">
-                    <div class="tabs">
-                        <div data-i18n="alert_tab_js" class="tab active" data-tab="alert-js">JavaScript</div>
-                        <div data-i18n="alert_tab_html" class="tab" data-tab="alert-html">HTML</div>
-                    </div>
-                    
-                    <div class="tab-content active" id="alert-js">
-                        <div class="code-block" id="alertCode">
-                            //...........
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="alert-html">
-                        <div data-i18n="msgbox_nohtml" class="code-block">
-                            &lt;!-- No HTML required - pure JavaScript --&gt;
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="float-note"><span class="float-note-icon">✓</span><span><strong>Live preview</strong><small>Change code, see the result</small></span></div>
+      </div>
+    </section>
+
+    <section class="workbench-section wrap" aria-labelledby="workbench-heading">
+      <div class="section-heading">
+        <div><p class="eyebrow">PICK UP A TOOL</p><h2 id="workbench-heading">Make something today.</h2></div>
+        <a class="text-link" href="/tools.html">See the full toolbox <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="destination-grid">
+        <a class="destination-card destination-editor" href="/editor.html">
+          <div class="destination-icon editor-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 4l-4 16"/></svg></div>
+          <div class="destination-top"><span class="pill pill-violet">THE EDITOR</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <h3>Build a tiny website</h3><p>Write HTML, CSS and JavaScript with real syntax help, then run it in an isolated preview.</p>
+          <span class="destination-meta">Monaco editor <i>·</i> Local drafts <i>·</i> Export</span>
+        </a>
+        <a class="destination-card destination-tools" href="/tools.html">
+          <div class="destination-icon tools-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h7v6H4zM14 5h6v4h-6zM4 14h6v5H4zM13 12h7v7h-7z"/></svg></div>
+          <div class="destination-top"><span class="pill pill-mint">THE TOOLBOX</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <h3>Make the details click</h3><p>Explore color contrast, layout, spacing, gradients, shadows, and the CSS box model.</p>
+          <span class="destination-meta">8 focused tools <i>·</i> Live output <i>·</i> Copy-ready</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="components-section" id="components" aria-labelledby="components-heading">
+      <div class="wrap components-wrap">
+        <div class="components-intro">
+          <p class="eyebrow">THE npm PACKAGE</p><h2 id="components-heading">Useful UI.<br><span>No framework required.</span></h2>
+          <p>tzrender is a small vanilla JavaScript library for common interface patterns. Every example below calls the package API you can install in your own project.</p>
+          <p class="component-code-note">Copy examples assume you imported <code>Render</code>, created <code>const ui = new Render()</code>, and awaited <code>ui.ready</code>.</p>
+          <pre class="install-snippet"><code>npm install @zyther/tzrender</code><button class="copy-inline" type="button" data-copy="npm install @zyther/tzrender" aria-label="Copy install command">Copy</button></pre>
+          <a class="text-link" href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">Browse the source on GitHub <span aria-hidden="true">↗</span></a>
         </div>
-        
-        <div class="component-section">
-            <h2 data-i18n="spinner_title">Spinner</h2>
-            <p data-i18n="spinner_desc">Show loading indicators with various styles.</p>
-            
-            <div class="demo-area">
-                <div class="controls">
-                    <div class="control-group">
-                        <label data-i18n="spinner_theme" for="spinnerTheme">Theme</label>
-                        <select id="spinnerTheme">
-                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
-                            <option data-i18n="theme_op_light" value="light">Light</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_variant" for="spinnerVariant">Variant</label>
-                        <select id="spinnerVariant">
-                            <option data-i18n="spinner_v_simple" value="simple">Simple</option>
-                            <option data-i18n="spinner_v_dual" value="dual">Dual</option>
-                            <option data-i18n="spinner_v_triple" value="triple">Triple</option>
-                            <option data-i18n="spinner_v_custom" value="custom" selected>Custom</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_text" for="spinnerText">Text</label>
-                        <input type="text" id="spinnerText" value="Loading...">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_animate" for="spinnerAnimated">Animate Text</label>
-                        <select id="spinnerAnimated">
-                            <option data-i18n="choice_yes" value="true">Yes</option>
-                            <option data-i18n="choice_no" value="false">No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_backdrop" for="spinnerBackdrop">Show Backdrop</label>
-                        <select id="spinnerBackdrop">
-                            <option data-i18n="choice_yes" value="true">Yes</option>
-                            <option data-i18n="choice_no" value="false">No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_custom_url" for="spinnerCustomUrl">Custom Image URL</label>
-                        <input type="text" id="spinnerCustomUrl" value="https://www.svgrepo.com/show/54385/target.svg">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_animation" for="spinnerAnimation">Animation</label>
-                        <select id="spinnerAnimation">
-                            <option data-i18n="spinner_a_spin" value="spin">Spin</option>
-                            <option data-i18n="spinner_a_pulse" value="pulse">Pulse</option>
-                            <option data-i18n="spinner_a_bounce" value="jump">Bounce</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="spinner_color" for="spinnerColor">Color</label>
-                        <input type="text" id="spinnerColor" value="skyblue">
-                    </div>
-                </div>
-                
-                <div class="controls">
-                    <button data-i18n="spinner_button_show" class="button" id="showSpinner">Show Spinner</button>
-                    <button data-i18n="spinner_button_hide" class="button hidden" id="hideSpinner">Hide Spinner</button>
-                    <button data-i18n="spinner_button_destroy" class="button hidden" id="destroySpinner">Destroy Spinner</button>
-                </div>
-                
-                <div class="tab-container">
-                    <div class="tabs">
-                        <div data-i18n="spinner_tab_js" class="tab active" data-tab="spinner-js">JavaScript</div>
-                        <div data-i18n="spinner_tab_html" class="tab" data-tab="spinner-html">HTML</div>
-                    </div>
-                    
-                    <div class="tab-content active" id="spinner-js">
-                        <div class="code-block" id="spinnerCode">
-                            //...........
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="spinner-html">
-                        <div data-i18n="msgbox_nohtml" class="code-block">
-                            &lt;!-- No HTML required - pure JavaScript --&gt;
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="component-playground">
+          <div class="component-card">
+            <div class="component-card-top"><span class="component-mark mark-violet">01</span><div><h3>Feedback</h3><p>Let people know what just happened.</p></div></div>
+            <div class="component-actions"><button class="button button-small" id="demoToast" type="button">Show toast</button><button class="button button-small button-quiet" id="demoAlert" type="button">Show alert</button><button class="button button-small button-quiet" type="button" data-copy="ui.toast({ title: 'Saved', message: 'Your changes are ready.', variant: 'success' });" aria-label="Copy toast example">Copy example</button></div>
+          </div>
+          <div class="component-card">
+            <div class="component-card-top"><span class="component-mark mark-amber">02</span><div><h3>Confirmation</h3><p>Ask before a meaningful action.</p></div></div>
+            <div class="component-actions"><button class="button button-small" id="demoConfirm" type="button">Open confirm dialog</button><button class="button button-small button-quiet" type="button" data-copy="const confirmed = await ui.confirm({ title: 'Continue?', msg: 'Are you ready?' });" aria-label="Copy confirmation example">Copy example</button></div>
+          </div>
+          <div class="component-card">
+            <div class="component-card-top"><span class="component-mark mark-sky">03</span><div><h3>Content patterns</h3><p>Explore collapsible and tabbed content.</p></div></div>
+            <div class="component-actions"><button class="button button-small" id="demoAccordion" type="button">Try accordion</button><button class="button button-small" id="demoTabs" type="button">Try tabs</button><button class="button button-small button-quiet" id="demoTooltip" type="button">Focus for a tooltip</button><button class="button button-small button-quiet" type="button" data-copy="ui.accordion({ items: [{ title: 'What is HTML?', content: 'A language for page structure.' }] });" aria-label="Copy accordion example">Copy example</button></div>
+            <div class="demo-pattern-mount" id="demoPatternMount"></div>
+          </div>
+          <div class="component-card">
+            <div class="component-card-top"><span class="component-mark mark-mint">04</span><div><h3>Navigation</h3><p>Try a keyboard-friendly menu or drawer.</p></div></div>
+            <div class="component-actions"><button class="button button-small" id="demoMenu" type="button">Open menu</button><button class="button button-small button-quiet" id="demoDrawer" type="button">Open drawer</button><button class="button button-small button-quiet" type="button" data-copy="ui.drawer({ title: 'Details', content: 'More information.' });" aria-label="Copy drawer example">Copy example</button></div>
+          </div>
+          <div class="component-card component-wide">
+            <div class="component-card-top"><span class="component-mark mark-violet">05</span><div><h3>Loading states</h3><p>Try a spinner, blocking screen, skeleton, and real progress UI.</p></div></div>
+            <div class="component-actions"><button class="button button-small" id="demoSpinner" type="button">Show spinner</button><button class="button button-small" id="demoBlocker" type="button">Show blocker</button><button class="button button-small button-quiet" id="demoSkeleton" type="button">Try skeleton</button><button class="button button-small button-quiet" type="button" data-copy="const progress = ui.progress({ label: 'Uploading', value: 25, showValue: true });" aria-label="Copy progress example">Copy example</button></div>
+            <div class="demo-progress"><div><span>Uploading your first build</span><strong id="demoProgressValue">68%</strong></div><div class="demo-progress-track" id="demoProgressTrack"></div><button class="text-link" id="demoProgress" type="button">Advance progress <span aria-hidden="true">→</span></button></div>
+          </div>
+          <p class="component-feedback" id="componentFeedback" role="status" aria-live="polite">Interactive examples are ready after the component styles load.</p>
         </div>
-        
-        <div class="component-section">
-            <h2 data-i18n="block_title">Block UI</h2>
-            <p data-i18n="block_desc">Create animated overlays that block user interaction.</p>
-            
-            <div class="demo-area">
-                <div class="controls">
-                    <div class="control-group">
-                        <label data-i18n="block_theme" for="blockTheme">Theme</label>
-                        <select id="blockTheme">
-                            <option data-i18n="theme_op_dark" value="dark">Dark</option>
-                            <option data-i18n="theme_op_light" value="light">Light</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_animation" for="blockAnimation">Animation</label>
-                        <select id="blockAnimation">
-                            <option data-i18n="block_a_particles" value="particles">Particles</option>
-                            <option data-i18n="block_a_lines" value="lines">Lines</option>
-                            <option data-i18n="block_a_shapes" value="shapes" selected>Shapes</option>
-                            <option data-i18n="block_a_orbs" value="orbs">Orbs</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_message" for="blockMessage">Message</label>
-                        <input type="text" id="blockMessage" value="Processing...">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_count" for="blockCount">Element Count</label>
-                        <input type="number" id="blockCount" value="120">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_min_size" for="blockMinSize">Min Size</label>
-                        <input type="number" id="blockMinSize" value="7">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_max_size" for="blockMaxSize">Max Size</label>
-                        <input type="number" id="blockMaxSize" value="100">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_click_destroy" for="blockClickDestroy">Destroy on Click</label>
-                        <select id="blockClickDestroy">
-                            <option data-i18n="choice_yes" value="true">Yes</option>
-                            <option data-i18n="choice_no" value="false" selected>No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label data-i18n="block_auto_destroy" for="blockAutoDestroy">Auto Destroy (ms)</label>
-                        <input type="number" id="blockAutoDestroy" value="0" placeholder="0 = disabled">
-                    </div>
-                </div>
-                
-                <button data-i18n="block_button_show" class="button" id="showBlockUI">Show Block UI</button>
-                
-                <div class="tab-container">
-                    <div class="tabs">
-                        <div data-i18n="block_tab_js" class="tab active" data-tab="block-js">JavaScript</div>
-                        <div data-i18n="block_tab_html" class="tab" data-tab="block-html">HTML</div>
-                    </div>
-                    
-                    <div class="tab-content active" id="block-js">
-                        <div class="code-block" id="blockCode">
-                            //...........
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="block-html">
-                        <div data-i18n="msgbox_nohtml" class="code-block">
-                            &lt;!-- No HTML required - pure JavaScript --&gt;
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+      </div>
+    </section>
+
+    <section class="learn-section wrap">
+      <div class="learn-note"><span class="learn-number">01</span><div><h2>Stay in control of your code.</h2><p>The preview runs in a separate sandbox. Your drafts are stored only in this browser until you export them.</p></div></div>
+      <div class="learn-note"><span class="learn-number">02</span><div><h2>Keep learning past the demo.</h2><p>Every CSS tool shows the code it creates. Take it into your own project and build on what you learned.</p></div></div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Built for curious people learning the open web.</p><div><a href="/editor.html">Editor</a><a href="/tools.html">Tools</a><a href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">GitHub ↗</a></div></footer>
 </body>
 </html>

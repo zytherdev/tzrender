@@ -1,5 +1,37 @@
 import colors from './utils/colors.js';
-import { createAccordion, createProgress, createSkeleton, createTabs, createToast, createTooltip } from './components.js';
+import { createAccordion, createDrawer, createMenu, createProgress, createSkeleton, createTabs, createToast, createTooltip } from './components.js';
+
+const SAFE_PAGE_ELEMENTS = new Set(['a','abbr','article','aside','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h1','h2','h3','h4','h5','h6','hr','i','img','kbd','li','main','mark','ol','p','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul']);
+const SAFE_PAGE_ATTRIBUTES = new Set(['alt','aria-label','aria-hidden','class','colspan','dir','height','href','id','lang','role','rowspan','src','target','title','width']);
+
+function sanitizePageMarkup(markup) {
+    const parsed = new DOMParser().parseFromString(String(markup), 'text/html');
+    parsed.querySelectorAll('script,style,iframe,object,embed,base,form,link,meta,svg,math,template').forEach((element) => element.remove());
+    [...parsed.body.querySelectorAll('*')].reverse().forEach((element) => {
+        if (!SAFE_PAGE_ELEMENTS.has(element.tagName.toLowerCase())) {
+            element.replaceWith(...element.childNodes);
+            return;
+        }
+        [...element.attributes].forEach((attribute) => {
+            const name = attribute.name.toLowerCase();
+            const value = attribute.value.trim();
+            if (!SAFE_PAGE_ATTRIBUTES.has(name) || name.startsWith('on')) {
+                element.removeAttribute(attribute.name);
+                return;
+            }
+            if (name === 'href' || name === 'src') {
+                const compact = value.replace(/[\u0000-\u0020]+/g, '').toLowerCase();
+                if (/^(javascript|vbscript|data):/.test(compact)) element.removeAttribute(attribute.name);
+                else if (name === 'src') {
+                    try { if (new URL(value, document.baseURI).origin !== location.origin) element.removeAttribute(attribute.name); }
+                    catch { element.removeAttribute(attribute.name); }
+                }
+            }
+        });
+        if (element.tagName === 'A' && element.getAttribute('target') === '_blank') element.setAttribute('rel', 'noopener noreferrer');
+    });
+    return document.importNode(parsed.body, true);
+}
 
 export default class Render
 {
@@ -11,11 +43,14 @@ export default class Render
     constructor()
     {
         this.cleanups = new Map()
+        this.ids = new Set()
         Render.instance_count++
 
         if (!Render.style_promise) {
-            Render.style_promise = this.inject_style().catch((error) => {
-                Render.style_promise = null
+            const stylePromise = this.inject_style()
+            Render.style_promise = stylePromise
+            stylePromise.catch((error) => {
+                if (Render.style_promise === stylePromise) Render.style_promise = null
                 console.error('tzrender: could not load component styles.', error)
             })
         }
@@ -25,9 +60,16 @@ export default class Render
     async inject_style()
     {
         if (Render.style_loaded || document.getElementById('tzrender-styles')) return
-        const styleFiles = ['__reset.css', 'msg_box.css', 'alert.css', 'spinner.css', 'block-ui.css', 'components.css']
-        const css = await Promise.all(styleFiles.map(async (file) => {
-            const response = await fetch(new URL(`./styles/${file}`, import.meta.url))
+        const styleFiles = [
+            ['__reset.css', new URL('./styles/__reset.css', import.meta.url)],
+            ['msg_box.css', new URL('./styles/msg_box.css', import.meta.url)],
+            ['alert.css', new URL('./styles/alert.css', import.meta.url)],
+            ['spinner.css', new URL('./styles/spinner.css', import.meta.url)],
+            ['block-ui.css', new URL('./styles/block-ui.css', import.meta.url)],
+            ['components.css', new URL('./styles/components.css', import.meta.url)]
+        ]
+        const css = await Promise.all(styleFiles.map(async ([file, url]) => {
+            const response = await fetch(url)
             if (!response.ok) throw new Error(`Could not load ${file} (${response.status})`)
             return response.text()
         }))
@@ -64,10 +106,6 @@ export default class Render
                 ntf_close_btn.type = 'button';
                 ntf_close_btn.setAttribute('aria-label', prms.props.closeLabel || 'Close dialog');
                 ntf_close_btn.textContent = '×';
-                ntf_close_btn.addEventListener('click', () => {
-                    prms.props.action.cancel.callback()
-                    this.destroy(ntf.id)
-                })
 
                 const ntf_title = document.createElement('h2')
                 ntf_title.id = `${id__}-title`;
@@ -91,34 +129,49 @@ export default class Render
                 ntf_confirm_btn.className = theme === 'light' ? 'tchzr-msgba-confirm-light tchzr-msgba-confirm' : 'tchzr-msgba-confirm'
                 ntf_confirm_btn.type = 'button';
                 ntf_confirm_btn.textContent = String(prms.props.action?.confirm?.text ?? 'Confirm');
-                const cancel = () => {
-                    try { prms.props.action?.cancel?.callback?.() }
-                    finally { this.destroy(ntf.id) }
+                let settled = false;
+                const runAction = (action) => {
+                    if (settled) return;
+                    settled = true;
+                    try { if (typeof action?.callback === 'function') action.callback(); }
+                    finally { this.destroy(ntf.id); }
                 };
-                const confirm = () => {
-                    try { prms.props.action?.confirm?.callback?.() }
-                    finally { this.destroy(ntf.id) }
-                };
+                const cancel = () => runAction(prms.props.action?.cancel);
+                const confirm = () => runAction(prms.props.action?.confirm);
                 ntf_close_btn.addEventListener('click', cancel);
                 ntf_cancel_btn.addEventListener('click', cancel);
                 ntf_confirm_btn.addEventListener('click', confirm);
                 const previousFocus = document.activeElement;
+                const inerted = [...document.body.children].map((element) => [element, Boolean(element.inert)]);
+                const restoreInert = () => inerted.forEach(([element, wasInert]) => { if (element.isConnected) element.inert = wasInert; });
+                const focusables = () => [...ntf_content.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')];
                 const onKeyDown = (event) => {
-                    if (event.key === 'Escape') {
+                    if (event.key === 'Escape' && prms.props.closeOnEscape !== false) {
                         event.preventDefault();
                         cancel();
                     } else if (event.key === 'Tab') {
-                        const focusable = [ntf_close_btn, ntf_cancel_btn, ntf_confirm_btn];
-                        if (event.shiftKey && document.activeElement === focusable[0]) {
+                        const focusable = focusables();
+                        if (!focusable.length) {
+                            event.preventDefault();
+                            ntf_content.focus();
+                        } else if (event.shiftKey && (document.activeElement === focusable[0] || !ntf_content.contains(document.activeElement))) {
                             event.preventDefault();
                             focusable.at(-1).focus();
-                        } else if (!event.shiftKey && document.activeElement === focusable.at(-1)) {
+                        } else if (!event.shiftKey && (document.activeElement === focusable.at(-1) || !ntf_content.contains(document.activeElement))) {
                             event.preventDefault();
                             focusable[0].focus();
                         }
                     }
                 };
+                const onFocusIn = (event) => {
+                    if (!ntf_content.contains(event.target)) (focusables()[0] || ntf_content).focus();
+                };
+                const onBackdrop = (event) => {
+                    if (event.target === ntf && prms.props.closeOnBackdrop === true) cancel();
+                };
                 ntf_content.addEventListener('keydown', onKeyDown);
+                document.addEventListener('focusin', onFocusIn);
+                ntf.addEventListener('click', onBackdrop);
 
                 ntf_actions.appendChild(ntf_cancel_btn)
                 ntf_actions.appendChild(ntf_confirm_btn)
@@ -130,9 +183,13 @@ export default class Render
 
                 ntf.appendChild(ntf_content)
 
+                inerted.forEach(([element]) => { element.inert = true; });
                 document.body.appendChild(ntf)
                 this.__registerCleanup(id__, () => {
                     ntf_content.removeEventListener('keydown', onKeyDown);
+                    document.removeEventListener('focusin', onFocusIn);
+                    ntf.removeEventListener('click', onBackdrop);
+                    restoreInert();
                     if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
                 });
                 ntf_confirm_btn.focus();
@@ -189,7 +246,9 @@ export default class Render
             {
                 const id__ = this.__id();
 
-                const { variant = 'simple', theme = 'dark', events = {}, text = {}, backdrop = true, custom = {} } = prms.props
+                const rawProps = prms.props || {};
+                const variant = ['simple', 'dual', 'triple', 'custom'].includes(rawProps.variant) ? rawProps.variant : 'simple';
+                const { theme = 'dark', events = {}, text = {}, backdrop = true, custom = {} } = rawProps;
 
                 const useLight = theme === 'light';
                 const cls = (base) => useLight ? `tchzr-${base}-light tchzr-${base}` : `tchzr-${base}-dark tchzr-${base}`;
@@ -197,55 +256,34 @@ export default class Render
                 const container = document.createElement('div');
                 container.id = id__;
                 container.className = backdrop ? cls('spinner-backdrop') : cls('spinner-container');
+                container.setAttribute('role', 'status');
+                container.setAttribute('aria-live', 'polite');
                 const timers = new Set();
                 let textInterval = null;
 
-                // events
                 const toggle = (show = true) => {
-                        const spinner = document.getElementById(container.id);
-                        if (spinner) {
-                            spinner.classList.toggle('__hiden__', !show);
-                        }
-                    }
+                    container.hidden = !show;
+                }
                 const destroy = () => {
                     this.destroy(container.id)
                 }
+                const onScreenClick = () => {
+                    if (events.screen_click?.destroy) destroy();
+                    else if (events.screen_click?.hide) toggle(false);
+                };
 
-                if(events)
-                {
-                    if(events.screen_click)
-                    {
-                        if (events.screen_click.hide) {
-                            container.addEventListener('click', () => toggle(false))
-                        }
-
-                        if (events.screen_click.destroy) {
-                            container.addEventListener('click', () => destroy())
-                        }
-                    }
-
-                    if(events.auto__)
-                    {
-                        if (events.auto__.hide) {
-                            const timer = window.setTimeout(() => toggle(false), events.auto__.timer || 3000);
-                            timers.add(timer);
-                        }
-
-                        if (events.auto__.destroy) {
-                            const timer = window.setTimeout(() => destroy(), events.auto__.timer || 3000);
-                            timers.add(timer);
-                        }
-                    }
-                }
-                //________
+                if (events.screen_click?.hide || events.screen_click?.destroy) container.addEventListener('click', onScreenClick);
+                if (events.auto__?.hide) timers.add(window.setTimeout(() => toggle(false), Number(events.auto__.timer) || 3000));
+                if (events.auto__?.destroy) timers.add(window.setTimeout(() => destroy(), Number(events.auto__.timer) || 3000));
 
                 const spinnerWrapper = document.createElement('div');
                 spinnerWrapper.className = `tchzr-spinner tchzr-spn-${variant}`;
+                spinnerWrapper.setAttribute('aria-hidden', 'true');
 
                 if (variant === 'custom' && custom.url) {
                     const img = document.createElement('img');
                     img.src = custom.url;
-                    img.alt = 'spinner';
+                    img.alt = '';
                     img.className = `tchzr-custom-spinner tchzr-spn-${custom.animation || ''}`;
                     spinnerWrapper.appendChild(img);
                 } else {
@@ -307,6 +345,7 @@ export default class Render
                 this.__registerCleanup(id__, () => {
                     timers.forEach((timer) => window.clearTimeout(timer));
                     if (textInterval !== null) window.clearInterval(textInterval);
+                    container.removeEventListener('click', onScreenClick);
                 });
 
                 return {
@@ -319,8 +358,9 @@ export default class Render
             {
                 const id__ = this.__id()
 
-                const { theme = 'dark', animation = 'particles', message, events = {}, custom: customOptions = {} } = prms.props;
-                const count = Math.max(1, Math.min(250, Math.floor(Number(prms.props.count) || 40)));
+                const { theme = 'dark', animation = 'particles', message, events = {}, custom: customOptions = {} } = prms.props || {};
+                const requestedCount = Number(prms.props?.count ?? 120);
+                const count = Math.max(1, Math.min(250, Math.floor(Number.isFinite(requestedCount) ? requestedCount : 120)));
                 const requestedSize = customOptions?.__size || {};
                 const custom = {
                     ...customOptions,
@@ -334,6 +374,9 @@ export default class Render
                 const backdrop = document.createElement('div');
                 backdrop.id = id__;
                 backdrop.className = `block-ui-backdrop block-ui-backdrop-${useLight ? 'light' : 'dark'}`;
+                backdrop.setAttribute('role', 'status');
+                backdrop.setAttribute('aria-live', 'polite');
+                backdrop.setAttribute('aria-label', String(message || 'Content is loading'));
                 let destroyed = false;
                 let animationFrameId = null;
                 let autoDestroyTimer = null;
@@ -367,6 +410,7 @@ export default class Render
 
                 const animLayer = document.createElement('div');
                 animLayer.className = `block-ui-anim block-ui-${animation}`;
+                animLayer.setAttribute('aria-hidden', 'true');
                 backdrop.appendChild(animLayer);
 
                 const elements = [];
@@ -640,24 +684,57 @@ export default class Render
         }
     }
 
-    block_ui(prms = {theme: 'dark', animation: 'shapes', count: 120, message: '', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, custom: { __size: { min: 7, max: 100 } }})
+    block_ui(prms = {})
     {
-        return this.build({ type: 'block_ui', props: prms })
+        const input = prms && typeof prms === 'object' ? prms : {};
+        const defaults = { theme: 'dark', animation: 'shapes', count: 120, message: '', events: {}, custom: {} };
+        const events = input.events || {};
+        return this.build({ type: 'block_ui', props: {
+            ...defaults,
+            ...input,
+            animation: ['particles', 'lines', 'shapes', 'orbs'].includes(input.animation) ? input.animation : (input.animation ? 'shapes' : defaults.animation),
+            events: {
+                ...events,
+                screen_click: { hide: false, destroy: false, ...(events.screen_click || {}) },
+                auto__: { timer: 3000, hide: false, destroy: false, ...(events.auto__ || {}) }
+            },
+            custom: { ...(input.custom || {}), __size: { min: 7, max: 100, ...(input.custom?.__size || {}) } }
+        } })
     }
 
-    msg_box(prms = {theme: 'dark', title: 'Message', msg: 'Something...', action: { cancel: { text: 'Cancel', callback: ()=>{} }, confirm: { text: 'Confirm', callback: ()=>{}} } })
+    msg_box(prms = {})
     {
-        return this.build({ type: 'msg_box', props: prms })
+        const input = prms && typeof prms === 'object' ? prms : {};
+        const action = input.action || {};
+        return this.build({ type: 'msg_box', props: {
+            theme: 'dark', title: 'Message', msg: '', closeLabel: 'Close dialog', closeOnEscape: true, closeOnBackdrop: false, ...input,
+            action: {
+                cancel: { text: 'Cancel', ...(action.cancel || {}) },
+                confirm: { text: 'Confirm', ...(action.confirm || {}) }
+            }
+        } })
     }
 
-    alert(prms = {theme: 'dark', variant: 'info', msg: 'Something...', timeout: 3000})
+    alert(prms = {})
     {
-        return this.build({ type: 'alert', props: prms })
+        const input = prms && typeof prms === 'object' ? prms : {};
+        return this.build({ type: 'alert', props: { theme: 'dark', variant: 'info', msg: '', timeout: 3000, ...input } })
     }
 
-    spinner(prms = {variant: 'simple', theme: 'dark', events: { screen_click: { hide: false, destroy: false }, auto__: { timer: 3000, hide: false, destroy: false } }, text: { content: 'Loading...', animated: true, color: 'lightgray' }, backdrop: true, custom: { animation: 'spin', color: 'skyblue' }})
+    spinner(prms = {})
     {
-        return this.build({ type: 'spinner', props: prms })
+        const input = prms && typeof prms === 'object' ? prms : {};
+        const events = input.events || {};
+        return this.build({ type: 'spinner', props: {
+            variant: 'simple', theme: 'dark', backdrop: true, ...input,
+            events: {
+                ...events,
+                screen_click: { hide: false, destroy: false, ...(events.screen_click || {}) },
+                auto__: { timer: 3000, hide: false, destroy: false, ...(events.auto__ || {}) }
+            },
+            text: { content: 'Loading...', animated: true, color: 'lightgray', ...(input.text || {}) },
+            custom: { animation: 'spin', color: 'skyblue', ...(input.custom || {}) }
+        } })
     }
 
     toast(options = {})
@@ -690,26 +767,86 @@ export default class Render
         return createSkeleton(this, options)
     }
 
-    async page(url, host = document.body, util = () => {})
+    drawer(options = {})
     {
-        host.innerHTML = await (await fetch(url)).text();
-        util()
+        return createDrawer(this, options)
+    }
+
+    menu(target, options = {})
+    {
+        return createMenu(this, target, options)
+    }
+
+    messageBox(options = {})
+    {
+        return this.msg_box(options)
+    }
+
+    blockUI(options = {})
+    {
+        return this.block_ui(options)
+    }
+
+    loadPage(...args)
+    {
+        return this.page(...args)
+    }
+
+    confirm(options = {})
+    {
+        const input = options && typeof options === 'object' ? options : {};
+        const actions = input.action || {};
+        return new Promise((resolve) => {
+            let resolved = false;
+            const finish = (value) => {
+                if (resolved) return;
+                resolved = true;
+                resolve(value);
+            };
+            const id = this.msg_box({
+                ...input,
+                action: {
+                    cancel: {
+                        text: input.cancelText ?? actions.cancel?.text ?? 'Cancel',
+                        callback: () => { try { actions.cancel?.callback?.(); } finally { finish(false); } }
+                    },
+                    confirm: {
+                        text: input.confirmText ?? actions.confirm?.text ?? 'Confirm',
+                        callback: () => { try { actions.confirm?.callback?.(); } finally { finish(true); } }
+                    }
+                }
+            });
+            this.__registerCleanup(id, () => finish(false));
+        });
+    }
+
+    async page(url, host = document.body, util = () => {}, options = {})
+    {
+        if (typeof util !== 'function') {
+            options = util && typeof util === 'object' ? util : {};
+            util = () => {};
+        }
+        const target = typeof host === 'string' ? document.querySelector(host) : host;
+        if (!(target instanceof Element)) throw new TypeError('tzrender.page: host must be a CSS selector or an Element.');
+        const response = await fetch(url, { signal: options?.signal });
+        if (!response.ok) throw new Error(`tzrender.page: request failed (${response.status} ${response.statusText || ''})`.trim());
+        const markup = await response.text();
+        if (options?.trustedHtml === true) {
+            target.innerHTML = markup;
+        } else {
+            const safeBody = sanitizePageMarkup(markup);
+            target.replaceChildren(...safeBody.childNodes);
+        }
+        if (typeof util === 'function') util(target);
+        return target;
     }
 
     __id()
     {
-        let id = '';
-        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 10; i++)
-        {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-
-        if (document.getElementById(id))
-        {
-            return this.__id();
-        }
-
+        const token = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+        let id = `tzr-${token.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+        while (this.ids.has(id) || document.getElementById(id)) id = `tzr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+        this.ids.add(id);
         return id;
     }
 
@@ -721,6 +858,8 @@ export default class Render
 
     destroy(id)
     {
+        id = typeof id === 'string' ? id : id?.__id;
+        if (!id) return;
         const callbacks = this.cleanups.get(id)
         if (callbacks) {
             this.cleanups.delete(id)
@@ -731,5 +870,11 @@ export default class Render
         }
         const el = document.getElementById(id)
         if (el) el.remove()
+        this.ids.delete(id)
+    }
+
+    destroyAll()
+    {
+        [...this.ids].forEach((id) => this.destroy(id))
     }
 }

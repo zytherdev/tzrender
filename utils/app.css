@@ -352,6 +352,13 @@ header h1 { letter-spacing: -.055em; font-size: 1.5rem; }
 .range-group label { display: flex; justify-content: space-between; gap: .3rem; }
 .range-group output { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .gradient-preview { height: 112px; border-radius: 14px; border: 1px solid var(--card-border); background: linear-gradient(135deg,#7657e8,#28c5b7); }
+.flex-preview, .grid-preview { min-height: 190px; padding: 1rem; border: 1px solid var(--card-border); border-radius: 14px; background: color-mix(in srgb, var(--accent) 6%, var(--bg-primary)); }
+.flex-preview { display: flex; justify-content: flex-start; align-items: center; flex-wrap: nowrap; gap: 12px; }
+.flex-preview span, .grid-preview span { display: grid; min-width: 0; min-height: 48px; place-items: center; border-radius: 10px; color: #fff; background: linear-gradient(135deg, #7657e8, #28aeb7); font-weight: 800; }
+.flex-preview span { flex: 0 1 64px; }
+.grid-preview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(48px, auto)); gap: 12px; }
+.layout-checkbox { display: flex; align-items: center; gap: .55rem; margin: .3rem 0 .9rem; color: var(--text-secondary); font-size: .85rem; cursor: pointer; }
+.layout-checkbox input { width: 1rem; height: 1rem; accent-color: var(--accent); }
 .shadow-stage { min-height: 156px; display: grid; place-items: center; border-radius: 14px; background: color-mix(in srgb, var(--accent) 7%, var(--bg-primary)); margin-bottom: .9rem; }
 .shadow-sample { display: grid; place-items: center; width: min(58%, 190px); min-height: 84px; border-radius: 16px; color: #2a2440; background: #fff; font-weight: 700; box-shadow: 0 16px 32px rgba(37,28,72,.16); }
 .contrast-preview { min-height: 112px; display: flex; flex-direction: column; justify-content: center; gap: .35rem; border: 1px solid var(--border); border-radius: 14px; padding: 1rem; color: #211b38; background: #fff; }

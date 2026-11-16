@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Write HTML, CSS and JavaScript in a browser editor and run your work in an isolated live preview.">
+  <title>Editor — tzrender</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/site/site.css">
+  <link rel="stylesheet" href="/site/editor.css">
+  <script type="module" src="/site/editor.js"></script>
+</head>
+<body class="editor-shell">
+  <header class="editor-topbar">
+    <a class="brand editor-brand" href="/" aria-label="Back to tzrender home"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span><span class="brand-divider"></span><span class="product-label">Editor</span></a>
+    <div class="project-controls">
+      <label class="visually-hidden" for="projectName">Project name</label><input id="projectName" class="project-name" value="My first website" maxlength="48" aria-label="Project name">
+      <label class="visually-hidden" for="starterSelect">Choose a starter</label><select id="starterSelect" class="toolbar-select" aria-label="Choose a starter"><option value="landing">Landing page starter</option><option value="profile">Profile card starter</option><option value="blank">Blank project</option></select>
+    </div>
+    <div class="editor-actions">
+      <span class="save-state" id="saveState" role="status" aria-live="polite"><i></i> Ready</span>
+      <label class="auto-run"><input type="checkbox" id="autoRun" checked><span>Auto-run</span></label>
+      <button class="toolbar-button" id="downloadFile" type="button" title="Download the active file">Download file</button>
+      <button class="toolbar-button toolbar-export" id="exportProject" type="button" title="Export your browser-local project">Export project</button>
+      <button class="toolbar-button toolbar-run" id="runProject" type="button"><span aria-hidden="true">▶</span> Run</button>
+    </div>
+  </header>
+
+  <main class="editor-workspace" id="editorWorkspace" data-panel="editor">
+    <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button><button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-panel-tab="console">Console <span class="console-count" id="consoleCount">0</span></button>
+    </nav>
+    <aside class="file-sidebar" aria-label="Project files">
+      <div class="sidebar-heading"><span>EXPLORER</span><button id="resetProject" class="subtle-icon-button" type="button" title="Reset this project to the selected starter">↺</button></div>
+      <div class="project-tree-label"><span class="tree-chevron">⌄</span> <span id="treeProjectName">MY FIRST WEBSITE</span></div>
+      <div class="file-list" role="tablist" aria-label="Project files">
+        <button class="file-tab active" type="button" role="tab" aria-selected="true" data-file="html"><span class="file-symbol file-html">5</span><span>index.html</span></button>
+        <button class="file-tab" type="button" role="tab" aria-selected="false" data-file="css"><span class="file-symbol file-css">#</span><span>styles.css</span></button>
+        <button class="file-tab" type="button" role="tab" aria-selected="false" data-file="js"><span class="file-symbol file-js">JS</span><span>script.js</span></button>
+      </div>
+      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Static HTML, CSS, and JavaScript only. No shell, Git, extensions, npm packages, or remote execution; drafts stay on this device.</p></div>
+      <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Saved only on this device</span></div>
+    </aside>
+
+    <section class="code-pane editor-panel" aria-label="Code editor">
+      <div class="pane-titlebar"><div class="open-file-tab"><span class="file-symbol file-html" id="activeFileSymbol">5</span><span id="activeFileLabel">index.html</span><span class="dirty-indicator" id="dirtyIndicator" hidden>●</span></div><div class="pane-tools"><span class="editor-language-label" id="languageLabel">HTML</span><button class="subtle-icon-button" id="formatCode" type="button" title="Format this file">⇥</button></div></div>
+      <div id="codeEditor" class="monaco-mount" aria-label="Source code"></div>
+      <div class="editor-statusbar"><span id="cursorStatus">Ln 1, Col 1</span><span><span class="status-dot"></span> HTML · CSS · JavaScript</span><span>UTF-8</span></div>
+    </section>
+
+    <section class="preview-pane editor-panel" aria-label="Website preview">
+      <div class="pane-titlebar preview-titlebar"><div class="pane-title"><span class="pane-icon preview-pane-icon" aria-hidden="true">◉</span><strong>Preview</strong><span class="preview-url">/index.html</span></div><div class="preview-toolbar"><label class="visually-hidden" for="viewportSize">Preview size</label><select id="viewportSize" class="viewport-select"><option value="responsive">Responsive</option><option value="desktop">Desktop · 1280px</option><option value="tablet">Tablet · 768px</option><option value="mobile">Mobile · 390px</option></select><button class="subtle-icon-button" id="reloadPreview" type="button" title="Run preview again">↻</button></div></div>
+      <div class="preview-stage" id="previewStage"><div class="preview-canvas-wrap" id="previewCanvasWrap"><iframe id="previewFrame" title="Sandboxed website preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><div class="preview-empty" id="previewEmpty" hidden><span class="empty-orbit" aria-hidden="true">&lt;/&gt;</span><p>Run your page to see it here.</p></div></div>
+      <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="Static HTML, CSS, and JavaScript only. No shell, Git, extensions, npm packages, or remote project execution. Drafts stay in this browser and are not cloud-synced. Remote scripts and API calls are blocked, but user code still runs locally in the sandbox; avoid secrets and infinite loops." title="This is a local static front-end workspace: no shell, Git, extensions, npm packages, or remote project execution. Drafts stay in this browser and are not cloud-synced. Remote scripts and API calls are blocked, but user code still runs locally in the sandbox; avoid secrets and infinite loops.">Sandboxed · static files · local drafts · no shell/Git/npm</span></div>
+    </section>
+
+    <section class="console-pane editor-panel" aria-label="Preview console">
+      <div class="console-heading"><div class="console-tabs"><button class="console-tab active" type="button" aria-pressed="true">Console</button><span class="console-tab-label">Output from your preview</span></div><div class="console-actions"><button id="clearConsole" class="subtle-icon-button" type="button" title="Clear messages">Clear</button></div></div>
+      <div class="console-output" id="consoleOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="console-placeholder">Your preview messages will appear here.</div></div>
+    </section>
+  </main>
+  <div class="editor-mobile-notice" id="mobileEditorNotice" hidden><span><strong>Best with a keyboard.</strong> Monaco is designed for desktop browsers. On smaller touch screens, code editing may feel limited.</span><button id="closeMobileNotice" type="button" aria-label="Dismiss editor support notice">×</button></div>
+  <div class="toast-region" id="siteToast" role="status" aria-live="polite"></div>
+</body>
+</html>

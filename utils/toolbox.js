@@ -1,9 +1,10 @@
 const COPY = {
   pt: {
     eyebrow: 'UM ESPAÇO AMIGÁVEL PARA SUA PRÓXIMA IDEIA', heroTitle: 'Crie para a web, uma pequena vitória por vez.', heroDescription: 'Geradores úteis, prévias instantâneas e código pronto para copiar — aprenda fazendo.', jumpTools: 'Explorar ferramentas ↓', jumpComponents: 'Ver componentes ↓',
-    toolboxEyebrow: 'COMECE AQUI · CRIE ALGO', toolboxTitle: 'Seu toolbox de front-end', toolboxDescription: 'Ajuste, visualize e copie. Sem configuração, sem mistério.', toolCount: '5 ferramentas grátis',
+    toolboxEyebrow: 'COMECE AQUI · CRIE ALGO', toolboxTitle: 'Seu toolbox de front-end', toolboxDescription: 'Ajuste, visualize e copie. Sem configuração, sem mistério.', toolCount: '7 ferramentas grátis',
     libraryKicker: 'COMPONENTES REUTILIZÁVEIS', libraryTitle: 'Prontos para entrar no seu projeto', libraryDescription: 'Estes exemplos chamam a API pública do tzrender — não são efeitos exclusivos desta página.', toastDemoTitle: 'Notificações toast', toastDemoDescription: 'Mostre um feedback rápido e acessível.', toastDemoButton: 'Mostrar toast', toastTitle: 'Salvo!', toastMessage: 'Suas alterações estão prontas.', tooltipDemoTitle: 'Tooltips acessíveis', tooltipDemoDescription: 'Passe o mouse ou foque este botão.', tooltipDemoButton: 'Passe ou foque aqui', tooltipContent: 'Uma dica útil para sua interface.', accordionDemoTitle: 'Accordion', accordionOneTitle: 'O que é HTML?', accordionOneContent: 'HTML organiza o conteúdo da página com elementos semânticos.', accordionTwoTitle: 'Para que serve CSS?', accordionTwoContent: 'CSS controla o visual, o espaçamento e a adaptação a telas diferentes.', tabsDemoTitle: 'Tabs com teclado', tabHtml: 'HTML', tabHtmlContent: 'HTML dá estrutura ao conteúdo da página.', tabCss: 'CSS', tabCssContent: 'CSS define cores, layouts e estilos responsivos.', tabJs: 'JavaScript', tabJsContent: 'JavaScript adiciona comportamento e interações.',
     progressDemoTitle: 'Indicadores de progresso', progressDemoDescription: 'Atualize uma barra ou anel conforme o trabalho avança.', progressDemoButton: 'Avançar progresso', progressLabel: 'Envio do arquivo', ringProgressLabel: 'Preparação', progressUpdatedLabel: 'Envio em andamento', skeletonDemoTitle: 'Placeholders skeleton', skeletonStatus: 'Carregando conteúdo de exemplo…',
+    flexKicker: 'LABORATÓRIO DE LAYOUT', flexTitle: 'Playground de Flexbox', flexDescription: 'Ajuste os controles, veja o layout mudar e copie o CSS.', flexDirection: 'Direção', directionRow: 'Linha', directionColumn: 'Coluna', directionReverse: 'Linha invertida', flexJustify: 'Alinhamento principal', flexAlign: 'Alinhamento cruzado', alignStart: 'Início', alignCenter: 'Centro', alignEnd: 'Fim', alignStretch: 'Esticar', spaceBetween: 'Espaço entre', spaceAround: 'Espaço ao redor', flexWrap: 'Permitir quebra de linha', gridKicker: 'LABORATÓRIO DE LAYOUT', gridTitle: 'Gerador de CSS Grid', gridDescription: 'Crie uma grade responsiva simples e copie o CSS.', gridColumns: 'Colunas', gridRows: 'Linhas', layoutGap: 'Espaçamento',
     playgroundKicker: 'APRENDA FAZENDO', playgroundTitle: 'Playground de código ao vivo', playgroundDescription: 'Edite HTML, CSS e JavaScript. A prévia muda enquanto você digita.', previewLabel: 'PRÉVIA AO VIVO', sandboxHint: 'Executa em uma prévia isolada. Seu código fica nesta aba do navegador.',
     starterKicker: 'COMECE DO ZERO', starterTitle: 'Estrutura inicial HTML', starterDescription: 'Gere um arquivo HTML5 pronto para editar, com o essencial incluído.', starterGreeting: 'Sua primeira página está pronta. Personalize do seu jeito!', siteNameLabel: 'Título da página', pageLanguageLabel: 'Idioma da página', yourCode: 'SEU CÓDIGO', copyButton: 'Copiar código', copiedButton: 'Copiado!', starterHint: 'Salve como index.html e abra no navegador.',
     gradientKicker: 'BRINQUE COM CORES', gradientTitle: 'Gerador de gradiente CSS', gradientDescription: 'Combine duas cores, ajuste o ângulo e copie o CSS.', startColor: 'Cor inicial', endColor: 'Cor final', angleLabel: 'Ângulo',
@@ -13,9 +14,10 @@ const COPY = {
   },
   en: {
     eyebrow: 'A FRIENDLY WORKSPACE FOR YOUR NEXT IDEA', heroTitle: 'Build for the web, one small win at a time.', heroDescription: 'Useful generators, instant previews and copy-ready code — learn by doing.', jumpTools: 'Explore the toolbox ↓', jumpComponents: 'Browse components ↓',
-    toolboxEyebrow: 'START HERE · MAKE SOMETHING', toolboxTitle: 'Your front-end toolbox', toolboxDescription: 'Tweak, preview and copy. No setup, no guesswork.', toolCount: '5 free tools',
+    toolboxEyebrow: 'START HERE · MAKE SOMETHING', toolboxTitle: 'Your front-end toolbox', toolboxDescription: 'Tweak, preview and copy. No setup, no guesswork.', toolCount: '7 free tools',
     libraryKicker: 'REUSABLE UI COMPONENTS', libraryTitle: 'Ready to drop into your project', libraryDescription: 'These examples call tzrender’s public API — they are not page-only effects.', toastDemoTitle: 'Toast notifications', toastDemoDescription: 'Show quick, accessible feedback.', toastDemoButton: 'Show toast', toastTitle: 'Saved!', toastMessage: 'Your changes are ready.', tooltipDemoTitle: 'Accessible tooltips', tooltipDemoDescription: 'Hover over or focus this button.', tooltipDemoButton: 'Hover or focus me', tooltipContent: 'A helpful hint for your interface.', accordionDemoTitle: 'Accordion', accordionOneTitle: 'What is HTML?', accordionOneContent: 'HTML organizes page content with semantic elements.', accordionTwoTitle: 'What does CSS do?', accordionTwoContent: 'CSS controls appearance, spacing, and responsive layouts.', tabsDemoTitle: 'Keyboard-friendly tabs', tabHtml: 'HTML', tabHtmlContent: 'HTML gives structure to page content.', tabCss: 'CSS', tabCssContent: 'CSS defines color, layout, and responsive styling.', tabJs: 'JavaScript', tabJsContent: 'JavaScript adds behavior and interactions.',
     progressDemoTitle: 'Progress indicators', progressDemoDescription: 'Update a bar or ring as work completes.', progressDemoButton: 'Advance progress', progressLabel: 'File upload', ringProgressLabel: 'Preparation', progressUpdatedLabel: 'Upload in progress', skeletonDemoTitle: 'Skeleton placeholders', skeletonStatus: 'Loading example content…',
+    flexKicker: 'LAYOUT LAB', flexTitle: 'Flexbox playground', flexDescription: 'Adjust the controls, see the layout change, and copy the CSS.', flexDirection: 'Direction', directionRow: 'Row', directionColumn: 'Column', directionReverse: 'Row reverse', flexJustify: 'Justify content', flexAlign: 'Align items', alignStart: 'Start', alignCenter: 'Center', alignEnd: 'End', alignStretch: 'Stretch', spaceBetween: 'Space between', spaceAround: 'Space around', flexWrap: 'Allow items to wrap', gridKicker: 'LAYOUT LAB', gridTitle: 'CSS Grid generator', gridDescription: 'Create a simple responsive grid and copy its CSS.', gridColumns: 'Columns', gridRows: 'Rows', layoutGap: 'Gap',
     playgroundKicker: 'LEARN BY DOING', playgroundTitle: 'Live code playground', playgroundDescription: 'Edit HTML, CSS and JavaScript. Your preview updates as you type.', previewLabel: 'LIVE PREVIEW', sandboxHint: 'Runs in an isolated preview. Your code stays in this browser tab.',
     starterKicker: 'START CLEAN', starterTitle: 'HTML page starter', starterDescription: 'Generate a ready-to-edit HTML5 file with the essentials included.', starterGreeting: 'Your first page is ready. Make it yours!', siteNameLabel: 'Page title', pageLanguageLabel: 'Page language', yourCode: 'YOUR CODE', copyButton: 'Copy code', copiedButton: 'Copied!', starterHint: 'Save it as index.html, then open it in your browser.',
     gradientKicker: 'COLOR PLAY', gradientTitle: 'CSS gradient maker', gradientDescription: 'Mix two colors, set the angle and copy the CSS.', startColor: 'Start color', endColor: 'End color', angleLabel: 'Angle',
@@ -25,9 +27,10 @@ const COPY = {
   },
   es: {
     eyebrow: 'UN ESPACIO AMIGABLE PARA TU PRÓXIMA IDEA', heroTitle: 'Construye para la web, un pequeño logro a la vez.', heroDescription: 'Generadores útiles, vistas previas instantáneas y código listo para copiar: aprende practicando.', jumpTools: 'Explorar herramientas ↓', jumpComponents: 'Ver componentes ↓',
-    toolboxEyebrow: 'EMPIEZA AQUÍ · CREA ALGO', toolboxTitle: 'Tu caja de herramientas front-end', toolboxDescription: 'Ajusta, previsualiza y copia. Sin configuración ni complicaciones.', toolCount: '5 herramientas gratis',
+    toolboxEyebrow: 'EMPIEZA AQUÍ · CREA ALGO', toolboxTitle: 'Tu caja de herramientas front-end', toolboxDescription: 'Ajusta, previsualiza y copia. Sin configuración ni complicaciones.', toolCount: '7 herramientas gratis',
     libraryKicker: 'COMPONENTES REUTILIZABLES', libraryTitle: 'Listos para usar en tu proyecto', libraryDescription: 'Estos ejemplos utilizan la API pública de tzrender; no son efectos exclusivos de esta página.', toastDemoTitle: 'Notificaciones toast', toastDemoDescription: 'Muestra feedback rápido y accesible.', toastDemoButton: 'Mostrar toast', toastTitle: '¡Guardado!', toastMessage: 'Tus cambios están listos.', tooltipDemoTitle: 'Tooltips accesibles', tooltipDemoDescription: 'Pasa el cursor o enfoca este botón.', tooltipDemoButton: 'Pasa el cursor o enfócame', tooltipContent: 'Un consejo útil para tu interfaz.', accordionDemoTitle: 'Acordeón', accordionOneTitle: '¿Qué es HTML?', accordionOneContent: 'HTML organiza el contenido de la página con elementos semánticos.', accordionTwoTitle: '¿Para qué sirve CSS?', accordionTwoContent: 'CSS controla el aspecto, el espaciado y los diseños adaptables.', tabsDemoTitle: 'Pestañas accesibles con teclado', tabHtml: 'HTML', tabHtmlContent: 'HTML da estructura al contenido de la página.', tabCss: 'CSS', tabCssContent: 'CSS define colores, diseños y estilos adaptables.', tabJs: 'JavaScript', tabJsContent: 'JavaScript añade comportamiento e interacciones.',
     progressDemoTitle: 'Indicadores de progreso', progressDemoDescription: 'Actualiza una barra o un anillo mientras avanza el trabajo.', progressDemoButton: 'Avanzar progreso', progressLabel: 'Carga del archivo', ringProgressLabel: 'Preparación', progressUpdatedLabel: 'Carga en progreso', skeletonDemoTitle: 'Placeholders skeleton', skeletonStatus: 'Cargando contenido de ejemplo…',
+    flexKicker: 'LABORATORIO DE DISEÑO', flexTitle: 'Playground de Flexbox', flexDescription: 'Ajusta los controles, observa el diseño y copia el CSS.', flexDirection: 'Dirección', directionRow: 'Fila', directionColumn: 'Columna', directionReverse: 'Fila inversa', flexJustify: 'Alineación principal', flexAlign: 'Alineación cruzada', alignStart: 'Inicio', alignCenter: 'Centro', alignEnd: 'Fin', alignStretch: 'Estirar', spaceBetween: 'Espacio entre', spaceAround: 'Espacio alrededor', flexWrap: 'Permitir que los elementos salten de línea', gridKicker: 'LABORATORIO DE DISEÑO', gridTitle: 'Generador de CSS Grid', gridDescription: 'Crea una cuadrícula adaptable y copia el CSS.', gridColumns: 'Columnas', gridRows: 'Filas', layoutGap: 'Espacio',
     playgroundKicker: 'APRENDE PRACTICANDO', playgroundTitle: 'Playground de código en vivo', playgroundDescription: 'Edita HTML, CSS y JavaScript. La vista previa cambia mientras escribes.', previewLabel: 'VISTA EN VIVO', sandboxHint: 'Se ejecuta en una vista aislada. Tu código permanece en esta pestaña.',
     starterKicker: 'EMPIEZA DESDE CERO', starterTitle: 'Plantilla HTML inicial', starterDescription: 'Genera un archivo HTML5 listo para editar con lo esencial.', starterGreeting: 'Tu primera página está lista. ¡Hazla tuya!', siteNameLabel: 'Título de la página', pageLanguageLabel: 'Idioma de la página', yourCode: 'TU CÓDIGO', copyButton: 'Copiar código', copiedButton: '¡Copiado!', starterHint: 'Guárdalo como index.html y ábrelo en tu navegador.',
     gradientKicker: 'JUEGA CON EL COLOR', gradientTitle: 'Generador de degradados CSS', gradientDescription: 'Combina dos colores, ajusta el ángulo y copia el CSS.', startColor: 'Color inicial', endColor: 'Color final', angleLabel: 'Ángulo',
@@ -94,6 +97,10 @@ function bindTools() {
   ['gradientStart', 'gradientEnd', 'gradientAngle'].forEach((id) => byId(id).addEventListener('input', refreshGradient));
   ['shadowX', 'shadowY', 'shadowBlur', 'shadowSpread'].forEach((id) => byId(id).addEventListener('input', refreshShadow));
   ['contrastText', 'contrastBg'].forEach((id) => byId(id).addEventListener('input', refreshContrast));
+  ['flexDirection', 'flexJustify', 'flexAlign'].forEach((id) => byId(id).addEventListener('change', refreshFlexbox));
+  ['flexGap', 'flexWrap'].forEach((id) => byId(id).addEventListener('input', refreshFlexbox));
+  ['gridColumns', 'gridRows'].forEach((id) => byId(id).addEventListener('change', refreshGrid));
+  byId('gridGap').addEventListener('input', refreshGrid);
   ['playgroundHtml', 'playgroundCss', 'playgroundJs'].forEach((id) => {
     byId(id).addEventListener('input', (event) => {
       event.currentTarget.dataset.userEdited = 'true';
@@ -107,6 +114,8 @@ function bindTools() {
   refreshGradient();
   refreshShadow();
   refreshContrast();
+  refreshFlexbox();
+  refreshGrid();
   refreshPlayground();
 }
 
@@ -145,6 +154,40 @@ function refreshShadow() {
   const shadow = `${x}px ${y}px ${blur}px ${spread}px rgba(37, 28, 72, 0.16)`;
   byId('shadowSample').style.boxShadow = shadow;
   byId('shadowOutput').textContent = `box-shadow: ${shadow};`;
+}
+
+function refreshFlexbox() {
+  const direction = byId('flexDirection').value;
+  const justify = byId('flexJustify').value;
+  const align = byId('flexAlign').value;
+  const gap = Number(byId('flexGap').value);
+  const wrap = byId('flexWrap').checked ? 'wrap' : 'nowrap';
+  const preview = byId('flexPreview');
+  preview.style.flexDirection = direction;
+  preview.style.justifyContent = justify;
+  preview.style.alignItems = align;
+  preview.style.gap = `${gap}px`;
+  preview.style.flexWrap = wrap;
+  byId('flexGapValue').value = `${gap}px`;
+  byId('flexOutput').textContent = `display: flex;\nflex-direction: ${direction};\njustify-content: ${justify};\nalign-items: ${align};\nflex-wrap: ${wrap};\ngap: ${gap}px;`;
+}
+
+function refreshGrid() {
+  const columns = Math.max(2, Math.min(4, Number(byId('gridColumns').value) || 3));
+  const rows = Math.max(1, Math.min(3, Number(byId('gridRows').value) || 2));
+  const gap = Math.max(0, Math.min(40, Number(byId('gridGap').value) || 0));
+  const preview = byId('gridPreview');
+  const itemCount = columns * rows;
+  preview.replaceChildren(...Array.from({ length: itemCount }, (_, index) => {
+    const item = document.createElement('span');
+    item.textContent = String(index + 1);
+    return item;
+  }));
+  preview.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+  preview.style.gridTemplateRows = `repeat(${rows}, minmax(48px, auto))`;
+  preview.style.gap = `${gap}px`;
+  byId('gridGapValue').value = `${gap}px`;
+  byId('gridOutput').textContent = `display: grid;\ngrid-template-columns: repeat(${columns}, minmax(0, 1fr));\ngrid-template-rows: repeat(${rows}, minmax(48px, auto));\ngap: ${gap}px;`;
 }
 
 function hexRgb(hex) {

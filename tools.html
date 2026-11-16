@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Build better CSS with practical live tools for contrast, gradients, layout, spacing, shadows, and the box model.">
+  <title>Front-end Tools — tzrender</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/site/site.css">
+  <link rel="stylesheet" href="/site/tools.css">
+  <script type="module" src="/site/tools.js"></script>
+</head>
+<body class="site-shell tools-shell">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="tzrender home"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a>
+    <nav class="main-nav" aria-label="Main navigation"><a href="/editor.html">Editor</a><a class="active" href="/tools.html" aria-current="page">Tools</a><a href="/#components">Components</a><a href="https://www.npmjs.com/package/@zyther/tzrender" target="_blank" rel="noopener">npm ↗</a></nav>
+    <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch to light theme" title="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button>
+  </header>
+  <main class="tools-main wrap">
+    <section class="tools-hero"><div><p class="eyebrow"><span class="status-dot"></span> Try it. Understand it. Take it with you.</p><h1>Small tools.<br><span>Better front ends.</span></h1><p>Useful CSS builders and accessibility checks with real previews and code you can use in your project.</p></div><div class="tools-hero-aside"><span class="tools-count"><strong>8</strong> tools</span><span>Free to use · Runs in your browser</span></div></section>
+    <section class="tools-catalog" aria-label="Front-end tools">
+      <div class="tools-controls"><div class="filter-tabs" role="group" aria-label="Filter tools"><button class="filter-tab active" type="button" data-filter="all" aria-pressed="true">All tools <span>8</span></button><button class="filter-tab" type="button" data-filter="code" aria-pressed="false">Code & starters</button><button class="filter-tab" type="button" data-filter="colors" aria-pressed="false">Colors & accessibility</button><button class="filter-tab" type="button" data-filter="layout" aria-pressed="false">CSS layout</button><button class="filter-tab" type="button" data-filter="effects" aria-pressed="false">Visual effects</button></div><label class="tool-search"><span class="visually-hidden">Search tools</span><span aria-hidden="true">⌕</span><input id="toolSearch" type="search" placeholder="Find a tool…" autocomplete="off"></label></div>
+      <p class="filter-status" id="filterStatus" role="status" aria-live="polite">Showing all 8 tools.</p>
+      <div class="tool-grid" id="toolGrid">
+        <article class="tool-card tool-card-featured" data-tool-card data-category="code" data-search="html starter document boilerplate page">
+          <div class="tool-card-head"><span class="tool-number">01</span><span class="tool-category">CODE & STARTERS</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Start an HTML page</h2><p>Get a clean, accessible HTML5 file with the basics already in place.</p>
+          <div class="tool-preview starter-preview"><div class="browser-preview-bar"><i></i><i></i><i></i><span>index.html</span></div><div class="starter-preview-content"><span class="preview-chip">STARTER FILE</span><strong id="starterPreviewTitle">My first website</strong><span>Viewport ready · semantic HTML · no dependencies</span></div></div>
+          <div class="tool-controls tool-controls-inline"><label class="field-label" for="starterTitle">Page title</label><input id="starterTitle" maxlength="60" value="My first website"><label class="field-label" for="starterDescription">Short description</label><input id="starterDescription" maxlength="120" value="A simple website built with HTML, CSS, and JavaScript."></div>
+          <div class="output-block"><div class="output-head"><span>YOUR HTML</span><button class="copy-button" data-copy="starterOutput" type="button">Copy file</button></div><pre class="code-output"><code id="starterOutput"></code></pre></div><div class="tool-feedback" id="starterFeedback" aria-live="polite">Save as <code>index.html</code> and open it in a browser.</div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="colors" data-search="gradient background color linear css">
+          <div class="tool-card-head"><span class="tool-number">02</span><span class="tool-category">COLORS & ACCESSIBILITY</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Gradient builder</h2><p>Shape a smooth two-color gradient and copy the CSS background rule.</p>
+          <div class="tool-preview gradient-preview" id="gradientPreview"><span>COLOR IN MOTION</span></div>
+          <div class="tool-controls control-grid"><label class="field-label" for="gradientStart">First color<input id="gradientStart" type="color" value="#8b72ff"></label><label class="field-label" for="gradientEnd">Second color<input id="gradientEnd" type="color" value="#54d6b4"></label><label class="range-field" for="gradientAngle">Angle <output id="gradientAngleValue">135°</output><input id="gradientAngle" type="range" min="0" max="360" value="135"></label></div>
+          <div class="output-block"><div class="output-head"><span>CSS</span><button class="copy-button" data-copy="gradientOutput" type="button">Copy CSS</button></div><pre class="code-output"><code id="gradientOutput"></code></pre></div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="colors" data-search="contrast accessibility wcag readable color text background">
+          <div class="tool-card-head"><span class="tool-number">03</span><span class="tool-category">COLORS & ACCESSIBILITY</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Contrast checker</h2><p>Check text contrast against WCAG AA and AAA thresholds before you ship.</p>
+          <div class="tool-preview contrast-preview" id="contrastPreview"><strong>Readable text matters.</strong><span>Can everyone read this?</span></div>
+          <div class="tool-controls control-grid"><label class="field-label" for="contrastForeground">Text color<input id="contrastForeground" type="color" value="#1d1833"></label><label class="field-label" for="contrastBackground">Background<input id="contrastBackground" type="color" value="#ffffff"></label></div>
+          <div class="contrast-summary" aria-live="polite"><strong id="contrastRatio">17.06:1</strong><span id="contrastGrade" class="grade-pill">AAA · Pass</span></div><p class="tool-footnote">WCAG AA: 4.5:1 for normal text, 3:1 for large text. AAA: 7:1 and 4.5:1.</p>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="layout" data-search="flexbox flex layout align items justify gap wrap css">
+          <div class="tool-card-head"><span class="tool-number">04</span><span class="tool-category">CSS LAYOUT</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Flexbox workbench</h2><p>See how direction, alignment, wrapping, and spacing change the layout.</p>
+          <div class="tool-preview flex-preview" id="flexPreview" aria-label="Flexbox preview"><span>01</span><span>02</span><span>03</span><span>04</span></div>
+          <div class="tool-controls control-grid"><label class="field-label" for="flexDirection">Direction<select id="flexDirection"><option>row</option><option>column</option><option>row-reverse</option><option>column-reverse</option></select></label><label class="field-label" for="flexJustify">Justify content<select id="flexJustify"><option>flex-start</option><option>center</option><option>flex-end</option><option>space-between</option><option selected>space-around</option><option>space-evenly</option></select></label><label class="field-label" for="flexAlign">Align items<select id="flexAlign"><option>stretch</option><option>flex-start</option><option selected>center</option><option>flex-end</option></select></label><label class="range-field" for="flexGap">Gap <output id="flexGapValue">12px</output><input id="flexGap" type="range" min="0" max="48" value="12"></label><label class="check-field"><input id="flexWrap" type="checkbox"><span>Allow items to wrap</span></label></div>
+          <div class="output-block"><div class="output-head"><span>FLEXBOX CSS</span><button class="copy-button" data-copy="flexOutput" type="button">Copy CSS</button></div><pre class="code-output"><code id="flexOutput"></code></pre></div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="layout" data-search="grid css columns rows gap responsive repeat">
+          <div class="tool-card-head"><span class="tool-number">05</span><span class="tool-category">CSS LAYOUT</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>CSS Grid builder</h2><p>Choose a grid structure, preview the tracks, and copy the generated CSS.</p>
+          <div class="tool-preview grid-preview" id="gridPreview" aria-label="CSS Grid preview"></div>
+          <div class="tool-controls control-grid"><label class="field-label" for="gridColumns">Columns<select id="gridColumns"><option value="2">2 columns</option><option value="3" selected>3 columns</option><option value="4">4 columns</option><option value="auto">Auto-fit</option></select></label><label class="field-label" for="gridMin">Minimum item width<select id="gridMin"><option value="160px">160px</option><option value="200px" selected>200px</option><option value="240px">240px</option><option value="280px">280px</option></select></label><label class="range-field" for="gridGap">Gap <output id="gridGapValue">16px</output><input id="gridGap" type="range" min="0" max="40" value="16"></label></div>
+          <div class="output-block"><div class="output-head"><span>GRID CSS</span><button class="copy-button" data-copy="gridOutput" type="button">Copy CSS</button></div><pre class="code-output"><code id="gridOutput"></code></pre></div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="effects" data-search="box shadow elevation blur spread offset css">
+          <div class="tool-card-head"><span class="tool-number">06</span><span class="tool-category">VISUAL EFFECTS</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Box-shadow studio</h2><p>Adjust an elevation shadow and see its softness and direction immediately.</p>
+          <div class="tool-preview shadow-stage"><div class="shadow-sample" id="shadowSample">A card with depth</div></div>
+          <div class="tool-controls control-grid"><label class="range-field" for="shadowX">X offset <output id="shadowXValue">0px</output><input id="shadowX" type="range" min="-24" max="24" value="0"></label><label class="range-field" for="shadowY">Y offset <output id="shadowYValue">16px</output><input id="shadowY" type="range" min="-16" max="36" value="16"></label><label class="range-field" for="shadowBlur">Blur <output id="shadowBlurValue">32px</output><input id="shadowBlur" type="range" min="0" max="80" value="32"></label><label class="range-field" for="shadowSpread">Spread <output id="shadowSpreadValue">0px</output><input id="shadowSpread" type="range" min="-12" max="20" value="0"></label><label class="field-label" for="shadowColor">Shadow color<input id="shadowColor" type="color" value="#31265a"></label><label class="range-field" for="shadowOpacity">Opacity <output id="shadowOpacityValue">18%</output><input id="shadowOpacity" type="range" min="0" max="60" value="18"></label></div>
+          <div class="output-block"><div class="output-head"><span>CSS</span><button class="copy-button" data-copy="shadowOutput" type="button">Copy CSS</button></div><pre class="code-output"><code id="shadowOutput"></code></pre></div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="layout" data-search="box model margin border padding width height content css">
+          <div class="tool-card-head"><span class="tool-number">07</span><span class="tool-category">CSS LAYOUT</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Box-model visualizer</h2><p>Understand how margin, border, padding, and content fit together.</p>
+          <div class="tool-preview box-stage"><div class="box-margin" id="boxMargin"><span class="box-label">margin</span><div class="box-border" id="boxBorder"><span class="box-label">border</span><div class="box-padding" id="boxPadding"><span class="box-label">padding</span><div class="box-content" id="boxContent">content<br><small id="boxDimensions">240 × 100</small></div></div></div></div></div>
+          <div class="tool-controls control-grid"><label class="range-field" for="boxWidth">Content width <output id="boxWidthValue">240px</output><input id="boxWidth" type="range" min="120" max="320" value="240"></label><label class="range-field" for="boxHeight">Content height <output id="boxHeightValue">100px</output><input id="boxHeight" type="range" min="60" max="180" value="100"></label><label class="range-field" for="boxPaddingRange">Padding <output id="boxPaddingValue">24px</output><input id="boxPaddingRange" type="range" min="0" max="40" value="24"></label><label class="range-field" for="boxBorderRange">Border <output id="boxBorderValue">4px</output><input id="boxBorderRange" type="range" min="0" max="16" value="4"></label><label class="range-field" for="boxMarginRange">Margin <output id="boxMarginValue">16px</output><input id="boxMarginRange" type="range" min="0" max="32" value="16"></label></div>
+          <div class="output-block"><div class="output-head"><span>CSS BOX MODEL</span><button class="copy-button" data-copy="boxModelOutput" type="button">Copy CSS</button></div><pre class="code-output"><code id="boxModelOutput"></code></pre></div>
+        </article>
+
+        <article class="tool-card" data-tool-card data-category="layout" data-search="spacing scale tokens design system css rem ratio">
+          <div class="tool-card-head"><span class="tool-number">08</span><span class="tool-category">CSS LAYOUT</span><span class="tool-card-arrow" aria-hidden="true">↗</span></div><h2>Spacing-scale maker</h2><p>Build a repeatable spacing system from one base value and a simple ratio.</p>
+          <div class="tool-preview spacing-preview" id="spacingPreview" aria-label="Spacing scale preview"></div>
+          <div class="tool-controls control-grid"><label class="field-label" for="spacingBase">Base size<select id="spacingBase"><option value="4">4px</option><option value="5">5px</option><option value="6" selected>6px</option><option value="8">8px</option></select></label><label class="field-label" for="spacingRatio">Scale ratio<select id="spacingRatio"><option value="1.2">1.2 — Minor third</option><option value="1.25" selected>1.25 — Major third</option><option value="1.333">1.333 — Perfect fourth</option><option value="1.5">1.5 — Perfect fifth</option></select></label><label class="field-label" for="spacingSteps">Number of steps<select id="spacingSteps"><option value="5">5 steps</option><option value="7" selected>7 steps</option><option value="9">9 steps</option></select></label></div>
+          <div class="output-block"><div class="output-head"><span>CSS CUSTOM PROPERTIES</span><button class="copy-button" data-copy="spacingOutput" type="button">Copy tokens</button></div><pre class="code-output"><code id="spacingOutput"></code></pre></div>
+        </article>
+      </div>
+      <div class="no-tools" id="noTools" hidden><span>Nothing found</span><p>Try a different word or choose another category.</p></div>
+    </section>
+  </main>
+  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Small tools for people learning to build for the web.</p><div><a href="/editor.html">Editor</a><a href="/#components">Component library</a></div></footer>
+</body>
+</html>

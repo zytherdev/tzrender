@@ -1,280 +1,315 @@
 # tzrender
 
-`@zyther/tzrender` is a lightweight JavaScript ES module for adding themed interface components to a vanilla HTML, CSS, and JavaScript page. It creates components in the DOM and loads its bundled styles; no CSS framework is required.
+`@zyther/tzrender` is a small vanilla JavaScript UI library for everyday interface patterns: alerts, dialogs, loading states, notifications, tooltips, accordions, tabs, drawers and menus. It is designed for projects built with ordinary HTML, CSS and JavaScript. It does not require a framework or CSS library.
 
-## Get started in a plain HTML page
+> **Package vs. website:** The package is the reusable UI library described below. This repository also contains a separate learning website with a [browser code editor](editor.html) and [front-end tools](tools.html). Those website features are not imported from the npm package.
 
-1. Create an `index.html` file and paste in this complete example:
+## Install and use
 
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>tzrender quick start</title>
-</head>
-<body>
-  <main>
-    <h1>tzrender quick start</h1>
-    <button id="notify" type="button">Show notifications</button>
-  </main>
-
-  <script type="module">
-    import Render from 'https://cdn.jsdelivr.net/npm/@zyther/tzrender@latest/index.js';
-
-    const ui = new Render();
-    await ui.ready;
-
-    document.querySelector('#notify').addEventListener('click', () => {
-      ui.alert({
-        variant: 'success',
-        msg: 'Your first tzrender notification!',
-        timeout: 5000
-      });
-
-      const toast = ui.toast({
-        title: 'Saved',
-        message: 'Your changes are ready.',
-        variant: 'success',
-        duration: 0
-      });
-
-      // Keep a reference if you want to close the toast from your own UI:
-      window.currentToast = toast;
-    });
-  </script>
-</body>
-</html>
-```
-
-2. Serve the file from a local web server (rather than opening it as `file://`), then open its HTTP address in a modern browser.
-3. Click **Show notifications**. The alert closes automatically after five seconds and can also be dismissed with its close button. The toast stays open because `duration` is `0`; close it with its own close button or call `window.currentToast.destroy()` (or `.dismiss()`) in the browser console or your code.
-
-`await ui.ready` waits for the bundled component styles to load. The styles are fetched relative to the module URL and inserted into the document. See [Troubleshooting](#troubleshooting) if loading fails.
-
-The CDN example uses `@latest` for convenience. For reproducible production deployments, pin the URL to a specific version published on npm.
-
-### Use with npm and Vite
-
-Install the package in a Vite project:
+Install the package in an existing JavaScript project:
 
 ```sh
 npm install @zyther/tzrender
 ```
 
-Then import and initialize it from your application JavaScript:
+Import it in a browser app that supports ES modules, such as a Vite project:
+
+```js
+import Render from '@zyther/tzrender';
+
+const ui = new Render();
+await ui.ready; // Wait for the package's component styles.
+
+ui.toast({
+  title: 'Saved',
+  message: 'Your changes are ready.',
+  variant: 'success'
+});
+```
+
+Start your project's development server and open its HTTP or HTTPS URL. Do not open an ES module project as `file://`; browsers commonly block the module or stylesheet loading it needs.
+
+### A complete first example
+
+Add this markup to your page:
+
+```html
+<main>
+  <h1>My first tzrender page</h1>
+  <button id="notify" type="button">Show a notification</button>
+</main>
+```
+
+Then add this JavaScript to your app entry file:
 
 ```js
 import Render from '@zyther/tzrender';
 
 const ui = new Render();
 await ui.ready;
-ui.alert({ variant: 'info', msg: 'Hello from Vite!' });
+
+document.querySelector('#notify').addEventListener('click', () => {
+  ui.alert({
+    variant: 'success',
+    msg: 'Your first tzrender notification!',
+    timeout: 5000
+  });
+});
+```
+
+`ui.ready` is a Promise. Await it before relying on the bundled styles. If a style request fails, the Promise rejects; catch the error if your app needs a fallback:
+
+```js
+try {
+  await ui.ready;
+} catch (error) {
+  console.error('tzrender styles could not be loaded.', error);
+}
 ```
 
 ## API reference
 
-Create an instance with `const ui = new Render()`. Every instance exposes `ui.ready`, a Promise that resolves after the bundled styles have been loaded (or logs a style-loading error if fetching them fails). Components that return a string return their generated DOM `id`. Unless noted, overlays are added to `document.body`.
+Create one `Render` instance and reuse it for the components owned by the same part of your app:
 
-### Notifications and dialogs
+```js
+import Render from '@zyther/tzrender';
+
+const ui = new Render();
+await ui.ready;
+```
+
+All user-provided labels and message strings are rendered as text rather than parsed as HTML. Unless noted otherwise, components are appended to `document.body`. Methods ending in `()` may return either a DOM ID string or a component handle; their return shapes are documented below.
+
+### Notifications
 
 #### `ui.alert(options)`
 
-Displays a dismissible status or alert message. Returns the element ID as a string. The close button dismisses it; a positive `timeout` also dismisses it automatically.
+Shows a short message with a dismiss button and optional automatic dismissal. Returns its DOM `id` as a string. Use `ui.destroy(id)` to remove it early.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `variant` | `'info'` | `'info'`, `'success'`, `'warning'`, or `'error'`; unknown values use `'info'`. |
-| `msg` | `'Something...'` | Message text. |
-| `timeout` | `3000` | Auto-dismiss delay in milliseconds; non-positive or non-finite values do not start a timer. |
-| `closeLabel` | `'Dismiss notification'` | Accessible name for the close button. |
+| `variant` | `'info'` | `'info'`, `'success'`, `'warning'` or `'error'`; an unknown value uses `'info'`. |
+| `msg` | `''` | The message text. |
+| `timeout` | `3000` | Auto-dismiss time in milliseconds. A non-positive or invalid value disables the timer. |
+| `closeLabel` | `'Dismiss notification'` | Accessible name for the dismiss button. |
 
 ```js
-const alertId = ui.alert({ variant: 'warning', msg: 'Check the form.', timeout: 0 });
+const noticeId = ui.alert({ variant: 'warning', msg: 'Check the form.', timeout: 0 });
 // Later:
-ui.destroy(alertId);
+ui.destroy(noticeId);
 ```
 
 #### `ui.toast(options)`
 
-Creates a closable, stacked notification. Returns `{ __id, element, dismiss(), destroy() }`; `dismiss()` and `destroy()` both remove the toast. Error toasts use an assertive live announcement; other variants use a polite one. The timer pauses while the toast is hovered or contains keyboard focus.
+Shows a closable notification. Toasts stack at the selected screen corner. Returns `{ __id, element, dismiss(), destroy() }`; `dismiss()` and `destroy()` both remove it. Its auto-dismiss timer pauses while someone hovers over it or moves keyboard focus inside it.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `variant` | `'info'` | `'info'`, `'success'`, `'warning'`, or `'error'`; invalid values use `'info'`. |
-| `position` | `'bottom-right'` | `'top-left'`, `'top-right'`, `'bottom-left'`, or `'bottom-right'`. |
-| `theme` | `'dark'` | `'dark'` or `'light'`; invalid values use `'dark'`. |
-| `title` | — | Optional title, rendered as text. |
-| `message` | `''` | Message text. `msg` is accepted as an alternative when `message` is omitted. |
-| `duration` | `4000` | Auto-dismiss delay in milliseconds. `0` keeps the toast open. `timeout` is an alias used when `duration` is omitted. |
+| `variant` | `'info'` | `'info'`, `'success'`, `'warning'` or `'error'`. Errors use an assertive screen-reader announcement; other variants use a polite announcement. |
+| `position` | `'bottom-right'` | `'top-left'`, `'top-right'`, `'bottom-left'` or `'bottom-right'`. |
+| `theme` | `'dark'` | `'dark'` or `'light'`. |
+| `title` | — | Optional title text. |
+| `message` | `''` | Message text. `msg` is an alias used when `message` is omitted. |
+| `duration` | `4000` | Auto-dismiss time in milliseconds. `0` keeps the toast open. `timeout` is an alias used when `duration` is omitted. |
 | `closeLabel` | `'Dismiss notification'` | Accessible name for the close button. |
-| `action` | — | Optional `{ label, onClick }`; an action button is added when `onClick` is a function. `label` defaults to `'Action'`. |
+| `action` | — | Optional `{ label, onClick }`. An action button appears when `onClick` is a function; `label` defaults to `'Action'`. |
 
 ```js
 const toast = ui.toast({ message: 'Profile updated.', duration: 0 });
-// Later: toast.dismiss(); // or toast.destroy()
+// Later, from your own button handler:
+toast.dismiss();
 ```
+
+### Dialogs
 
 #### `ui.msg_box(options)`
 
-Shows a modal confirmation dialog. Returns its element ID as a string. The close and cancel buttons run the cancel callback; the confirm button runs the confirm callback. The dialog initially focuses Confirm, traps Tab navigation within its buttons, closes on Escape, and restores the previously focused element when destroyed.
+Shows a modal dialog with Cancel and Confirm actions. Returns the dialog's DOM `id` as a string. Each action callback runs at most once, and missing callbacks are allowed. The dialog initially focuses Confirm, keeps keyboard focus inside, closes on Escape by default, and returns focus to the element that opened it when dismissed.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `title` | `'Message'` | Dialog heading, rendered as text. |
-| `msg` | `''` | Dialog message, rendered as text. |
-| `closeLabel` | `'Close dialog'` | Accessible name for the close button. |
-| `action.cancel.text` | `'Cancel'` | Cancel button label. |
-| `action.cancel.callback` | no-op | Function called on cancel. |
-| `action.confirm.text` | `'Confirm'` | Confirm button label. |
-| `action.confirm.callback` | no-op | Function called on confirm. |
+| `title` | `'Message'` | Dialog heading, shown as text. |
+| `msg` | `''` | Dialog message, shown as text. |
+| `closeLabel` | `'Close dialog'` | Accessible name for the top close button. |
+| `closeOnEscape` | `true` | Close the dialog when Escape is pressed. |
+| `closeOnBackdrop` | `false` | Close the dialog when the dim backdrop is clicked. |
+| `action.cancel.text` | `'Cancel'` | Cancel button text. |
+| `action.cancel.callback` | — | Optional function called when Cancel or the close button is activated. |
+| `action.confirm.text` | `'Confirm'` | Confirm button text. |
+| `action.confirm.callback` | — | Optional function called when Confirm is activated. |
 
 ```js
 const dialogId = ui.msg_box({
   title: 'Discard draft?',
   msg: 'Your unsaved changes will be lost.',
+  closeOnBackdrop: true,
   action: {
-    cancel: { text: 'Keep editing', callback: () => console.log('Kept') },
-    confirm: { text: 'Discard', callback: () => console.log('Discarded') }
+    cancel: { text: 'Keep editing' },
+    confirm: { text: 'Discard', callback: () => console.log('Draft discarded.') }
   }
 });
-// A dialog may also be removed with ui.destroy(dialogId).
 ```
 
-### Loading and progress
+#### `ui.confirm(options)`
 
-#### `ui.spinner(options)`
-
-Creates a loading spinner and returns `{ __id, toggle(show = true), destroy() }`. Use `toggle(false)` to hide it without removing it; call `destroy()` to remove it and clear its timers. It is appended to `document.body`.
+Uses the same accessible dialog and returns a `Promise<boolean>`: `true` for Confirm and `false` for Cancel, close, Escape, or programmatic destruction. Optional `action.cancel.callback` and `action.confirm.callback` functions run before the Promise settles.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `variant` | `'simple'` | `'simple'`, `'dual'`, `'triple'`, or `'custom'`. |
+| `theme`, `title`, `msg` | same as `msg_box` | Dialog theme and text. |
+| `closeLabel`, `closeOnEscape`, `closeOnBackdrop` | same as `msg_box` | Dialog accessibility and dismissal options. |
+| `confirmText` | `'Confirm'` | Confirm button text. `action.confirm.text` is used when this is omitted. |
+| `cancelText` | `'Cancel'` | Cancel button text. `action.cancel.text` is used when this is omitted. |
+| `action.confirm.callback` | — | Optional function called on confirmation. |
+| `action.cancel.callback` | — | Optional function called on cancellation. |
+
+```js
+const shouldDelete = await ui.confirm({
+  title: 'Delete this note?',
+  msg: 'This cannot be undone.',
+  confirmText: 'Delete'
+});
+if (shouldDelete) deleteNote();
+```
+
+### Loading states
+
+#### `ui.spinner(options)`
+
+Shows a loading spinner. Returns `{ __id, toggle(show = true), destroy() }`. Use `toggle(false)` to hide it without removing it, then call `destroy()` when the operation finishes. `destroy()` also clears the component's timers and listeners.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `variant` | `'simple'` | `'simple'`, `'dual'`, `'triple'` or `'custom'`. Unknown values use `'simple'`. |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `backdrop` | `true` | Use the backdrop presentation; `false` uses a container presentation. |
-| `text.content` | `'Loading...'` | Optional caption text. |
-| `text.animated` | `true` | Animate the caption by revealing its characters. |
+| `backdrop` | `true` | Use the backdrop layout. `false` uses the compact container layout. |
+| `text.content` | `'Loading...'` | Optional caption text. An empty string hides the caption. |
+| `text.animated` | `true` | Reveal caption characters in sequence. |
 | `text.color` | `'lightgray'` | Caption CSS color. |
-| `custom.url` | — | Image URL used for the `'custom'` variant. |
-| `custom.animation` | `'spin'` | Animation class for a custom image, or `'spin'` for ring-style simple/dual/triple spinners. |
-| `custom.color` | `'skyblue'` | Color for simple/dual/triple spinner shapes. |
-| `events.screen_click.hide` | `false` | Hide on backdrop click. |
-| `events.screen_click.destroy` | `false` | Destroy on backdrop click. |
-| `events.auto__.timer` | `3000` | Delay in milliseconds for enabled automatic actions. |
+| `custom.url` | — | Image URL for the `'custom'` variant. |
+| `custom.animation` | `'spin'` | Spinner animation class. `'spin'` creates ring-style simple/dual/triple variants. |
+| `custom.color` | `'skyblue'` | Color used by the built-in shapes/rings. |
+| `events.screen_click.hide` | `false` | Hide the spinner when its backdrop is clicked. |
+| `events.screen_click.destroy` | `false` | Remove the spinner when its backdrop is clicked; this takes precedence over `hide`. |
+| `events.auto__.timer` | `3000` | Delay in milliseconds for enabled timer actions. |
 | `events.auto__.hide` | `false` | Hide after the timer. |
-| `events.auto__.destroy` | `false` | Destroy after the timer. |
+| `events.auto__.destroy` | `false` | Remove after the timer. |
 
 ```js
 const loading = ui.spinner({ text: { content: 'Saving…', animated: false } });
-// When the operation finishes:
-loading.destroy();
+try {
+  await saveChanges();
+} finally {
+  loading.destroy();
+}
 ```
 
 #### `ui.block_ui(options)`
 
-Adds a full-screen animated blocking overlay. Returns `{ __id, destroy() }`; it is appended to `document.body` and should be destroyed when the blocked work ends.
+Displays a full-screen animated blocking overlay. Returns `{ __id, destroy() }`. Always destroy it when the work ends; the method installs an animation loop and temporary pointer listeners that `destroy()` cleans up.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `animation` | `'shapes'` | `'particles'`, `'lines'`, `'shapes'`, or `'orbs'`. |
-| `count` | `120` | Number of animated elements, clamped to 1–250. |
-| `message` | — | Optional message text. |
-| `events.screen_click.destroy` | `false` | Destroy when the overlay is clicked. |
-| `events.auto__.timer` | `3000` | Delay in milliseconds for automatic destruction. |
-| `events.auto__.destroy` | `false` | Destroy after the timer. |
-| `custom.__size.min` / `custom.__size.max` | `7` / `100` | Minimum and maximum animated element size; invalid ranges use these defaults. |
+| `animation` | `'shapes'` | `'particles'`, `'lines'`, `'shapes'` or `'orbs'`; unknown values use `'shapes'`. |
+| `count` | `120` | Animated elements, clamped to 1–250. |
+| `message` | `''` | Optional loading status text. |
+| `events.screen_click.destroy` | `false` | Remove the overlay when it is clicked. |
+| `events.auto__.timer` | `3000` | Delay before an enabled automatic action. |
+| `events.auto__.destroy` | `false` | Remove the overlay after the timer. |
+| `custom.__size.min` / `custom.__size.max` | `7` / `100` | Minimum and maximum decorative element size in pixels. Invalid ranges use these defaults. |
 
 ```js
-const blocker = ui.block_ui({ message: 'Please wait…', animation: 'particles' });
-// After the task:
-blocker.destroy();
+const blocker = ui.block_ui({ message: 'Preparing your dashboard…', animation: 'particles' });
+try {
+  await loadDashboard();
+} finally {
+  blocker.destroy();
+}
 ```
 
 #### `ui.progress(options)`
 
-Creates a determinate or indeterminate progress indicator. Returns `{ __id, element, set(value, label?), destroy() }`. `set` updates the value (clamped to 0–100) and optionally the label. Pass `null` to `set` for indeterminate progress; passing a number switches back to determinate progress.
+Creates a progress bar or circular indicator. Returns `{ __id, element, set(value, label?), destroy(), value }`. Progress values are clamped to 0–100. `set(null)` switches to indeterminate mode; set a number to return to determinate mode.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `container` | `document.body` | CSS selector or DOM `Element` where the indicator is appended. |
-| `label` | `'Loading progress'` | Accessible progress label. |
-| `value` | `0` | Initial progress, clamped to 0–100. |
+| `container` | `document.body` | Existing CSS selector or DOM `Element` to receive the progress component. |
+| `label` | `'Loading progress'` | Visible and accessible description. |
+| `value` | `0` | Initial value from 0 to 100. |
 | `variant` | `'bar'` | `'bar'` or `'ring'`. |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
 | `color` | — | Optional CSS color override. |
-| `showValue` | `false` | Whether to show the numeric percentage. |
-| `indeterminate` | `false` | Use indeterminate progress instead of a value-based indicator. |
+| `showValue` | `false` | Show the numeric percentage. |
+| `indeterminate` | `false` | Start with an indeterminate animation. |
 
 ```js
-const progress = ui.progress({ label: 'Uploading file', value: 25, showValue: true });
+const progress = ui.progress({ label: 'Uploading', value: 25, showValue: true });
 progress.set(60, 'Upload in progress');
-// When complete:
 progress.set(100, 'Upload complete');
 progress.destroy();
 ```
 
 #### `ui.skeleton(options)`
 
-Creates a decorative loading placeholder. Returns `{ __id, element, destroy() }`. Its visual content is marked `aria-hidden`; pair it with separate accessible status text (for example, a nearby `role="status"` element) so assistive-technology users are informed about loading.
+Creates a decorative loading placeholder and returns `{ __id, element, destroy() }`. The placeholder is hidden from screen readers; pair it with a real loading status or `aria-busy` state.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `container` | `document.body` | CSS selector or DOM `Element` where the placeholder is appended. |
-| `variant` | `'text'` | `'text'`, `'circle'`, `'card'`, or `'image'`. |
-| `rows` | `3` | Number of placeholder text rows. |
+| `container` | `document.body` | Existing CSS selector or DOM `Element` to receive the placeholder. |
+| `variant` | `'text'` | `'text'`, `'circle'`, `'card'` or `'image'`. |
+| `rows` | `3` | Text rows for the `'text'` variant, clamped to 1–12. |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `width` | `'100%'` | Placeholder CSS width. |
-| `height` | — | Optional placeholder CSS height. |
-| `animated` | `true` | Enable the placeholder animation. |
+| `width` | `'100%'` (text/card/image), `'3.5rem'` (circle) | CSS width. |
+| `height` | — | CSS height for non-card variants. |
+| `animated` | `true` | Show the shimmer animation. |
 
 ```js
-// HTML: <section id="profile" aria-busy="true"><p id="loading-status" role="status">Loading profile…</p></section>
 const profile = document.querySelector('#profile');
-const status = document.querySelector('#loading-status');
+profile.setAttribute('aria-busy', 'true');
 const placeholder = ui.skeleton({ container: profile, variant: 'card' });
-// After replacing the loading view with real content:
+
+// After rendering the real profile:
 placeholder.destroy();
 profile.setAttribute('aria-busy', 'false');
-status.textContent = 'Profile loaded.';
 ```
 
-### Information and navigation components
+### Information and navigation
 
 #### `ui.tooltip(target, options)`
 
-Attaches a tooltip to a CSS selector or an `Element`. It appears on pointer hover and keyboard focus, maintains `aria-describedby`, and can be dismissed with Escape. Returns `{ __id, element, show(), hide(), destroy() }`.
+Adds a tooltip to a CSS selector or `Element`. It opens on pointer hover and keyboard focus, sets `aria-describedby` on the trigger, and can be dismissed with Escape. Returns `{ __id, element, show(), hide(), destroy() }`.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `content` | `''` | Tooltip text. `text` is an alternative when `content` is omitted. |
-| `placement` | `'top'` | `'top'`, `'right'`, `'bottom'`, or `'left'`; invalid values use `'top'`. |
+| `content` | `''` | Tooltip text. `text` is an alias when `content` is omitted. |
+| `placement` | `'top'` | `'top'`, `'right'`, `'bottom'` or `'left'`; an unknown value uses `'top'`. |
 
 ```js
-const tip = ui.tooltip('#save-button', { content: 'Save your changes', placement: 'bottom' });
-// Later: tip.destroy();
+const tip = ui.tooltip('#saveButton', { content: 'Save your work', placement: 'bottom' });
+// Later:
+tip.destroy();
 ```
 
 #### `ui.accordion(options)`
 
-Creates an accordion. Returns `{ __id, element, open(index), close(index), destroy() }`. At least one item is required. By default, opening an item closes the others; set `multiple: true` to allow multiple open panels.
+Creates an accordion and returns `{ __id, element, open(index), close(index), destroy() }`. Opening one item closes the other open items unless `multiple: true`.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `container` | `document.body` | CSS selector or DOM `Element` where the accordion is appended. |
+| `container` | `document.body` | Existing CSS selector or DOM `Element`. |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
-| `multiple` | `false` | Allow multiple panels to remain open. |
-| `items` | required | Array of `{ title, content, open }`. `title` defaults to `Item N`; `open` is optional. |
+| `multiple` | `false` | Allow multiple open panels. |
+| `items` | required | One or more `{ title, content, open }` objects. Titles default to `Item 1`, `Item 2`, etc. `open` starts the item expanded. |
 
 ```js
 const faq = ui.accordion({
   container: '#faq',
   items: [
-    { title: 'Can content contain HTML?', content: 'Strings appear as text.' },
-    { title: 'Can I add an element?', content: document.createElement('em') }
+    { title: 'Can I use HTML?', content: 'Text content is the safest default.' },
+    { title: 'Can it open by default?', content: 'Yes.', open: true }
   ]
 });
 faq.open(0);
@@ -282,66 +317,165 @@ faq.open(0);
 
 #### `ui.tabs(options)`
 
-Creates keyboard-operable tabs. Returns `{ __id, element, select(index), activeIndex, destroy() }`. At least one item is required. Left/Right Arrow move between tabs (wrapping at the ends); Home and End move to the first and last tab.
+Creates accessible tabs with roving keyboard focus. Returns `{ __id, element, select(index), activeIndex, destroy() }`. Left/Right Arrow wrap through the tabs; Home and End move to the first and last tab.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `container` | `document.body` | CSS selector or DOM `Element` where the tabs are appended. |
+| `container` | `document.body` | Existing CSS selector or DOM `Element`. |
 | `theme` | `'dark'` | `'dark'` or `'light'`. |
 | `label` | `'Content tabs'` | Accessible name for the tab list. |
-| `activeIndex` | `0` | Initially selected tab; bounded to the available items. |
-| `items` | required | Array of `{ label, content }`. `label` defaults to `Tab N`. |
+| `activeIndex` | `0` | Initial tab index; bounded to the available tabs. |
+| `items` | required | One or more `{ label, content }` objects. Labels default to `Tab 1`, `Tab 2`, etc. |
 
 ```js
-const sections = ui.tabs({
+const helpTabs = ui.tabs({
   label: 'Help topics',
   items: [
-    { label: 'Account', content: 'Manage your account settings.' },
-    { label: 'Billing', content: document.createElement('p') }
+    { label: 'Account', content: 'Manage account settings.' },
+    { label: 'Billing', content: 'Review billing information.' }
   ]
 });
-sections.select(1);
+helpTabs.select(1);
 ```
 
-For accordion panels and tab panels, string content is inserted as text, not interpreted as HTML. A DOM `Node` may be passed as `content`; tzrender appends a clone of that node. This text-safe behavior also applies to notification, tooltip, and message strings. Do not pass untrusted markup expecting it to be parsed.
+#### `ui.drawer(options)`
 
-### Page loading and cleanup
+Opens an accessible side panel and returns `{ __id, element, open(), close(), destroy() }`. Its background is inert while the drawer is open; focus stays inside, Escape closes by default, and closing restores the previous focus. Call `open()` to reopen a closed drawer.
 
-#### `ui.page(url, host, callback)`
-
-Fetches HTML from `url`, replaces `host.innerHTML` with the response text, then calls `callback()`. Defaults are `host = document.body` and an empty callback. This method is asynchronous; it does not return a component ID. The remote server must permit the request under browser CORS rules. Only load HTML from sources you trust.
+| Option | Default | Description |
+| --- | --- | --- |
+| `title` | — | Visible heading and accessible name. |
+| `label` | `'Side panel'` | Accessible name used when there is no title. |
+| `content` | `''` | Text content, or a DOM `Node` that is cloned into the panel. Strings are never interpreted as HTML. |
+| `placement` | `'right'` | `'left'`, `'right'` or `'bottom'`. |
+| `theme` | `'dark'` | `'dark'` or `'light'`. |
+| `closeLabel` | `'Close panel'` | Accessible name for the close button. |
+| `closeOnEscape` | `true` | Close on Escape. |
+| `closeOnBackdrop` | `false` | Close when the backdrop is clicked. |
 
 ```js
-await ui.page('/sections/help.html', document.querySelector('#app'), () => {
-  console.log('Help content loaded');
+const drawer = ui.drawer({ title: 'Help', content: 'Start by editing the HTML file.' });
+// Later:
+drawer.close();
+drawer.destroy();
+```
+
+#### `ui.menu(target, options)`
+
+Attaches a compact action menu to a button or other `HTMLElement`. Returns `{ __id, element, open(), close(), toggle(), destroy() }`. Use a real, keyboard-focusable button for `target`. Arrow keys, Home, End and Escape work inside the menu; clicking outside closes it.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `items` | required | One or more `{ label, onSelect }` objects. Labels are rendered as text. At most 50 items are accepted. |
+| `label` | `'Actions'` | Accessible name for the menu. |
+| `theme` | `'dark'` | `'dark'` or `'light'`. |
+| `placement` | `'bottom-start'` | `'bottom-start'`, `'bottom-end'`, `'top-start'` or `'top-end'`. |
+
+```js
+const actionsMenu = ui.menu('#moreButton', {
+  label: 'Note actions',
+  items: [
+    { label: 'Rename', onSelect: () => renameNote() },
+    { label: 'Delete', onSelect: () => deleteNote() }
+  ]
 });
 ```
 
-#### `ui.destroy(id)`
+### Content safety and HTML loading
 
-Removes the DOM element with the given ID and runs cleanup registered for it, including timers and event listeners. Use the returned ID for `alert`, `msg_box`, or any component returning a string; returned component objects also expose `destroy()` where listed above.
+For `accordion`, `tabs`, and `drawer`, string content is inserted as text. You may pass a DOM `Node` when your app intentionally builds markup; tzrender clones that node rather than moving it. Notification, tooltip, modal, and menu labels are also text. Do not pass a string containing HTML expecting it to render.
+
+#### `ui.page(url, host, callback, options)`
+
+Loads a remote HTML fragment asynchronously. Returns a `Promise<Element>` for the destination host. `host` can be a CSS selector or an existing `Element`; it defaults to `document.body`. The optional callback runs after a successful load and receives the updated host. The request must be permitted by browser same-origin/CORS rules.
+
+By default, tzrender **sanitizes** the downloaded markup: scripts, styles, forms, frames, event-handler attributes and unsafe URL schemes are removed. Unknown tags are unwrapped. Cross-origin image `src` values are removed. This is a small safe-fragment convenience, not a general-purpose HTML sanitizer. For the best security, load only markup you control.
+
+| Argument/option | Default | Description |
+| --- | --- | --- |
+| `url` | required | URL passed to `fetch()`. |
+| `host` | `document.body` | CSS selector or DOM `Element`. |
+| `callback` | — | Optional function called with the updated host after a successful response. |
+| `options.signal` | — | Optional `AbortSignal` passed to `fetch()`. |
+| `options.trustedHtml` | `false` | Set to `true` only for markup from a source you fully trust. This bypasses sanitization and assigns directly to `innerHTML`. |
+
+HTTP errors reject the Promise and leave the existing host contents unchanged. Network, abort, and parsing errors also reject. Handle failures in the usual way:
 
 ```js
-const id = ui.alert({ msg: 'Temporary message', timeout: 0 });
-ui.destroy(id);
+const host = document.querySelector('#help');
+try {
+  await ui.page('/fragments/help.html', host, (updatedHost) => {
+    console.log('Help loaded into', updatedHost);
+  });
+} catch (error) {
+  host.textContent = 'Help could not be loaded. Please try again.';
+  console.error(error);
+}
 ```
 
-## Containers, themes, and accessibility
+To opt into the trusted-HTML compatibility path, the options object may be used as the third argument:
 
-- `accordion`, `tabs`, `progress`, and `skeleton` can be mounted in a chosen container. All four accept a CSS selector or a DOM `Element`. Other overlays and toast regions are mounted on `document.body`.
-- The built-in themes are `dark` and `light`. Component styles are bundled with the package; no framework-specific classes, CSS framework, or external stylesheet import is required. `color`, `width`, and `height` options (where available) are CSS values.
-- Alerts, toasts, dialogs, tooltips, accordions, and tabs include accessibility semantics. Keep notification text meaningful, give icon-only controls appropriate labels, and ensure a tooltip trigger can receive keyboard focus. Tooltips can be read on focus; Escape hides one.
-- Accordion headers and tabs are buttons and can be operated with standard keyboard controls. Tabs support Left/Right Arrow, Home, and End. Dialogs support Escape and a Tab focus loop.
-- Skeleton visuals are decorative and hidden from assistive technology. Provide a separate status message for loading updates; use a progress label that describes the work underway.
+```js
+await ui.page('/fragments/from-my-own-site.html', '#help', { trustedHtml: true });
+```
 
-## Browser support
+Never set `trustedHtml: true` for user-submitted or otherwise untrusted markup. Sanitization does not make a remote server, its links, or your own rendering logic trustworthy.
 
-Use a modern browser with JavaScript ES module support, `fetch`, and the DOM APIs used by the components. Load the page over HTTP/HTTPS (for example, through Vite or another local development server); `file://` pages commonly prevent module or stylesheet fetches.
+### Cleanup and compatibility
+
+#### `ui.destroy(idOrHandle)`
+
+Removes a component owned by this `Render` instance and runs its registered cleanup, including timers, animation frames and event listeners. Pass a string ID returned by `alert()` or `msg_box()`, or a component handle such as a toast, drawer, or progress indicator. The method is safe to call again after a component has already been removed.
+
+```js
+const alertId = ui.alert({ msg: 'Temporary message', timeout: 0 });
+ui.destroy(alertId);
+```
+
+#### `ui.destroyAll()`
+
+Removes all components created by this instance only. Components created by another `Render` instance are unaffected. Call it when a page, view, or application section is being torn down.
+
+```js
+const ui = new Render();
+ui.toast({ message: 'Saved' });
+ui.progress({ label: 'Uploading', value: 25 });
+// When this view is removed:
+ui.destroyAll();
+```
+
+The original snake_case methods remain supported. These camelCase aliases call the same implementations:
+
+| Alias | Original method |
+| --- | --- |
+| `ui.messageBox(options)` | `ui.msg_box(options)` |
+| `ui.blockUI(options)` | `ui.block_ui(options)` |
+| `ui.loadPage(url, host, callback, options)` | `ui.page(url, host, callback, options)` |
+
+## Themes, containers, and accessibility
+
+- Built-in themes are `'dark'` and `'light'`. Component CSS is included with the package; no framework-specific classes, manual stylesheet import, or external font request is needed.
+- `accordion`, `tabs`, `progress`, and `skeleton` accept a `container` selector or `Element`. A drawer and toast may include a cloned DOM `Node` where documented. Other overlays are attached to `document.body`.
+- Dialogs and drawers have accessible names, keep keyboard focus within the open surface, and restore focus when closed. Escape dismissal is configurable.
+- Menus expose expanded state on their trigger and support arrow-key navigation. Tabs support Left/Right Arrow, Home, and End. Accordions use real buttons with expanded state.
+- Loading animations respect reduced-motion preferences. Skeleton shapes are decorative; use a separate status message to announce loading progress.
+- Give progress indicators useful labels. Prefer meaningful text for notifications instead of relying on color alone.
+
+## Website editor and tools
+
+The repository's learning website is separate from the npm API:
+
+- [Browser code editor](https://github.com/zytherdev/tzrender/blob/main/editor.html): Monaco-based HTML, CSS, and JavaScript editor with a sandboxed preview. It edits three local static files only; it does not provide a shell, Git, extensions, npm package installs, or remote project execution. Editing is designed for desktop browsers; smaller touch screens are best-effort. Drafts stay in this browser only, are not cloud-synced, and can be lost if you clear site data. Preview JavaScript still runs on your device and may use significant resources, so avoid secrets and infinite loops.
+- [Front-end tools](https://github.com/zytherdev/tzrender/blob/main/tools.html): eight focused utilities for starter HTML, color and contrast, CSS layout and visual effects.
 
 ## Troubleshooting
 
-- **The CDN module returns 404:** Check the spelling of `@zyther/tzrender@latest/index.js`, confirm the browser is online, and retry after the package CDN has refreshed. For a project build, install with `npm install @zyther/tzrender` and import the package through Vite.
-- **The component appears unstyled:** Wait for `await ui.ready`; check the browser console and Network panel for failed requests to jsDelivr or the package's `styles/` files. Serve the page via HTTP/HTTPS, verify network access, and avoid opening it directly as `file://`.
-- **Styles fail on a local page:** Start a local server rather than relying on the filesystem URL. For example, in a Vite project run `npm run dev` and open the URL it prints.
-- **`page()` fails or returns no content:** Confirm the URL is reachable and the server allows cross-origin requests (CORS) when it is on a different origin. Check the console and Network panel for the fetch error.
-- **A container is not found:** Ensure the target element exists before calling the component; for accordion and tabs, a selector must match an existing element.
+- **`ui.ready` rejects:** Check that the package's bundled `src/styles/` files are included in the installed package and that the module is served over HTTP/HTTPS. Catch the Promise rejection if your page has its own fallback styles.
+- **The component is unstyled:** Await `ui.ready`, then inspect the browser console and Network panel for failed requests to the package CSS files. Do not open the project directly as `file://`.
+- **`page()` rejects:** Check the URL, server response status and CORS rules. A failed response leaves the current host content intact; a successful response may still have some tags removed by the default sanitizer.
+- **A component cannot find its container or target:** Make sure the element exists before calling the method. `container` accepts a selector or `Element`; `tooltip` and `menu` also need a matching trigger.
+- **A dialog callback is not running:** Confirm the correct button was clicked. Cancel and the top close button call the cancel callback; Escape and backdrop dismissal do too when enabled.
+
+## Browser support
+
+Use a modern browser with ES module, `fetch`, DOM, `AbortSignal`, focus, and `inert` support. Serve the site or app over HTTP/HTTPS so package styles and modules can load correctly.

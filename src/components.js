@@ -467,3 +467,226 @@ export function createSkeleton(owner, options = {}) {
   owner.__registerCleanup(id, () => root.remove());
   return { __id: id, element: root, destroy: () => owner.destroy(id) };
 }
+
+export function createDrawer(owner, options = {}) {
+  const id = owner.__id();
+  const theme = themeClass(options.theme);
+  const placement = ['left', 'right', 'bottom'].includes(options.placement) ? options.placement : 'right';
+  const root = document.createElement('div');
+  root.id = id;
+  root.className = `tzr-drawer-backdrop tzr-drawer-backdrop--${theme}`;
+  root.dataset.placement = placement;
+
+  const panel = document.createElement('aside');
+  panel.className = `tzr-drawer tzr-drawer--${theme} tzr-drawer--${placement}`;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.tabIndex = -1;
+  if (options.title) {
+    const title = document.createElement('h2');
+    title.id = `${id}-title`;
+    title.className = 'tzr-drawer__title';
+    title.textContent = String(options.title);
+    panel.setAttribute('aria-labelledby', title.id);
+    panel.append(title);
+  } else {
+    panel.setAttribute('aria-label', String(options.label || 'Side panel'));
+  }
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'tzr-drawer__close';
+  closeButton.setAttribute('aria-label', String(options.closeLabel || 'Close panel'));
+  closeButton.textContent = '×';
+  panel.append(closeButton);
+
+  const body = document.createElement('div');
+  body.className = 'tzr-drawer__body';
+  appendContent(body, options.content ?? '');
+  panel.append(body);
+  root.append(panel);
+
+  const previouslyFocused = document.activeElement;
+  let inerted = [];
+  let open = true;
+  const setBackgroundInert = (value) => {
+    if (value) {
+      if (inerted.length) return;
+      inerted = [...document.body.children].filter((element) => element !== root).map((element) => [element, Boolean(element.inert)]);
+      inerted.forEach(([element]) => { element.inert = true; });
+    } else {
+      inerted.forEach(([element, wasInert]) => { if (element.isConnected) element.inert = wasInert; });
+      inerted = [];
+    }
+  };
+  const focusables = () => [...panel.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')];
+  const focusPanel = () => (focusables()[0] || panel).focus();
+  const close = () => {
+    if (!open) return;
+    open = false;
+    root.hidden = true;
+    setBackgroundInert(false);
+    if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus();
+  };
+  const openPanel = () => {
+    if (open) return;
+    open = true;
+    root.hidden = false;
+    setBackgroundInert(true);
+    focusPanel();
+  };
+  const onKeyDown = (event) => {
+    if (!open) return;
+    if (event.key === 'Escape' && options.closeOnEscape !== false) {
+      event.preventDefault();
+      close();
+    } else if (event.key === 'Tab') {
+      const nodes = focusables();
+      if (!nodes.length) {
+        event.preventDefault();
+        panel.focus();
+      } else if (event.shiftKey && (document.activeElement === nodes[0] || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        nodes.at(-1).focus();
+      } else if (!event.shiftKey && (document.activeElement === nodes.at(-1) || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        nodes[0].focus();
+      }
+    }
+  };
+  const onBackdrop = (event) => {
+    if (event.target === root && options.closeOnBackdrop === true) close();
+  };
+  const onFocusIn = (event) => {
+    if (open && !panel.contains(event.target)) focusPanel();
+  };
+  closeButton.addEventListener('click', close);
+  root.addEventListener('click', onBackdrop);
+  panel.addEventListener('keydown', onKeyDown);
+  document.addEventListener('focusin', onFocusIn);
+  document.body.append(root);
+  setBackgroundInert(true);
+  focusPanel();
+
+  owner.__registerCleanup(id, () => {
+    setBackgroundInert(false);
+    closeButton.removeEventListener('click', close);
+    root.removeEventListener('click', onBackdrop);
+    panel.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('focusin', onFocusIn);
+    root.remove();
+    if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus();
+  });
+  return { __id: id, element: root, open: openPanel, close, destroy: () => owner.destroy(id) };
+}
+
+export function createMenu(owner, target, options = {}) {
+  const trigger = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!(trigger instanceof HTMLElement)) throw new TypeError('tzrender.menu: target must be a CSS selector or an HTMLElement.');
+  const items = Array.isArray(options.items) ? options.items.slice(0, 50) : [];
+  if (!items.length) throw new TypeError('tzrender.menu: provide at least one menu item.');
+
+  const id = owner.__id();
+  const theme = themeClass(options.theme);
+  const menu = document.createElement('div');
+  menu.id = id;
+  menu.className = `tzr-menu tzr-menu--${theme}`;
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', String(options.label || 'Actions'));
+  menu.hidden = true;
+  const itemButtons = [];
+  items.forEach((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tzr-menu__item';
+    button.setAttribute('role', 'menuitem');
+    button.tabIndex = -1;
+    button.textContent = String(item?.label ?? `Action ${index + 1}`);
+    button.addEventListener('click', () => {
+      try { if (typeof item?.onSelect === 'function') item.onSelect(); }
+      finally { close(true); }
+    });
+    menu.append(button);
+    itemButtons.push(button);
+  });
+
+  const previousHaspopup = trigger.getAttribute('aria-haspopup');
+  const previousExpanded = trigger.getAttribute('aria-expanded');
+  const previousControls = trigger.getAttribute('aria-controls');
+  trigger.setAttribute('aria-haspopup', 'menu');
+  trigger.setAttribute('aria-controls', id);
+  trigger.setAttribute('aria-expanded', 'false');
+  document.body.append(menu);
+  let open = false;
+  const placeMenu = () => {
+    const rect = trigger.getBoundingClientRect();
+    menu.hidden = false;
+    const bounds = menu.getBoundingClientRect();
+    const gap = 6;
+    let top = rect.bottom + gap;
+    let left = options.placement === 'bottom-end' ? rect.right - bounds.width : rect.left;
+    if (options.placement === 'top-start' || options.placement === 'top-end') top = rect.top - bounds.height - gap;
+    if (options.placement === 'top-end') left = rect.right - bounds.width;
+    left = Math.max(8, Math.min(left, window.innerWidth - bounds.width - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - bounds.height - 8));
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  };
+  const show = (edge = 'first') => {
+    if (open) return;
+    open = true;
+    placeMenu();
+    trigger.setAttribute('aria-expanded', 'true');
+    (edge === 'last' ? itemButtons.at(-1) : itemButtons[0]).focus();
+  };
+  const close = (restoreFocus = false) => {
+    if (!open) return;
+    open = false;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger.focus();
+  };
+  const toggle = () => open ? close() : show();
+  const onTriggerClick = () => toggle();
+  const onTriggerKeyDown = (event) => {
+    if (event.key === 'ArrowDown') { event.preventDefault(); show('first'); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); show('last'); }
+  };
+  const onMenuKeyDown = (event) => {
+    const current = itemButtons.indexOf(document.activeElement);
+    let next = current;
+    if (event.key === 'ArrowDown') next = (current + 1) % itemButtons.length;
+    else if (event.key === 'ArrowUp') next = (current - 1 + itemButtons.length) % itemButtons.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = itemButtons.length - 1;
+    else if (event.key === 'Escape') { event.preventDefault(); close(true); return; }
+    else if (event.key === 'Tab') { close(false); return; }
+    else return;
+    event.preventDefault();
+    itemButtons[next].focus();
+  };
+  const onOutsidePointer = (event) => {
+    if (open && !menu.contains(event.target) && !trigger.contains(event.target)) close(false);
+  };
+  const onPositionChange = () => { if (open) placeMenu(); };
+  trigger.addEventListener('click', onTriggerClick);
+  trigger.addEventListener('keydown', onTriggerKeyDown);
+  menu.addEventListener('keydown', onMenuKeyDown);
+  document.addEventListener('pointerdown', onOutsidePointer);
+  window.addEventListener('resize', onPositionChange);
+  window.addEventListener('scroll', onPositionChange, true);
+
+  owner.__registerCleanup(id, () => {
+    trigger.removeEventListener('click', onTriggerClick);
+    trigger.removeEventListener('keydown', onTriggerKeyDown);
+    menu.removeEventListener('keydown', onMenuKeyDown);
+    document.removeEventListener('pointerdown', onOutsidePointer);
+    window.removeEventListener('resize', onPositionChange);
+    window.removeEventListener('scroll', onPositionChange, true);
+    if (previousHaspopup === null) trigger.removeAttribute('aria-haspopup'); else trigger.setAttribute('aria-haspopup', previousHaspopup);
+    if (previousExpanded === null) trigger.removeAttribute('aria-expanded'); else trigger.setAttribute('aria-expanded', previousExpanded);
+    if (previousControls === null) trigger.removeAttribute('aria-controls'); else trigger.setAttribute('aria-controls', previousControls);
+    menu.remove();
+  });
+  return { __id: id, element: menu, open: show, close, toggle, destroy: () => owner.destroy(id) };
+}

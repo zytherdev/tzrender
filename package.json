@@ -1,16 +1,48 @@
 {
   "name": "@zyther/tzrender",
   "version": "0.1.7",
-  "description": "Lightweight vanilla JavaScript UI components: accessible notifications, dialogs, tooltips, tabs, accordions, progress indicators and skeleton loaders.",
+  "description": "Lightweight vanilla JavaScript UI components: accessible dialogs, notifications, navigation, menus, drawers, progress indicators and skeleton loaders.",
   "main": "index.js",
   "type": "module",
   "module": "index.js",
+  "packageManager": "npm@10.9.9",
   "files": [
     "src",
     "index.js",
     "README.md"
   ],
-  "keywords": ["render", "ui", "ui-design", "component", "components", "toast", "tooltip", "accordion", "tabs", "dialog", "progress", "skeleton", "loading", "accessibility", "vanilla-javascript", "utility", "module", "tzrender", "dom", "esm", "html", "javascript"],
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "render",
+    "ui",
+    "ui-design",
+    "component",
+    "components",
+    "toast",
+    "tooltip",
+    "accordion",
+    "tabs",
+    "dialog",
+    "drawer",
+    "menu",
+    "progress",
+    "skeleton",
+    "loading",
+    "accessibility",
+    "vanilla-javascript",
+    "utility",
+    "module",
+    "tzrender",
+    "dom",
+    "esm",
+    "html",
+    "javascript"
+  ],
   "author": "zytherdev <zyther.dev@outlook.com>",
   "homepage": "https://github.com/zytherdev/tzrender#readme",
   "bugs": {
@@ -20,5 +52,17 @@
     "type": "git",
     "url": "git+https://github.com/zytherdev/tzrender.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "dompurify": "3.4.18",
+    "jsdom": "31.0.1",
+    "monaco-editor": "0.57.0",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  },
+  "overrides": {
+    "monaco-editor": {
+      "dompurify": "3.4.18"
+    }
+  }
 }

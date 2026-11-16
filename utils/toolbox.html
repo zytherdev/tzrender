@@ -82,5 +82,33 @@
       </div>
       <div class="contrast-result" aria-live="polite"><strong id="contrastRatio">16.42:1</strong><span id="contrastBadge" class="contrast-badge">AA + AAA</span><span class="hint" data-tool-copy="contrastHint">WCAG AA requires 4.5:1 for normal text.</span></div>
     </article>
+
+    <article class="tool-card" id="flexboxTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">↔</span><div><p class="tool-kicker" data-tool-copy="flexKicker">LAYOUT LAB</p><h3 data-tool-copy="flexTitle">Flexbox playground</h3></div></div>
+      <p class="tool-description" data-tool-copy="flexDescription">Adjust the controls, see the layout change, and copy the CSS.</p>
+      <div class="flex-preview" id="flexPreview" aria-label="Flexbox layout preview"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+      <div class="controls compact-controls two-columns">
+        <div class="control-group"><label for="flexDirection" data-tool-copy="flexDirection">Direction</label><select id="flexDirection"><option value="row" data-tool-copy="directionRow">Row</option><option value="column" data-tool-copy="directionColumn">Column</option><option value="row-reverse" data-tool-copy="directionReverse">Row reverse</option></select></div>
+        <div class="control-group"><label for="flexJustify" data-tool-copy="flexJustify">Justify content</label><select id="flexJustify"><option value="flex-start" data-tool-copy="alignStart">Start</option><option value="center" data-tool-copy="alignCenter">Center</option><option value="flex-end" data-tool-copy="alignEnd">End</option><option value="space-between" data-tool-copy="spaceBetween">Space between</option><option value="space-around" data-tool-copy="spaceAround">Space around</option></select></div>
+        <div class="control-group"><label for="flexAlign" data-tool-copy="flexAlign">Align items</label><select id="flexAlign"><option value="stretch" data-tool-copy="alignStretch">Stretch</option><option value="flex-start" data-tool-copy="alignStart">Start</option><option value="center" data-tool-copy="alignCenter">Center</option><option value="flex-end" data-tool-copy="alignEnd">End</option></select></div>
+        <div class="control-group range-group"><label for="flexGap"><span data-tool-copy="layoutGap">Gap</span> <output id="flexGapValue">12px</output></label><input type="range" id="flexGap" min="0" max="40" value="12"></div>
+      </div>
+      <label class="layout-checkbox"><input type="checkbox" id="flexWrap"> <span data-tool-copy="flexWrap">Allow items to wrap</span></label>
+      <div class="output-heading"><span data-tool-copy="yourCode">YOUR CODE</span><button class="copy-button" data-copy-target="flexOutput" data-tool-copy="copyButton">Copy code</button></div>
+      <pre class="code-output"><code id="flexOutput"></code></pre>
+    </article>
+
+    <article class="tool-card" id="gridTool">
+      <div class="tool-card-heading"><span class="tool-icon" aria-hidden="true">▦</span><div><p class="tool-kicker" data-tool-copy="gridKicker">LAYOUT LAB</p><h3 data-tool-copy="gridTitle">CSS Grid generator</h3></div></div>
+      <p class="tool-description" data-tool-copy="gridDescription">Create a simple responsive grid and copy its CSS.</p>
+      <div class="grid-preview" id="gridPreview" aria-label="CSS Grid layout preview"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+      <div class="controls compact-controls two-columns">
+        <div class="control-group"><label for="gridColumns" data-tool-copy="gridColumns">Columns</label><select id="gridColumns"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
+        <div class="control-group"><label for="gridRows" data-tool-copy="gridRows">Rows</label><select id="gridRows"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div>
+        <div class="control-group range-group"><label for="gridGap"><span data-tool-copy="layoutGap">Gap</span> <output id="gridGapValue">12px</output></label><input type="range" id="gridGap" min="0" max="40" value="12"></div>
+      </div>
+      <div class="output-heading"><span data-tool-copy="yourCode">YOUR CODE</span><button class="copy-button" data-copy-target="gridOutput" data-tool-copy="copyButton">Copy code</button></div>
+      <pre class="code-output"><code id="gridOutput"></code></pre>
+    </article>
   </div>
 </section>
