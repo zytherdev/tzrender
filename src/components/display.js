@@ -171,7 +171,8 @@ export function createAvatar(owner, options = {}) {
 export function createBadge(owner, options = {}) {
   const variants = ['neutral', 'primary', 'success', 'warning', 'danger', 'info'];
   const sizes = ['small', 'medium', 'large'];
-  const { id, element: badge } = createRoot(owner, options, 'span', 'tzr-badge');
+  const themeClass = options.theme === 'light' || options.theme === 'dark' ? ` tzr-badge--${options.theme}` : '';
+  const { id, element: badge } = createRoot(owner, options, 'span', `tzr-badge${themeClass}`);
   let variant = variants.includes(options.variant) ? options.variant : 'neutral';
   let size = sizes.includes(options.size) ? options.size : 'medium';
   badge.classList.add(`tzr-badge--${variant}`, `tzr-badge--${size}`);

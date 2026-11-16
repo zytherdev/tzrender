@@ -141,6 +141,18 @@
   .tzr-badge--danger { color: #ffacb1; }
   .tzr-badge--info { color: #a4d9ff; }
 }
+.tzr-badge--light.tzr-badge--neutral { color: #565666; }
+.tzr-badge--light.tzr-badge--primary { color: #5740c6; }
+.tzr-badge--light.tzr-badge--success { color: #08784d; }
+.tzr-badge--light.tzr-badge--warning { color: #8c5b0a; }
+.tzr-badge--light.tzr-badge--danger { color: #a22e37; }
+.tzr-badge--light.tzr-badge--info { color: #22618f; }
+.tzr-badge--dark.tzr-badge--neutral { color: #d2d0df; }
+.tzr-badge--dark.tzr-badge--primary { color: #c7baff; }
+.tzr-badge--dark.tzr-badge--success { color: #91e3bd; }
+.tzr-badge--dark.tzr-badge--warning { color: #ffd185; }
+.tzr-badge--dark.tzr-badge--danger { color: #ffacb1; }
+.tzr-badge--dark.tzr-badge--info { color: #a4d9ff; }
 @media (prefers-reduced-motion: reduce) {
   .tzr-switch__track, .tzr-switch__track::after { transition-duration: .01ms; }
 }

@@ -3,6 +3,10 @@ import '../node_modules/monaco-editor/esm/vs/language/html/monaco.contribution.j
 import '../node_modules/monaco-editor/esm/vs/language/css/monaco.contribution.js';
 import '../node_modules/monaco-editor/esm/vs/language/json/monaco.contribution.js';
 import '../node_modules/monaco-editor/esm/vs/language/typescript/monaco.contribution.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/css/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/html/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/javascript/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/typescript/register.js';
 import '../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/browser/colorPickerContribution.js';
 import '../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/browser/colorPicker.css';
 import editorWorker from '../node_modules/monaco-editor/esm/vs/editor/editor.worker.js?worker';

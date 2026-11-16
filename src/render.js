@@ -73,7 +73,9 @@ export default class Render
             ['new-components.css', new URL('./styles/new-components.css', import.meta.url)]
         ]
         const css = await Promise.all(styleFiles.map(async ([file, url]) => {
-            const response = await fetch(url)
+            const fetchUrl = new URL(url)
+            if (import.meta.env?.DEV) fetchUrl.searchParams.set('direct', '')
+            const response = await fetch(fetchUrl)
             if (!response.ok) throw new Error(`Could not load ${file} (${response.status})`)
             return response.text()
         }))

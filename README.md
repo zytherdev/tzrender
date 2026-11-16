@@ -552,13 +552,14 @@ const profileAvatar = ui.avatar({
 
 Creates a compact text badge. Returns `{ __id, element, setText(text), setVariant(variant), setSize(size), setVisible(visible), text, variant, size, visible, destroy() }`.
 
-Options: `container` (`document.body`), `text` (or `label`, default `'Status'`), `variant` (`'neutral'`; also `'primary'`, `'success'`, `'warning'`, `'danger'`, `'info'`), `size` (`'medium'`; also `'small'`, `'large'`), `announce` (`false`; adds a polite `status` role) and `assertive` (`false`; with `announce`, uses an assertive `alert` role).
+Options: `container` (`document.body`), `text` (or `label`, default `'Status'`), `variant` (`'neutral'`; also `'primary'`, `'success'`, `'warning'`, `'danger'`, `'info'`), `size` (`'medium'`; also `'small'`, `'large'`), `announce` (`false`; adds a polite `status` role), `assertive` (`false`; with `announce`, uses an assertive `alert` role) and `theme` (omitted to follow `prefers-color-scheme`, or set to `'light'` / `'dark'` to choose explicitly).
 
 ```js
 const status = ui.badge({
   container: '#publish-state',
   text: 'Ready to publish',
   variant: 'success',
+  theme: 'light',
   announce: true
 });
 ```

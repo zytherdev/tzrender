@@ -21,6 +21,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('component style injection', () => {
+  it('fetches raw stylesheet text from Vite during development', async () => {
+    const ui = new Render();
+    await ui.ready;
+    const styleUrls = fetch.mock.calls.map(([input]) => new URL(input));
+
+    expect(styleUrls).toHaveLength(7);
+    expect(styleUrls.every((url) => url.searchParams.has('direct'))).toBe(true);
+    expect(document.getElementById('tzrender-styles')?.textContent).toContain('/* test component css */');
+  });
+});
+
 describe('editor preview document', () => {
   it('keeps the starter content and closes the injected stylesheet', () => {
     const source = buildPreviewDocument({
@@ -209,7 +221,7 @@ describe('expanded component library', () => {
     const rating = ui.rating({ container: '#host', label: 'Rate this', value: 2, allowClear: true });
     const copy = ui.copyButton({ container: '#host', text: 'safe text' });
     const avatar = ui.avatar({ container: '#host', name: 'Taylor Zane', src: 'javascript:alert(1)' });
-    const badge = ui.badge({ container: '#host', text: 'Ready', variant: 'success' });
+    const badge = ui.badge({ container: '#host', text: 'Ready', variant: 'success', theme: 'dark' });
     const handles = [toggle, checks, radios, segments, combo, popover, pages, crumbs, rating, copy, avatar, badge];
 
     expect(handles).toHaveLength(12);
@@ -235,6 +247,7 @@ describe('expanded component library', () => {
     expect(avatar.src).toBeNull();
     expect(avatar.element.getAttribute('aria-label')).toBe('Taylor Zane');
     expect(badge.setVariant('warning')).toBe('warning');
+    expect(badge.element.classList.contains('tzr-badge--dark')).toBe(true);
 
     popover.open();
     expect(popover.isOpen).toBe(true);

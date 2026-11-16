@@ -182,51 +182,51 @@ try {
   const examples = {
     switch: {
       code: "ui.switch({ container: '#newComponentMount', label: 'Email updates', checked: true });",
-      render: (container) => ui.switch({ container, label: 'Email updates', description: 'Get occasional project tips.', checked: true, onChange: (value) => announce(`Email updates ${value ? 'on' : 'off'}.`) })
+      render: (container, theme) => ui.switch({ container, theme, label: 'Email updates', description: 'Get occasional project tips.', checked: true, onChange: (value) => announce(`Email updates ${value ? 'on' : 'off'}.`) })
     },
     checkboxGroup: {
       code: "ui.checkboxGroup({ container: '#newComponentMount', label: 'Topics', items: [{ value: 'html', label: 'HTML' }, { value: 'css', label: 'CSS' }] });",
-      render: (container) => ui.checkboxGroup({ container, label: 'Topics to explore', value: ['css'], items: [{ value: 'html', label: 'HTML', description: 'Page structure' }, { value: 'css', label: 'CSS', description: 'Page styles' }, { value: 'js', label: 'JavaScript', description: 'Page behavior' }], onChange: (values) => announce(`Selected topics: ${values.join(', ') || 'none'}.`) })
+      render: (container, theme) => ui.checkboxGroup({ container, theme, label: 'Topics to explore', value: ['css'], items: [{ value: 'html', label: 'HTML', description: 'Page structure' }, { value: 'css', label: 'CSS', description: 'Page styles' }, { value: 'js', label: 'JavaScript', description: 'Page behavior' }], onChange: (values) => announce(`Selected topics: ${values.join(', ') || 'none'}.`) })
     },
     radioGroup: {
       code: "ui.radioGroup({ container: '#newComponentMount', label: 'Layout', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }] });",
-      render: (container) => ui.radioGroup({ container, label: 'Preview layout', value: 'wide', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }, { value: 'stacked', label: 'Stacked' }], onChange: (value) => announce(`Preview layout: ${value}.`) })
+      render: (container, theme) => ui.radioGroup({ container, theme, label: 'Preview layout', value: 'wide', items: [{ value: 'wide', label: 'Wide' }, { value: 'compact', label: 'Compact' }, { value: 'stacked', label: 'Stacked' }], onChange: (value) => announce(`Preview layout: ${value}.`) })
     },
     segmentedControl: {
       code: "ui.segmentedControl({ container: '#newComponentMount', label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'mobile', label: 'Mobile' }] });",
-      render: (container) => ui.segmentedControl({ container, label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'tablet', label: 'Tablet' }, { value: 'mobile', label: 'Mobile' }], onChange: (value) => announce(`Preview size: ${value}. Use arrow keys to switch.`) })
+      render: (container, theme) => ui.segmentedControl({ container, theme, label: 'Preview size', value: 'desktop', items: [{ value: 'desktop', label: 'Desktop' }, { value: 'tablet', label: 'Tablet' }, { value: 'mobile', label: 'Mobile' }], onChange: (value) => announce(`Preview size: ${value}. Use arrow keys to switch.`) })
     },
     combobox: {
       code: "ui.combobox({ container: '#newComponentMount', label: 'Choose a color', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }] });",
-      render: (container) => ui.combobox({ container, label: 'Choose a starter color', placeholder: 'Type to filter…', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }, { value: 'amber', label: 'Amber' }], onChange: (value) => announce(`Selected color: ${value}.`) })
+      render: (container, theme) => ui.combobox({ container, theme, label: 'Choose a starter color', placeholder: 'Type to filter…', items: [{ value: 'violet', label: 'Violet' }, { value: 'mint', label: 'Mint' }, { value: 'amber', label: 'Amber' }], onChange: (value) => announce(`Selected color: ${value}.`) })
     },
     popover: {
       code: "ui.popover('#demoPopoverTrigger', { title: 'A helpful note', content: 'Popover content is inserted as text.' });",
-      render: () => {
+      render: (_container, theme) => {
         const trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.id = 'demoPopoverTrigger';
         trigger.className = 'button button-small';
         trigger.textContent = 'Open helpful note';
         newComponentMount.append(trigger);
-        return ui.popover(trigger, { title: 'A helpful note', content: 'Popover content is inserted as text. Press Escape to close it.', theme: currentTheme() });
+        return ui.popover(trigger, { title: 'A helpful note', content: 'Popover content is inserted as text. Press Escape to close it.', theme });
       }
     },
     pagination: {
       code: "ui.pagination({ container: '#newComponentMount', totalPages: 8, currentPage: 3 });",
-      render: (container) => ui.pagination({ container, totalPages: 8, currentPage: 3, label: 'Example pages', onChange: (page) => announce(`Showing example page ${page}.`) })
+      render: (container, theme) => ui.pagination({ container, theme, totalPages: 8, currentPage: 3, label: 'Example pages', onChange: (page) => announce(`Showing example page ${page}.`) })
     },
     breadcrumb: {
       code: "ui.breadcrumb({ container: '#newComponentMount', items: [{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: 'Getting started', current: true }] });",
-      render: (container) => ui.breadcrumb({ container, items: [{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: 'Getting started', current: true }] })
+      render: (container, theme) => ui.breadcrumb({ container, theme, items: [{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: 'Getting started', current: true }] })
     },
     rating: {
       code: "ui.rating({ container: '#newComponentMount', label: 'Rate this guide', value: 4, allowClear: true });",
-      render: (container) => ui.rating({ container, label: 'Rate this guide', value: 4, allowClear: true, onChange: (value) => announce(`Guide rating: ${value} of 5.`) })
+      render: (container, theme) => ui.rating({ container, theme, label: 'Rate this guide', value: 4, allowClear: true, onChange: (value) => announce(`Guide rating: ${value} of 5.`) })
     },
     copyButton: {
       code: "ui.copyButton({ container: '#newComponentMount', text: 'npm install @zyther/tzrender', label: 'Copy install command' });",
-      render: (container) => ui.copyButton({ container, text: 'npm install @zyther/tzrender', label: 'Copy install command', onCopy: () => announce('Install command copied.'), onError: () => announce('Clipboard unavailable in this browser context.') })
+      render: (container, theme) => ui.copyButton({ container, theme, text: 'npm install @zyther/tzrender', label: 'Copy install command', onCopy: () => announce('Install command copied.'), onError: () => announce('Clipboard unavailable in this browser context.') })
     },
     avatar: {
       code: "ui.avatar({ container: '#newComponentMount', name: 'Taylor Zane', size: 56 });",
@@ -234,7 +234,7 @@ try {
     },
     badge: {
       code: "ui.badge({ container: '#newComponentMount', text: 'Ready', variant: 'success' });",
-      render: (container) => ui.badge({ container, text: 'Ready to publish', variant: 'success', size: 'medium', announce: true })
+      render: (container, theme) => ui.badge({ container, theme, text: 'Ready to publish', variant: 'success', size: 'medium', announce: true })
     }
   };
 
@@ -242,7 +242,7 @@ try {
     const example = examples[name] || examples.switch;
     newComponentHandle?.destroy();
     newComponentMount.replaceChildren();
-    newComponentHandle = example.render('#newComponentMount');
+    newComponentHandle = example.render('#newComponentMount', currentTheme());
     newComponentCode.textContent = example.code;
     copyNewComponentExample.dataset.copy = example.code;
     announce(`${name} example is ready. Try it, then copy the code.`);
@@ -251,16 +251,37 @@ try {
   newComponentSelect?.addEventListener('change', (event) => showNewComponent(event.target.value));
   showNewComponent(newComponentSelect?.value || 'switch');
 
+  function syncThemeClass(element, prefix, theme, hasLightVariant = false) {
+    if (!element) return;
+    const hasThemeClass = element.classList.contains(`${prefix}--light`)
+      || element.classList.contains(`${prefix}--dark`)
+      || element.classList.contains(prefix);
+    if (!hasThemeClass) return;
+    element.classList.toggle(`${prefix}--dark`, theme === 'dark');
+    if (hasLightVariant) element.classList.toggle(`${prefix}--light`, theme === 'light');
+  }
+
+  function syncComponentPreviewTheme(theme) {
+    const previews = [
+      [progressComponent.element, 'tzr-progress', true],
+      [patternExample?.element, 'tzr-accordion', false],
+      [patternExample?.element, 'tzr-tabs', false],
+      [patternExample?.element, 'tzr-skeleton', false],
+      [demoMenu.element, 'tzr-menu', false],
+      [newComponentHandle?.element, 'tzr-form', true],
+      [newComponentHandle?.element, 'tzr-popover', true],
+      [newComponentHandle?.element, 'tzr-pagination', true],
+      [newComponentHandle?.element, 'tzr-breadcrumb', true],
+      [newComponentHandle?.element, 'tzr-copy', true],
+      [newComponentHandle?.element, 'tzr-badge', true]
+    ];
+    for (const [element, prefix, hasLightVariant] of previews) syncThemeClass(element, prefix, theme, hasLightVariant);
+  }
+
   window.addEventListener('tzrender:theme-change', (event) => {
     const theme = event.detail?.theme;
-    if (theme === 'light' || theme === 'dark') {
-      progressComponent.element.classList.toggle('tzr-progress--light', theme === 'light');
-      progressComponent.element.classList.toggle('tzr-progress--dark', theme === 'dark');
-    }
+    if (theme === 'light' || theme === 'dark') syncComponentPreviewTheme(theme);
   });
-
-  // The menu handle is retained for a future example button without changing its ownership.
-  void demoMenu;
 } catch (error) {
   console.error('tzrender demo initialization failed:', error);
   announce('The component preview could not load. Check the browser console and try the package docs.');
