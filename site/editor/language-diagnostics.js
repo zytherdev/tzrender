@@ -1,3 +1,10 @@
+import { analyzePython } from './python-intelligence.js';
+import { analyzeLua } from './lua-intelligence.js';
+import { analyzePHP } from './php-intelligence.js';
+import { analyzeJava } from './java-intelligence.js';
+import { analyzeSQL } from './sql-intelligence.js';
+import { analyzeDocument } from './document-intelligence.js';
+
 const OWNER = 'tzrender-language-diagnostics';
 const SUPPORTED = new Set(['ruby', 'r', 'perl']);
 const MAX_DIAGNOSTICS = 20;
@@ -150,12 +157,43 @@ function toDiagnostic(error) {
 export function updateLanguageDiagnostics(monaco, models) {
   for (const model of models.values()) {
     const language = model.getLanguageId();
-    const diagnostics = SUPPORTED.has(language)
-      ? findLanguageDiagnostics(language, model.getValue()).map((marker) => ({
-          ...marker,
-          severity: monaco.MarkerSeverity.Error,
-        }))
-      : [];
+    const source = model.getValue();
+    const diagnostics = languageDiagnostics(language, source).map((marker) => ({
+      ...marker,
+      severity: marker.severity ?? monaco.MarkerSeverity.Error,
+    }));
     monaco.editor.setModelMarkers(model, OWNER, diagnostics);
   }
+}
+
+function languageDiagnostics(language, source) {
+  if (['ruby', 'r', 'perl'].includes(language)) {
+    return findLanguageDiagnostics(language, source).map((marker) => ({
+      ...marker,
+      severity: 8
+    }));
+  }
+  const convertOffset = (item) => {
+    const offset = Math.max(0, Math.min(source.length, item.offset ?? 0));
+    const { line, column } = locationAt(source, offset);
+    const startLineNumber = item.startLineNumber ?? item.line ?? item.lineNumber ?? line;
+    const startColumn = item.startColumn ?? item.column ?? column;
+    const endLineNumber = item.endLineNumber ?? startLineNumber;
+    return {
+      message: item.message,
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn: item.endColumn ?? startColumn + (item.length ?? 1),
+      severity: item.severity === 'warning' || item.severity === 4 ? 4 : 8,
+      source: 'tzrender'
+    };
+  };
+  if (language === 'python') return analyzePython(source).map(convertOffset);
+  if (language === 'lua') return analyzeLua(source).map(convertOffset);
+  if (language === 'php') return analyzePHP(source).map(convertOffset);
+  if (language === 'java') return analyzeJava(source).map(convertOffset);
+  if (language === 'sql') return analyzeSQL(source).map(convertOffset);
+  if (['yaml', 'xml', 'markdown'].includes(language)) return analyzeDocument(language, source).map(convertOffset);
+  return [];
 }

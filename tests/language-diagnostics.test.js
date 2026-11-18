@@ -66,4 +66,46 @@ describe('language diagnostics', () => {
     updateLanguageDiagnostics(monaco, new Map([['a.rb', { ...supported, getValue: () => 'f()' }]]));
     expect(markerCall.mock.calls[0][2]).toEqual([]);
   });
+
+  it.each([
+    ['python', 'print([1))'],
+    ['lua', 'print(1))'],
+    ['php', '<?php echo foo(] ?>'],
+    ['java', 'class A { void f(] }'],
+    ['sql', 'SELECT (1]]'],
+  ])('publishes local static diagnostics for %s models', (language, source) => {
+    const model = { getLanguageId: () => language, getValue: () => source };
+    const setModelMarkers = vi.fn();
+    const monaco = {
+      MarkerSeverity: { Error: 8, Warning: 4 },
+      editor: { setModelMarkers },
+    };
+    updateLanguageDiagnostics(monaco, new Map([['main', model]]));
+    expect(setModelMarkers).toHaveBeenCalledOnce();
+    const [target, owner, markers] = setModelMarkers.mock.calls[0];
+    expect(target).toBe(model);
+    expect(owner).toBe('tzrender-language-diagnostics');
+    expect(markers.length).toBeGreaterThan(0);
+    expect(markers[0]).toMatchObject({
+      startLineNumber: expect.any(Number),
+      startColumn: expect.any(Number),
+      endLineNumber: expect.any(Number),
+      endColumn: expect.any(Number),
+      severity: expect.any(Number),
+      source: 'tzrender',
+    });
+  });
+
+  it.each([
+    ['yaml', '\tbad: value'],
+    ['xml', '<root>'],
+    ['markdown', '```js\nunfinished'],
+  ])('publishes document diagnostics for %s models', (language, source) => {
+    const model = { getLanguageId: () => language, getValue: () => source };
+    const setModelMarkers = vi.fn();
+    updateLanguageDiagnostics({ MarkerSeverity: { Error: 8, Warning: 4 }, editor: { setModelMarkers } }, new Map([['doc', model]]));
+    const markers = setModelMarkers.mock.calls[0][2];
+    expect(markers.length).toBeGreaterThan(0);
+    expect(markers[0]).toMatchObject({ startLineNumber: expect.any(Number), startColumn: expect.any(Number), source: 'tzrender' });
+  });
 });

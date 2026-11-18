@@ -46,6 +46,12 @@ import { createSqlRuntime } from './editor/sql-runtime.js';
 import { createRubyRuntime } from './editor/ruby-runtime.js';
 import { createRRuntime } from './editor/r-runtime.js';
 import { createPerlRuntime } from './editor/perl-runtime.js';
+import { registerPythonIntelligence } from './editor/python-intelligence.js';
+import { registerLuaIntelligence } from './editor/lua-intelligence.js';
+import { registerPHPIntelligence } from './editor/php-intelligence.js';
+import { registerJavaIntelligence } from './editor/java-intelligence.js';
+import { registerSQLIntelligence } from './editor/sql-intelligence.js';
+import { registerDocumentIntelligence } from './editor/document-intelligence.js';
 import { registerRubyIntelligence } from './editor/ruby-intelligence.js';
 import { registerRIntelligence } from './editor/r-intelligence.js';
 import { registerPerlIntelligence } from './editor/perl-intelligence.js';
@@ -1364,6 +1370,12 @@ function initEditor() {
     else dispose?.dispose?.();
   }
   languageIntelligenceDisposers = [
+    registerPythonIntelligence(monaco, snapshotProject),
+    registerLuaIntelligence(monaco, snapshotProject),
+    registerPHPIntelligence(monaco, snapshotProject),
+    registerJavaIntelligence(monaco, snapshotProject),
+    registerSQLIntelligence(monaco, snapshotProject),
+    registerDocumentIntelligence(monaco, snapshotProject),
     registerRubyIntelligence(monaco, snapshotProject),
     registerRIntelligence(monaco, snapshotProject),
     registerPerlIntelligence(monaco, snapshotProject)
