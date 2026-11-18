@@ -2,11 +2,20 @@ export const STORAGE_KEY = 'tzrender-editor-v2';
 export const LEGACY_STORAGE_KEY = 'tzrender-editor-v1';
 export const MAX_FILE_CHARS = 100_000;
 export const MAX_PROJECT_CHARS = 1_000_000;
-export const MAX_PROJECT_FILES = 32;
-export const MAX_FILE_NAME = 64;
+export const MAX_PROJECT_FILES = 512;
+export const MAX_PROJECT_FOLDERS = 1024;
+export const MAX_FILE_NAME = 255;
+export const MAX_PATH_LENGTH = 1024;
 
 const LEGACY_FILE_NAMES = { html: 'index.html', css: 'styles.css', js: 'script.js' };
-const FILE_NAME_PATTERN = /^(?!\.{1,2}$)[A-Za-z0-9][A-Za-z0-9._-]{0,62}$/;
+// Besides POSIX traversal, reject names that are unsafe on common export targets
+// or can poison object-based maps. Dotfiles and names without an extension are OK.
+// Device-like names remain valid because these paths belong to a virtual filesystem.
+const UNSAFE_SEGMENT = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069\\<>:"|?*]/u;
+const RESERVED_SEGMENT = /^(?:__proto__|prototype|constructor)$/i;
+// JSON escaping can expand a single character to six characters.
+const MAX_SAVED_PROJECT_CHARS = MAX_PROJECT_CHARS * 6
+  + (MAX_PROJECT_FILES + MAX_PROJECT_FOLDERS) * (MAX_PATH_LENGTH * 6 + 30) + 10_000;
 
 export const FILE_TYPES = {
   html: { language: 'html', icon: '5', category: 'markup', runnable: true },
@@ -90,14 +99,33 @@ export const STARTERS = {
 
 export function getFileType(name = '') {
   const extension = String(name).split('.').pop()?.toLowerCase() || '';
-  return FILE_TYPES[extension] || { language: 'plaintext', icon: 'T', category: 'document', runnable: false };
+  return Object.hasOwn(FILE_TYPES, extension)
+    ? FILE_TYPES[extension]
+    : { language: 'plaintext', icon: 'T', category: 'document', runnable: false };
+}
+
+function isSafePath(path) {
+  if (typeof path !== 'string' || !path || path.length > MAX_PATH_LENGTH) return false;
+  return path.split('/').every((segment) => segment.length > 0
+    && segment.length <= MAX_FILE_NAME
+    && segment !== '.' && segment !== '..'
+    && !segment.endsWith('.') && !segment.endsWith(' ')
+    && !UNSAFE_SEGMENT.test(segment)
+    && !RESERVED_SEGMENT.test(segment));
 }
 
 export function isSafeFileName(name) {
-  return typeof name === 'string'
-    && name.length <= MAX_FILE_NAME
-    && FILE_NAME_PATTERN.test(name)
-    && Object.hasOwn(FILE_TYPES, name.split('.').pop()?.toLowerCase() || '');
+  return isSafePath(name);
+}
+
+export function isSafeFolderName(name) {
+  return isSafePath(name);
+}
+
+// Normalize canonical Unicode variants and case expansions (e.g. ß/SS and
+// Greek final sigma) consistently for the whole virtual filesystem.
+export function caseFoldPath(path) {
+  return path.toLowerCase().toUpperCase().toLowerCase().normalize('NFC');
 }
 
 function cleanProjectFiles(files) {
@@ -109,15 +137,56 @@ function cleanProjectFiles(files) {
   const cleaned = [];
   let total = 0;
   for (const [name, content] of entries) {
-    if (!isSafeFileName(name)) throw new Error(`Unsupported or unsafe file name: ${String(name).slice(0, 80)}`);
-    if (seen.has(name.toLowerCase())) throw new Error(`Duplicate file name: ${name}`);
+    if (!isSafeFileName(name)) throw new Error(`Unsafe file path: ${String(name).slice(0, 80)}`);
+    if (seen.has(caseFoldPath(name))) throw new Error(`Duplicate file name: ${name}`);
     if (typeof content !== 'string' || content.length > MAX_FILE_CHARS) throw new Error(`${name} is larger than ${MAX_FILE_CHARS.toLocaleString()} characters or is not text.`);
     total += content.length;
     if (total > MAX_PROJECT_CHARS) throw new Error(`Projects are limited to ${MAX_PROJECT_CHARS.toLocaleString()} total characters.`);
-    seen.add(name.toLowerCase());
+    seen.add(caseFoldPath(name));
     cleaned.push({ name, content });
   }
   return cleaned;
+}
+
+// Shared by persistence and file-system operations. Ancestors are inferred,
+// while explicit folders preserve empty directories across round trips.
+export function validateProjectTree(files, folders = []) {
+  const cleanFiles = cleanProjectFiles(files);
+  if (!Array.isArray(folders)) throw new Error('Project folders must be an array of paths.');
+  if (folders.length > MAX_PROJECT_FOLDERS) throw new Error(`Projects are limited to ${MAX_PROJECT_FOLDERS} folders.`);
+
+  const fileNames = new Set(cleanFiles.map((file) => caseFoldPath(file.name)));
+  const folderNames = new Map();
+  const explicitlySeen = new Set();
+  const cleanFolders = [];
+
+  function addFolder(path) {
+    const key = caseFoldPath(path);
+    if (fileNames.has(key)) throw new Error(`A file conflicts with folder: ${path}`);
+    const existing = folderNames.get(key);
+    if (existing && existing !== path) throw new Error(`Folder name conflicts by case: ${path}`);
+    if (!existing) {
+      if (cleanFolders.length >= MAX_PROJECT_FOLDERS) throw new Error(`Projects are limited to ${MAX_PROJECT_FOLDERS} folders.`);
+      folderNames.set(key, path);
+      cleanFolders.push(path);
+    }
+  }
+
+  function addAncestors(path, includeSelf) {
+    const parts = path.split('/');
+    const count = includeSelf ? parts.length : parts.length - 1;
+    for (let i = 1; i <= count; i += 1) addFolder(parts.slice(0, i).join('/'));
+  }
+
+  for (const path of folders) {
+    if (!isSafeFolderName(path)) throw new Error(`Unsafe folder path: ${String(path).slice(0, 80)}`);
+    const key = caseFoldPath(path);
+    if (explicitlySeen.has(key)) throw new Error(`Duplicate folder name: ${path}`);
+    explicitlySeen.add(key);
+    addAncestors(path, true);
+  }
+  for (const file of cleanFiles) addAncestors(file.name, false);
+  return { files: cleanFiles, folders: cleanFolders };
 }
 
 export function normalizeProject(value, fallbackName = 'Imported project') {
@@ -125,20 +194,22 @@ export function normalizeProject(value, fallbackName = 'Imported project') {
   if (value.format && value.format !== 'tzrender-project') throw new Error('This file is not a tzrender project.');
   const source = value.files;
   if (!source || typeof source !== 'object') throw new Error('The project has no files.');
-  let files;
-  if (Array.isArray(source)) files = cleanProjectFiles(source);
-  else {
-    const mapped = Object.entries(source).map(([key, content]) => {
+  let fileSource = source;
+  if (!Array.isArray(source)) {
+    fileSource = Object.entries(source).map(([key, content]) => {
       const name = Object.hasOwn(LEGACY_FILE_NAMES, key) ? LEGACY_FILE_NAMES[key] : key;
-      return [name, content];
+      return { name, content };
     });
-    files = cleanProjectFiles(mapped);
   }
+  const { files, folders } = validateProjectTree(fileSource, value.folders);
+  const activeFile = !Array.isArray(source) && Object.hasOwn(LEGACY_FILE_NAMES, value.activeFile)
+    ? LEGACY_FILE_NAMES[value.activeFile] : value.activeFile;
   return {
     projectName: typeof value.projectName === 'string' ? value.projectName.trim().slice(0, 48) || fallbackName : fallbackName,
     starter: Object.hasOwn(STARTERS, value.starter) ? value.starter : 'blank',
-    activeFile: files.some((file) => file.name === value.activeFile) ? value.activeFile : files.find((file) => file.name === 'index.html')?.name || files[0].name,
-    files
+    activeFile: files.some((file) => file.name === activeFile) ? activeFile : files.find((file) => file.name === 'index.html')?.name || files[0].name,
+    files,
+    folders
   };
 }
 
@@ -146,19 +217,17 @@ export function loadSavedProject(storage = globalThis.localStorage) {
   for (const key of [STORAGE_KEY, LEGACY_STORAGE_KEY]) {
     try {
       const raw = storage?.getItem(key);
-      if (!raw || raw.length > MAX_PROJECT_CHARS * 2) continue;
+      if (!raw || raw.length > MAX_SAVED_PROJECT_CHARS) continue;
       const parsed = JSON.parse(raw);
       if (key === STORAGE_KEY && parsed.version !== 2) continue;
       if (key === LEGACY_STORAGE_KEY && parsed.version !== 1) continue;
-      const sourceFiles = key === LEGACY_STORAGE_KEY
-        ? Object.fromEntries(Object.entries(LEGACY_FILE_NAMES).map(([oldKey, name]) => [name, parsed.files?.[oldKey]]))
-        : parsed.files;
       return normalizeProject({
         format: 'tzrender-project',
         projectName: parsed.projectName,
         starter: parsed.starter,
         activeFile: parsed.activeFile,
-        files: sourceFiles
+        files: parsed.files,
+        folders: parsed.folders
       });
     } catch {
       // A corrupt or obsolete draft never prevents the editor from opening.
@@ -167,8 +236,8 @@ export function loadSavedProject(storage = globalThis.localStorage) {
   return null;
 }
 
-export function serializeProject({ projectName, starter, activeFile, files }) {
-  const cleanFiles = cleanProjectFiles(files);
+export function serializeProject({ projectName, starter, activeFile, files, folders }) {
+  const { files: cleanFiles, folders: cleanFolders } = validateProjectTree(files, folders);
   return JSON.stringify({
     format: 'tzrender-project',
     version: 2,
@@ -176,16 +245,19 @@ export function serializeProject({ projectName, starter, activeFile, files }) {
     starter: Object.hasOwn(STARTERS, starter) ? starter : 'blank',
     activeFile: cleanFiles.some((file) => file.name === activeFile) ? activeFile : cleanFiles[0].name,
     files: cleanFiles,
+    folders: cleanFolders,
     savedAt: new Date().toISOString()
   });
 }
 
 export function createStarterProject(starter = 'landing') {
-  const selected = STARTERS[starter] || STARTERS.landing;
+  const selected = Object.hasOwn(STARTERS, starter) ? STARTERS[starter] : STARTERS.landing;
+  const { files, folders } = validateProjectTree(selected.files, selected.folders);
   return {
     projectName: selected.name,
     starter: Object.hasOwn(STARTERS, starter) ? starter : 'landing',
-    activeFile: selected.files.find((file) => file.name === 'index.html')?.name || selected.files[0].name,
-    files: selected.files.map((file) => ({ ...file }))
+    activeFile: files.find((file) => file.name === 'index.html')?.name || files[0].name,
+    files,
+    folders
   };
 }

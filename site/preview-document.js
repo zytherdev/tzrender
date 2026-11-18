@@ -18,9 +18,17 @@ export function buildPreviewDocument({ html = '', css = '', javascript = '', max
   parsed.head.append(style);
 
   const bridge = `\n(() => {\n  const send = (data) => { try { parent.postMessage({ channel: 'tzrender-preview', ...data }, '*'); } catch {} };\n  const printable = (value) => { if (typeof value === 'string') return value; if (value instanceof Error) return value.stack || value.message; try { const result = JSON.stringify(value); return result === undefined ? String(value) : result; } catch { return String(value); } };\n  for (const level of ['log', 'info', 'warn', 'error']) {\n    const original = console[level].bind(console);\n    console[level] = (...args) => { original(...args); send({ type: 'console', level, message: args.map(printable).join(' ') }); };\n  }\n  addEventListener('error', (event) => send({ type: 'error', message: event.message || 'Script error', line: event.lineno || 0 }));\n  addEventListener('unhandledrejection', (event) => send({ type: 'error', message: printable(event.reason) }));\n  addEventListener('securitypolicyviolation', (event) => send({ type: 'console', level: 'warn', message: 'Preview blocked external resource: ' + (event.violatedDirective || 'network policy') }));\n  addEventListener('load', () => send({ type: 'ready' }), { once: true });\n})();\n`;
-  const script = document.createElement('script');
-  script.textContent = `${bridge}\n${scriptText.replace(/<\/script/gi, '<\\/script')}`;
-  parsed.body.append(script);
+  const bridgeScript = document.createElement('script');
+  bridgeScript.textContent = bridge;
+  // CSP must precede the bridge, which must precede every user script, including
+  // scripts in <head>. Do not move any of the page's scripts relative to each other.
+  policy.after(bridgeScript);
+
+  if (scriptText) {
+    const script = document.createElement('script');
+    script.textContent = scriptText.replace(/<\/script/gi, '<\\/script');
+    parsed.body.append(script);
+  }
 
   // User-authored closing-tag text was escaped above. Keep this real style end tag
   // intact so the browser does not parse the rest of the document as stylesheet text.

@@ -58,9 +58,10 @@ describe('editor preview document', () => {
     expect(preview.querySelectorAll('base, meta[http-equiv="refresh"], meta[http-equiv="Content-Security-Policy"]')).toHaveLength(1);
     expect(preview.querySelectorAll('meta[http-equiv="refresh"], base')).toHaveLength(0);
     expect(preview.querySelectorAll('meta[http-equiv="Content-Security-Policy"]')).toHaveLength(1);
-    expect(preview.querySelectorAll('script')).toHaveLength(1);
+    expect(preview.querySelectorAll('script')).toHaveLength(2);
+    expect(preview.head.querySelector('script')?.textContent).toContain('tzrender-preview');
     expect(preview.querySelector('style')?.textContent).toContain('<\\/style');
-    expect(preview.querySelector('script')?.textContent).toContain('<\\/script');
+    expect(preview.body.querySelector('script')?.textContent).toContain('<\\/script');
     expect(preview.body.textContent).toContain('Preview');
   });
 });

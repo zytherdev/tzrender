@@ -41,6 +41,175 @@ function markdownPreview(file) {
   return documentPage(file.name, `<article class="markdown-preview">${safeMarkup}</article>`, MARKDOWN_STYLES);
 }
 
+// Project names are canonical relative POSIX paths, not browser URLs. Never let
+// malformed project entries make an otherwise unsafe reference resolvable.
+function isProjectPath(path) {
+  return typeof path === 'string' && path.length > 0 && !/[\\\x00-\x1f\x7f]/.test(path)
+    && path.split('/').every((part) => part && part !== '.' && part !== '..');
+}
+
+function extensionOf(path) {
+  return path.split('.').pop().toLowerCase();
+}
+
+function directoryOf(path) {
+  const slash = path.lastIndexOf('/');
+  return slash < 0 ? '' : path.slice(0, slash);
+}
+
+const CLASSIC_SCRIPT_TYPES = new Set([
+  '', 'application/ecmascript', 'application/javascript', 'application/x-ecmascript', 'application/x-javascript',
+  'text/ecmascript', 'text/javascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2',
+  'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript',
+  'text/x-ecmascript', 'text/x-javascript'
+]);
+
+function isClassicScript(script) {
+  const type = script.getAttribute('type');
+  const language = script.getAttribute('language');
+  const label = type === null && language ? `text/${language}` : (type || '');
+  return CLASSIC_SCRIPT_TYPES.has(label.trim().toLowerCase());
+}
+
+// Only project-relative URLs are accepted. Decode segments before checking for
+// traversal, separators and schemes; neither a URL base nor the network is used.
+function resolveProjectReference(reference, pagePath) {
+  if (typeof reference !== 'string') return null;
+  const raw = reference.trim().split(/[?#]/, 1)[0];
+  if (!raw || raw.startsWith('/') || /[\\\x00-\x1f\x7f]/.test(raw)) return null;
+  const result = directoryOf(pagePath) ? directoryOf(pagePath).split('/') : [];
+  const parts = raw.split('/');
+  for (let index = 0; index < parts.length; index += 1) {
+    let part;
+    try {
+      part = decodeURIComponent(parts[index]);
+    } catch {
+      return null;
+    }
+    if (/[\/\\\x00-\x1f\x7f]/.test(part) || (index === 0 && part.includes(':'))) return null;
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (!result.length) return null;
+      result.pop();
+    } else {
+      result.push(part);
+    }
+  }
+  return result.length ? result.join('/') : null;
+}
+
+function websitePreview(htmlFile, files, compiledTypeScript) {
+  if (!isProjectPath(htmlFile.name)) throw new Error('The HTML file has an unsafe project path.');
+  const html = String(htmlFile.content);
+  if (html.length > MAX_PROJECT_CHARS) throw new Error('The HTML file is too large to preview.');
+
+  const safeFiles = files.filter((file) => isProjectPath(file?.name) && typeof file.content === 'string');
+  const byPath = new Map();
+  for (const file of safeFiles) {
+    if (!byPath.has(file.name)) byPath.set(file.name, file);
+  }
+  // The editor compiles all .ts files in file order; associate the otherwise
+  // anonymous outputs with those same source paths without recompiling them.
+  const compiledByPath = new Map();
+  const typeScriptFiles = files.filter((file) => typeof file?.name === 'string' && extensionOf(file.name) === 'ts');
+  typeScriptFiles.forEach((file, index) => {
+    if (isProjectPath(file.name) && typeof compiledTypeScript[index] === 'string' && !compiledByPath.has(file.name)) {
+      compiledByPath.set(file.name, compiledTypeScript[index]);
+    }
+  });
+
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const stylesheets = [...parsed.querySelectorAll('link[rel~="stylesheet" i]')];
+  const externalScripts = [...parsed.querySelectorAll('script[src]')];
+  let expandedLength = html.length;
+  let delayedScriptIndex = 0;
+  const safeInlineText = (text, closingTag) => {
+    if (text.length > MAX_PROJECT_CHARS - expandedLength) throw new Error('The expanded HTML is too large to preview.');
+    const escaped = text.replace(closingTag, (tag) => `<\\/${tag.slice(2)}`);
+    expandedLength += escaped.length;
+    if (expandedLength > MAX_PROJECT_CHARS) throw new Error('The expanded HTML is too large to preview.');
+    return escaped;
+  };
+
+  for (const link of stylesheets) {
+    const path = resolveProjectReference(link.getAttribute('href'), htmlFile.name);
+    const file = path && byPath.get(path);
+    // Alternate/disabled sheets cannot be faithfully enabled as inline styles.
+    if (file && extensionOf(file.name) === 'css' && !link.hasAttribute('disabled')
+      && !link.rel.toLowerCase().split(/\s+/).includes('alternate')) {
+      const style = parsed.createElement('style');
+      for (const attribute of ['media', 'title', 'type']) {
+        if (link.hasAttribute(attribute)) style.setAttribute(attribute, link.getAttribute(attribute));
+      }
+      style.textContent = safeInlineText(file.content, /<\/style/gi);
+      link.replaceWith(style);
+    } else {
+      link.remove();
+    }
+  }
+  for (const source of externalScripts) {
+    const path = resolveProjectReference(source.getAttribute('src'), htmlFile.name);
+    const file = path && byPath.get(path);
+    const extension = file && extensionOf(file.name);
+    const code = extension === 'ts' ? compiledByPath.get(file.name)
+      : file && ['js', 'mjs'].includes(extension) ? file.content : undefined;
+    if (typeof code !== 'string') {
+      source.remove();
+      continue;
+    }
+    const script = parsed.createElement('script');
+    const attributes = [...source.attributes]
+      .filter((attribute) => attribute.name !== 'src' && attribute.name !== 'integrity');
+    const delayedClassic = isClassicScript(source) && !source.hasAttribute('nomodule')
+      && (source.hasAttribute('defer') || source.hasAttribute('async'));
+    if (delayedClassic) {
+      // Inline classic scripts ignore defer/async. A module is queued with the
+      // browser's deferred modules (or async queue), then inserts the original
+      // code as a classic script, retaining its global scope and DOM position.
+      let marker;
+      let selector;
+      do {
+        marker = `tzrender-delayed-script-${delayedScriptIndex++}`;
+        selector = `script[data-tzrender-delayed="${marker}"]`;
+      } while (parsed.querySelector(selector));
+      for (const attribute of attributes) script.setAttribute(attribute.name, attribute.value);
+      script.type = 'module';
+      script.setAttribute('data-tzrender-delayed', marker);
+      const savedAttributes = attributes.map(({ name, value }) => [name, value]);
+      const wrapper = `const script = document.createElement('script');\n`
+        + `for (const [name, value] of ${JSON.stringify(savedAttributes)}) script.setAttribute(name, value);\n`
+        + `script.textContent = ${JSON.stringify(code)};\n`
+        + `const placeholder = document.querySelector(${JSON.stringify(selector)});\n`
+        + `if (placeholder) placeholder.replaceWith(script); else document.head.append(script);`;
+      script.textContent = safeInlineText(wrapper, /<\/script/gi);
+    } else {
+      for (const attribute of attributes) script.setAttribute(attribute.name, attribute.value);
+      script.textContent = safeInlineText(code, /<\/script/gi);
+    }
+    source.replaceWith(script);
+  }
+
+  // Legacy pages without style/script elements use assets alongside that page,
+  // regardless of how many other HTML pages exist. Decide separately per type;
+  // any explicit element (including a missing/external reference) opts out.
+  // Use the same first-entry-per-path policy as explicit references.
+  const uniqueFiles = [...byPath.values()];
+  const sameDirectory = (file) => directoryOf(file.name) === directoryOf(htmlFile.name);
+  const useCssFallback = !stylesheets.length && !parsed.querySelector('style');
+  const useScriptFallback = !externalScripts.length && !parsed.querySelector('script');
+  const css = useCssFallback
+    ? uniqueFiles.filter((file) => sameDirectory(file) && extensionOf(file.name) === 'css').map((file) => file.content).join('\n\n') : '';
+  const javascript = useScriptFallback
+    ? [
+      ...uniqueFiles.filter((file) => sameDirectory(file) && ['js', 'mjs'].includes(extensionOf(file.name))).map((file) => file.content),
+      ...uniqueFiles.filter((file) => sameDirectory(file) && extensionOf(file.name) === 'ts' && compiledByPath.has(file.name))
+        .map((file) => compiledByPath.get(file.name))
+    ].join('\n\n') : '';
+  const markup = `<!doctype html>\n${parsed.documentElement.outerHTML}`;
+  if (markup.length > MAX_PROJECT_CHARS) throw new Error('The expanded HTML is too large to preview.');
+  return buildPreviewDocument({ html: markup, css, javascript, maxLength: MAX_PROJECT_CHARS });
+}
+
 export function buildProjectPreview({ activeFile, files, compiledTypeScript = [] } = {}) {
   if (!activeFile || !Array.isArray(files)) throw new Error('Select a project file to preview.');
   const extension = activeFile.name.split('.').pop().toLowerCase();
@@ -55,19 +224,14 @@ export function buildProjectPreview({ activeFile, files, compiledTypeScript = []
     throw new Error(`.${extension || 'unknown'} files receive syntax highlighting only; this workspace does not run that file type.`);
   }
 
-  const htmlFile = files.find((file) => file.name.toLowerCase() === 'index.html')
-    || files.find((file) => ['html', 'htm'].includes(file.name.split('.').pop().toLowerCase()));
+  const htmlFile = ['html', 'htm'].includes(extension) ? activeFile
+    : files.find((file) => file.name.toLowerCase() === 'index.html')
+      || files.find((file) => ['html', 'htm'].includes(file.name.split('.').pop().toLowerCase()));
   if (!htmlFile) throw new Error('Add an .html file before running a website preview.');
-  const css = files.filter((file) => file.name.endsWith('.css')).map((file) => file.content).join('\n\n');
-  const javascript = [
-    ...files.filter((file) => ['js', 'mjs'].includes(file.name.split('.').pop().toLowerCase())).map((file) => file.content),
-    ...compiledTypeScript
-  ].join('\n\n');
-  const path = extension === 'html' || extension === 'htm' ? activeFile.name : htmlFile.name;
   return {
     mode: 'website',
-    path,
-    srcdoc: buildPreviewDocument({ html: htmlFile.content, css, javascript, maxLength: MAX_PROJECT_CHARS })
+    path: htmlFile.name,
+    srcdoc: websitePreview(htmlFile, files, Array.isArray(compiledTypeScript) ? compiledTypeScript : [])
   };
 }
 

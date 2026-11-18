@@ -23,8 +23,10 @@ import {
   isSafeFileName,
   loadSavedProject,
   MAX_FILE_CHARS,
+  MAX_PATH_LENGTH,
   MAX_PROJECT_CHARS,
   MAX_PROJECT_FILES,
+  MAX_PROJECT_FOLDERS,
   normalizeProject,
   serializeProject,
   STORAGE_KEY,
@@ -35,6 +37,8 @@ import { createJavaRuntime } from './editor/java-runtime.js';
 import { createPhpRuntime } from './editor/php-runtime.js';
 import { createTypeScriptRuntime } from './editor/typescript-runtime.js';
 import { executeTerminalCommand, getTerminalHelp } from './editor/terminal.js';
+import { createFileExplorer } from './editor/explorer.js';
+import { setupEditorAppearance } from './editor/appearance.js';
 
 self.MonacoEnvironment = {
   getWorker(_workerId, label) {
@@ -55,9 +59,10 @@ const modelSubscriptions = new Map();
 let project = readDraft() || createStarterProject('landing');
 let activeFileName = project.activeFile;
 let editor;
-let modelSequence = 0;
+let explorer;
 let saveTimer = 0;
 let previewTimer = 0;
+let previewRunSequence = 0;
 let markerTimer = 0;
 let draftChanged = false;
 let consoleCount = 0;
@@ -66,8 +71,13 @@ let terminalHistory = [];
 let historyCursor = 0;
 let resizeState = null;
 const LAYOUT_STORAGE_KEY = 'tzrender-editor-layout-v1';
+// JSON can encode any UTF-16 code unit in six ASCII bytes. Account for all
+// file contents, file/folder paths, the active path and pretty-print overhead.
+const MAX_PROJECT_BACKUP_BYTES = MAX_PROJECT_CHARS * 6
+  + (MAX_PROJECT_FILES + MAX_PROJECT_FOLDERS + 1) * MAX_PATH_LENGTH * 6
+  + (MAX_PROJECT_FILES + MAX_PROJECT_FOLDERS) * 128 + 100_000;
 let layoutResizeState = null;
-let sidebarWidth = 205;
+let sidebarWidth = 235;
 let outputHeight = 205;
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -162,6 +172,7 @@ function getFiles() {
 function isProjectDifferentFromStarter() {
   const starter = STARTERS[project.starter];
   if (!starter) return true;
+  if (project.folders?.length) return true;
   const current = getFiles();
   if (current.length !== starter.files.length) return true;
   return starter.files.some((file) => current.find((item) => item.name === file.name)?.content !== file.content);
@@ -174,6 +185,7 @@ function saveDraftNow() {
       projectName: $('projectName').value,
       starter: project.starter,
       activeFile: activeFileName,
+      folders: project.folders,
       files: getFiles()
     });
     window.localStorage.setItem(STORAGE_KEY, serialized);
@@ -184,6 +196,7 @@ function saveDraftNow() {
   } catch (error) {
     console.warn('Could not save this project in browser storage.', error);
     setSaveState('Local save unavailable', 'error');
+    showToast(`Could not save draft: ${error?.message || 'Browser storage is unavailable.'}`);
     return false;
   }
 }
@@ -202,8 +215,18 @@ function updateProjectName() {
 }
 
 function safeFileUri(name) {
-  modelSequence += 1;
-  return monaco.Uri.parse(`file:///tzrender-workspace-${modelSequence}/${encodeURIComponent(name)}`);
+  const characters = Array.from(name);
+  const loneSurrogate = (character) => character.length === 1
+    && character.charCodeAt(0) >= 0xd800 && character.charCodeAt(0) <= 0xdfff;
+  if (characters.some(loneSurrogate)) {
+    // URI encoding rejects unpaired surrogates, although project paths allow
+    // them. Keep these models in a separate namespace and escape '%' as well,
+    // so distinct real paths cannot acquire the same Monaco URI.
+    const encoded = characters.map((character) => character === '%' ? '%25'
+      : loneSurrogate(character) ? `%u${character.charCodeAt(0).toString(16).padStart(4, '0')}` : character).join('');
+    return monaco.Uri.from({ scheme: 'file', path: `/tzrender-workspace-escaped/${encoded}` });
+  }
+  return monaco.Uri.from({ scheme: 'file', path: `/tzrender-workspace/${name}` });
 }
 
 function onModelChange(name) {
@@ -233,44 +256,14 @@ function destroyAllModels() {
 }
 
 function fileIconClass(name) {
-  const category = getFileType(name).category;
-  return `file-${category}`;
+  const extension = name.split('.').pop().toLowerCase();
+  const classes = { htm: 'html', mjs: 'js', cjs: 'js', jsx: 'js', tsx: 'ts', markdown: 'md', json: 'data', yaml: 'data', yml: 'data' };
+  const badge = classes[extension] || extension;
+  return `file-${['html', 'css', 'js', 'ts', 'py', 'php', 'java', 'md', 'data'].includes(badge) ? badge : 'text'}`;
 }
 
 function renderFileList() {
-  const host = $('fileList');
-  host.replaceChildren();
-  for (const file of getFiles()) {
-    const type = getFileType(file.name);
-    const row = document.createElement('div');
-    row.className = `file-row${file.name === activeFileName ? ' active' : ''}`;
-    row.setAttribute('role', 'listitem');
-
-    const open = document.createElement('button');
-    open.type = 'button';
-    open.className = 'file-open';
-    open.dataset.file = file.name;
-    open.setAttribute('aria-current', file.name === activeFileName ? 'page' : 'false');
-    open.title = file.name;
-    const symbol = document.createElement('span');
-    symbol.className = `file-symbol ${fileIconClass(file.name)}`;
-    symbol.setAttribute('aria-hidden', 'true');
-    symbol.textContent = type.icon;
-    const label = document.createElement('span');
-    label.textContent = file.name;
-    open.append(symbol, label);
-    open.addEventListener('click', () => setActiveFile(file.name));
-
-    const rename = document.createElement('button');
-    rename.type = 'button';
-    rename.className = 'file-action';
-    rename.setAttribute('aria-label', `Rename ${file.name}`);
-    rename.title = `Rename ${file.name}`;
-    rename.textContent = '⋯';
-    rename.addEventListener('click', () => renameActiveFile(file.name));
-    row.append(open, rename);
-    host.append(row);
-  }
+  explorer?.render();
 }
 
 function updateActiveFileChrome() {
@@ -298,7 +291,13 @@ function updateActiveFileChrome() {
 }
 
 function setActiveFile(name) {
-  if (!models.has(name) || activeFileName === name) return;
+  if (!models.has(name)) return;
+  if (activeFileName === name) {
+    explorer?.select(name);
+    if (window.matchMedia('(max-width: 900px)').matches) setWorkspacePanel('editor');
+    editor?.focus();
+    return;
+  }
   if (editor) {
     viewStates.set(activeFileName, editor.saveViewState());
     activeFileName = name;
@@ -309,10 +308,12 @@ function setActiveFile(name) {
     activeFileName = name;
   }
   project.activeFile = name;
-  renderFileList();
+  explorer?.select(name);
   updateActiveFileChrome();
-  if (window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('editor');
+  if (window.matchMedia('(max-width: 900px)').matches) setWorkspacePanel('editor');
   scheduleProblems();
+  scheduleSave();
+  schedulePreview();
 }
 
 function clearConsole(message = 'Console output from the sandboxed website preview appears here.') {
@@ -425,7 +426,7 @@ function setOutputTab(name) {
 }
 
 function setWorkspacePanel(name) {
-  const valid = ['editor', 'preview', 'output'].includes(name) ? name : 'editor';
+  const valid = ['files', 'editor', 'preview', 'output'].includes(name) ? name : 'editor';
   workspace.dataset.panel = valid;
   for (const tab of document.querySelectorAll('[data-panel-tab]')) tab.setAttribute('aria-selected', String(tab.dataset.panelTab === valid));
   if (valid === 'editor') window.setTimeout(() => editor?.layout(), 70);
@@ -556,9 +557,55 @@ async function runCompiledLanguageFile(language, name, source) {
   }
 }
 
-async function runProject() {
+// Match the website preview's page selection, local script resolution and
+// same-directory legacy fallback. The returned indices refer to *all* TS files in
+// the snapshot, because buildProjectPreview associates compiled outputs by index.
+function previewTypeScriptIndices(activeFile, files, typeScriptFiles) {
+  const extensionOf = (name) => name.split('.').pop().toLowerCase();
+  const directoryOf = (name) => name.includes('/') ? name.slice(0, name.lastIndexOf('/')) : '';
+  const extension = extensionOf(activeFile.name);
+  if (!['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension)) return [];
+  const html = ['html', 'htm'].includes(extension) ? activeFile
+    : files.find((file) => file.name.toLowerCase() === 'index.html')
+      || files.find((file) => ['html', 'htm'].includes(extensionOf(file.name)));
+  if (!html) return [];
+
+  const parsed = new DOMParser().parseFromString(html.content, 'text/html');
+  const scripts = [...parsed.querySelectorAll('script[src]')];
+  const referenced = new Set();
+  for (const script of scripts) {
+    const raw = (script.getAttribute('src') || '').trim().split(/[?#]/, 1)[0];
+    if (!raw || raw.startsWith('/') || /[\\\x00-\x1f\x7f]/.test(raw)) continue;
+    const parts = raw.split('/');
+    const path = directoryOf(html.name) ? directoryOf(html.name).split('/') : [];
+    let safe = true;
+    for (let index = 0; index < parts.length; index += 1) {
+      let part;
+      try { part = decodeURIComponent(parts[index]); } catch { safe = false; break; }
+      if (/[\/\\\x00-\x1f\x7f]/.test(part) || (index === 0 && part.includes(':'))) { safe = false; break; }
+      if (!part || part === '.') continue;
+      if (part === '..') {
+        if (!path.length) { safe = false; break; }
+        path.pop();
+      } else path.push(part);
+    }
+    if (safe && path.length) referenced.add(path.join('/'));
+  }
+  const fallback = !scripts.length && !parsed.querySelector('script');
+  return typeScriptFiles.flatMap((file, index) => referenced.has(file.name)
+    || (fallback && directoryOf(file.name) === directoryOf(html.name)) ? [index] : []);
+}
+
+function invalidatePreview() {
+  previewRunSequence += 1;
   clearTimeout(previewTimer);
-  const activeFile = getFiles().find((file) => file.name === activeFileName);
+}
+
+async function runProject({ openPreview = false } = {}) {
+  invalidatePreview();
+  const runId = previewRunSequence;
+  const files = getFiles();
+  const activeFile = files.find((file) => file.name === activeFileName);
   if (!activeFile) return;
   const extension = activeFile.name.split('.').pop().toLowerCase();
   if (extension === 'py') {
@@ -571,32 +618,33 @@ async function runProject() {
     await runCompiledLanguageFile(extension, activeFile.name, activeFile.content);
     return;
   }
+  if (openPreview && getFileType(activeFile.name).runnable && window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('preview');
   setPreviewStatus('Preparing preview…', 'running');
   try {
-    let compiledTypeScript = [];
-    if (['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension)) {
-      const typeScriptFiles = getFiles().filter((file) => file.name.toLowerCase().endsWith('.ts'));
-      compiledTypeScript = [];
-      for (const file of typeScriptFiles) {
-        const result = await typeScriptRuntime.compile(file.content);
-        applyTypeScriptDiagnostics(file.name, result.diagnostics);
-        if (result.diagnostics.some((diagnostic) => diagnostic.category === 1)) {
-          throw new Error(`TypeScript compile failed in ${file.name}. See Problems for details.`);
-        }
-        compiledTypeScript.push(result.code);
+    const typeScriptFiles = files.filter((file) => file.name.toLowerCase().endsWith('.ts'));
+    const compiledTypeScript = new Array(typeScriptFiles.length);
+    for (const index of previewTypeScriptIndices(activeFile, files, typeScriptFiles)) {
+      const file = typeScriptFiles[index];
+      const result = await typeScriptRuntime.compile(file.content);
+      if (runId !== previewRunSequence) return;
+      applyTypeScriptDiagnostics(file.name, result.diagnostics);
+      if (result.diagnostics.some((diagnostic) => diagnostic.category === 1)) {
+        throw new Error(`TypeScript compile failed in ${file.name}. See Problems for details.`);
       }
+      compiledTypeScript[index] = result.code;
     }
-    const preview = buildProjectPreview({ activeFile, files: getFiles(), compiledTypeScript });
+    if (runId !== previewRunSequence) return;
+    const preview = buildProjectPreview({ activeFile, files, compiledTypeScript });
     setPreviewDocument(preview.srcdoc, preview.path);
     setPreviewStatus(preview.mode === 'document' ? 'Document preview updated' : 'Preview is running', 'running');
     clearConsole('Console cleared. Messages from the next preview run appear here.');
-    if (window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('preview');
   } catch (error) {
-    previewFailure(error?.message || 'Could not build the preview.');
+    if (runId === previewRunSequence) previewFailure(error?.message || 'Could not build the preview.');
   }
 }
 
 function schedulePreview() {
+  invalidatePreview();
   if (!$('autoRun').checked) {
     setPreviewStatus('Changes not run yet', 'paused');
     return;
@@ -606,9 +654,8 @@ function schedulePreview() {
     setPreviewStatus(`${extension.toUpperCase()} is manual-run only`, 'paused');
     return;
   }
-  clearTimeout(previewTimer);
   setPreviewStatus('Updating preview…', 'running');
-  previewTimer = window.setTimeout(runProject, 550);
+  previewTimer = window.setTimeout(() => runProject(), 550);
 }
 
 function setProject(nextProject, { save = true, run = true } = {}) {
@@ -617,8 +664,10 @@ function setProject(nextProject, { save = true, run = true } = {}) {
     projectName: nextProject.projectName,
     starter: nextProject.starter,
     activeFile: nextProject.activeFile,
+    folders: nextProject.folders,
     files: nextProject.files
   });
+  invalidatePreview();
   if (editor) {
     editor.saveViewState();
     viewStates.set(activeFileName, editor.saveViewState());
@@ -638,14 +687,16 @@ function setProject(nextProject, { save = true, run = true } = {}) {
   }
   draftChanged = true;
   $('dirtyIndicator').hidden = false;
-  renderFileList();
+  explorer?.reset();
+  explorer?.select(activeFileName);
   updateActiveFileChrome();
   clearConsole();
   clearTerminal('Project loaded. Type help for available local commands.');
   updateProblems();
-  if (save) saveDraftNow();
+  const saved = !save || saveDraftNow();
   if (run) runProject();
   if (window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('editor');
+  return saved;
 }
 
 function confirmReplace(action) {
@@ -658,89 +709,48 @@ function replaceWithStarter(key, force = false) {
     $('starterSelect').value = project.starter;
     return;
   }
-  setProject(createStarterProject(key));
-  showToast('Starter loaded. The previous project was replaced.');
+  if (setProject(createStarterProject(key))) showToast('Starter loaded. The previous project was replaced.');
 }
 
-function uniqueNewFileName(extension) {
-  const baseNames = { html: 'page', css: 'styles', js: 'script', ts: 'app', py: 'main', php: 'index', java: 'Main', md: 'notes', json: 'data', yaml: 'config' };
-  const base = baseNames[extension] || 'file';
-  let name = `${base}.${extension}`;
-  let suffix = 2;
-  while (models.has(name)) name = `${base}-${suffix++}.${extension}`;
-  return name;
+function snapshotProject() {
+  return { ...project, projectName: $('projectName').value, activeFile: activeFileName,
+    folders: [...(project.folders || [])], files: getFiles() };
 }
 
-function createFile() {
-  if (models.size >= MAX_PROJECT_FILES) return showToast(`Projects can contain at most ${MAX_PROJECT_FILES} files.`);
-  const extension = $('newFileType').value;
-  if (!Object.hasOwn(FILE_TYPES, extension)) return showToast('That file type is not supported.');
-  const file = { name: uniqueNewFileName(extension), content: '' };
-  makeModel(file);
-  project.activeFile = file.name;
-  setActiveFile(file.name);
-  renderFileList();
-  draftChanged = true;
-  $('dirtyIndicator').hidden = false;
-  scheduleSave();
-  editor.focus();
-  showToast(`${file.name} created.`);
-}
-
-function renameActiveFile(name = activeFileName) {
-  if (!models.has(name)) return;
-  const nextName = window.prompt('Rename file (include its extension):', name);
-  if (nextName === null) return;
-  const trimmed = nextName.trim();
-  if (!isSafeFileName(trimmed)) return showToast('Use a supported file name without folders or spaces.');
-  if (trimmed.toLowerCase() !== name.toLowerCase() && [...models.keys()].some((item) => item.toLowerCase() === trimmed.toLowerCase())) return showToast('A file with that name already exists.');
-  if (trimmed === name) return;
-  const oldModel = models.get(name);
-  const viewState = viewStates.get(name);
-  const newModel = makeModel({ name: trimmed, content: oldModel.getValue() });
-  if (activeFileName === name) {
-    editor.setModel(newModel);
-    activeFileName = trimmed;
-    project.activeFile = trimmed;
+// Reconcile the filesystem snapshot without recreating unrelated Monaco models,
+// so edits and undo history in untouched files are preserved.
+function applyFilesystemProject(next) {
+  const oldActive = activeFileName;
+  if (editor && models.has(oldActive)) viewStates.set(oldActive, editor.saveViewState());
+  const nextNames = new Set(next.files.map((file) => file.name));
+  for (const file of next.files) {
+    if (!models.has(file.name)) makeModel(file);
+    else if (models.get(file.name).getValue() !== file.content) models.get(file.name).setValue(file.content);
   }
-  modelSubscriptions.get(name)?.dispose();
-  modelSubscriptions.delete(name);
-  models.delete(name);
-  oldModel.dispose();
-  viewStates.delete(name);
-  if (viewState) viewStates.set(trimmed, viewState);
-  $('dirtyIndicator').hidden = false;
-  draftChanged = true;
-  renderFileList();
-  updateActiveFileChrome();
-  scheduleSave();
-  schedulePreview();
-  showToast(`Renamed to ${trimmed}.`);
-}
-
-function deleteActiveFile() {
-  const file = getFiles().find((item) => item.name === activeFileName);
-  if (!file) return;
-  if (models.size <= 1) return showToast('A project must keep at least one file.');
-  const htmlFiles = getFiles().filter((item) => ['html', 'htm'].includes(item.name.split('.').pop().toLowerCase()));
-  if (htmlFiles.length === 1 && htmlFiles[0].name === file.name) return showToast('Add another HTML file before deleting the last page.');
-  if (!window.confirm(`Delete ${file.name}? This cannot be undone.`)) return;
-  const name = file.name;
-  const nextFile = getFiles().find((item) => item.name !== name);
-  if (activeFileName === name) setActiveFile(nextFile.name);
-  modelSubscriptions.get(name)?.dispose();
-  modelSubscriptions.delete(name);
-  models.get(name)?.dispose();
-  models.delete(name);
-  viewStates.delete(name);
-  project.activeFile = activeFileName;
+  if (!nextNames.has(oldActive) && next.activeFile !== oldActive && viewStates.has(oldActive)) {
+    viewStates.set(next.activeFile, viewStates.get(oldActive));
+  }
+  project = next;
+  activeFileName = next.activeFile;
+  if (editor && editor.getModel() !== models.get(activeFileName)) {
+    editor.setModel(models.get(activeFileName));
+    editor.restoreViewState(viewStates.get(activeFileName) || null);
+  }
+  for (const [name, model] of models) {
+    if (!nextNames.has(name)) {
+      modelSubscriptions.get(name)?.dispose();
+      modelSubscriptions.delete(name);
+      model.dispose();
+      models.delete(name);
+      viewStates.delete(name);
+    }
+  }
   draftChanged = true;
   $('dirtyIndicator').hidden = false;
-  renderFileList();
   updateActiveFileChrome();
   scheduleSave();
+  scheduleProblems();
   schedulePreview();
-  showToast(`${name} deleted.`);
 }
 
 function downloadFile(filename, content, mime = 'text/plain;charset=utf-8') {
@@ -761,7 +771,7 @@ function downloadActiveFile() {
   const mime = file.name.endsWith('.html') ? 'text/html;charset=utf-8'
     : file.name.endsWith('.css') ? 'text/css;charset=utf-8'
       : file.name.endsWith('.json') ? 'application/json;charset=utf-8' : 'text/plain;charset=utf-8';
-  downloadFile(file.name, file.content, mime);
+  downloadFile(file.name.split('/').pop(), file.content, mime);
   showToast(`${file.name} downloaded.`);
 }
 
@@ -771,6 +781,7 @@ function exportProject() {
       projectName: $('projectName').value,
       starter: project.starter,
       activeFile: activeFileName,
+      folders: project.folders,
       files: getFiles()
     });
     const safeName = $('projectName').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'tzrender-project';
@@ -784,16 +795,15 @@ function exportProject() {
 
 async function importProjectFile(file) {
   if (!file) return;
-  if (file.size > MAX_PROJECT_CHARS * 2) throw new Error('Project backups must be smaller than 2 MB.');
+  if (file.size > MAX_PROJECT_BACKUP_BYTES) throw new Error(`Project backups must be no larger than ${MAX_PROJECT_BACKUP_BYTES.toLocaleString()} bytes.`);
   const parsed = JSON.parse(await file.text());
   const imported = normalizeProject(parsed);
   if (!confirmReplace('Import this project?')) return;
-  setProject(imported);
-  showToast('Project imported and saved in this browser.');
+  if (setProject(imported)) showToast('Project imported and saved in this browser.');
 }
 
 function renderPreviewFile() {
-  runProject();
+  runProject({ openPreview: true });
 }
 
 function runTerminalPython(filename) {
@@ -829,7 +839,7 @@ async function submitTerminal(event) {
       files: getFiles,
       projectName: () => $('projectName').value,
       activeFile: () => activeFileName,
-      runActive: runProject,
+      runActive: () => runProject({ openPreview: true }),
       runPython: runTerminalPython,
       runPhp: runTerminalPhp,
       runJava: runTerminalJava,
@@ -969,20 +979,12 @@ function defineEditorTheme() {
   });
 }
 
-function applyTheme(theme) {
-  const value = ['vs', 'hc-black', 'tzrender-night'].includes(theme) ? theme : 'tzrender-night';
-  monaco.editor.setTheme(value);
-  $('editorTheme').value = value;
-  document.documentElement.dataset.theme = value === 'vs' ? 'light' : 'dark';
-  try { window.localStorage.setItem('tzrender-editor-theme', value); } catch { /* Theme preference is optional. */ }
-}
-
 function initEditor() {
   registerLanguages();
   defineEditorTheme();
   const nextProject = normalizeProject({
     format: 'tzrender-project', projectName: project.projectName,
-    starter: project.starter, activeFile: project.activeFile, files: project.files
+    starter: project.starter, activeFile: project.activeFile, folders: project.folders, files: project.files
   });
   project = nextProject;
   $('projectName').value = project.projectName;
@@ -996,7 +998,7 @@ function initEditor() {
     lineDecorationsWidth: 8, wordWrap: 'on', scrollBeyondLastLine: false,
     tabSize: 2, insertSpaces: true, formatOnPaste: true,
     bracketPairColorization: { enabled: true }, guides: { bracketPairs: true, indentation: true },
-    renderWhitespace: 'selection', fontSize: 14, lineHeight: 21,
+    renderWhitespace: 'selection', fontSize: 16, lineHeight: 24,
     fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
     cursorBlinking: 'smooth', smoothScrolling: true, accessibilitySupport: 'auto',
     ariaLabel: 'Multi-language source code editor', padding: { top: 13, bottom: 16 },
@@ -1005,17 +1007,15 @@ function initEditor() {
     parameterHints: { enabled: true }, autoClosingBrackets: 'languageDefined',
     autoClosingQuotes: 'languageDefined', linkedEditing: true
   });
+  setupEditorAppearance(editor, monaco);
+  explorer = createFileExplorer({ getProject: snapshotProject, applyProject: applyFilesystemProject,
+    openFile: setActiveFile, download: downloadFile, toast: showToast });
   editor.onDidChangeCursorPosition((event) => {
     $('cursorStatus').textContent = `Ln ${event.position.lineNumber}, Col ${event.position.column}`;
   });
-  renderFileList();
+  explorer.select(activeFileName);
   updateActiveFileChrome();
   updateProblems();
-  try {
-    applyTheme(window.localStorage.getItem('tzrender-editor-theme') || 'tzrender-night');
-  } catch {
-    applyTheme('tzrender-night');
-  }
   setSaveState(readDraft() ? 'Saved only on this device' : 'Ready');
   runProject();
 }
@@ -1126,7 +1126,7 @@ function handleGlobalKeydown(event) {
   const key = event.key.toLowerCase();
   if (modifier && key === 'enter') {
     event.preventDefault();
-    runProject();
+    runProject({ openPreview: true });
   } else if (modifier && key === 's') {
     event.preventDefault();
     saveDraftNow();
@@ -1159,11 +1159,14 @@ function initializeEventHandlers() {
   });
   $('starterSelect').addEventListener('change', (event) => replaceWithStarter(event.target.value));
   $('resetProject').addEventListener('click', () => replaceWithStarter(project.starter));
-  $('runProject').addEventListener('click', runProject);
-  $('reloadPreview').addEventListener('click', runProject);
+  $('runProject').addEventListener('click', () => runProject({ openPreview: true }));
+  $('reloadPreview').addEventListener('click', () => runProject({ openPreview: true }));
   $('autoRun').addEventListener('change', () => {
-    if ($('autoRun').checked) runProject();
-    else setPreviewStatus('Auto-run paused', 'paused');
+    if ($('autoRun').checked) schedulePreview();
+    else {
+      invalidatePreview();
+      setPreviewStatus('Auto-run paused', 'paused');
+    }
   });
   $('downloadFile').addEventListener('click', downloadActiveFile);
   $('exportProject').addEventListener('click', exportProject);
@@ -1173,17 +1176,14 @@ function initializeEventHandlers() {
     catch (error) { showToast(error?.message || 'That project file could not be imported.'); }
     finally { event.target.value = ''; }
   });
-  $('addFile').addEventListener('click', createFile);
-  $('renameFile').addEventListener('click', () => renameActiveFile());
-  $('deleteFile').addEventListener('click', deleteActiveFile);
+  $('renameFile').addEventListener('click', () => explorer.rename(activeFileName));
+  $('deleteFile').addEventListener('click', () => explorer.remove(activeFileName));
   $('formatCode').addEventListener('click', () => runEditorAction('editor.action.formatDocument', `${activeFileName} formatted.`));
   $('findCode').addEventListener('click', () => runEditorAction('actions.find'));
   $('goToLine').addEventListener('click', () => runEditorAction('editor.action.gotoLine'));
   $('commandPalette').addEventListener('click', () => runEditorAction('editor.action.quickCommand'));
   $('insertColor').addEventListener('click', () => $('colorPicker').click());
   $('colorPicker').addEventListener('input', insertPickedColor);
-  $('editorTheme').addEventListener('change', (event) => applyTheme(event.target.value));
-  $('fontSize').addEventListener('change', (event) => editor.updateOptions({ fontSize: Number(event.target.value) || 14 }));
   $('tabSize').addEventListener('change', (event) => editor.updateOptions({ tabSize: Number(event.target.value) || 2, insertSpaces: true }));
   $('minimapToggle').addEventListener('change', (event) => editor.updateOptions({ minimap: { enabled: event.target.checked } }));
   $('wordWrapToggle').addEventListener('change', (event) => editor.updateOptions({ wordWrap: event.target.checked ? 'on' : 'off' }));
@@ -1258,7 +1258,7 @@ $('terminalInput').addEventListener('focus', () => { if (window.matchMedia('(max
 $('terminalPrompt').addEventListener('click', () => $('terminalInput').focus());
 window.addEventListener('beforeunload', () => {
   if (draftChanged) {
-    try { window.localStorage.setItem(STORAGE_KEY, serializeProject({ projectName: $('projectName').value, starter: project.starter, activeFile: activeFileName, files: getFiles() })); }
+    try { window.localStorage.setItem(STORAGE_KEY, serializeProject({ projectName: $('projectName').value, starter: project.starter, activeFile: activeFileName, folders: project.folders, files: getFiles() })); }
     catch { /* Best-effort synchronous local draft save. */ }
   }
 });

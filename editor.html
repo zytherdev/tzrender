@@ -25,6 +25,7 @@
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <title>Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>try { const theme = localStorage.getItem('tzrender-editor-theme'); if (theme === 'vs') document.documentElement.dataset.theme = 'light'; else if (theme === 'hc-black') document.documentElement.dataset.theme = 'contrast'; } catch { /* Default to dark when storage is unavailable. */ }</script>
   <link rel="stylesheet" href="/site/site.css">
   <link rel="stylesheet" href="/site/editor.css">
   <script type="module" src="/site/editor.js"></script>
@@ -57,9 +58,11 @@
   <div class="toolstrip" role="toolbar" aria-label="Editor tools">
     <div class="tool-group">
       <label for="editorTheme">Theme</label>
-      <select id="editorTheme" class="toolbar-select" aria-label="Editor color theme"><option value="tzrender-night">Night</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select>
-      <label for="fontSize">Size</label>
-      <select id="fontSize" class="toolbar-select" aria-label="Editor font size"><option>12</option><option selected>14</option><option>16</option><option>18</option><option>20</option></select>
+      <select id="editorTheme" class="toolbar-select" aria-label="Studio color theme"><option value="tzrender-night">Dark</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select>
+      <label for="fontSize">Code size</label>
+      <select id="fontSize" class="toolbar-select" aria-label="Editor font size"><option>12</option><option>14</option><option selected>16</option><option>18</option><option>20</option><option>22</option><option>24</option></select>
+      <label for="interfaceSize">UI size</label>
+      <select id="interfaceSize" class="toolbar-select" aria-label="Interface text size"><option value="normal">Default</option><option value="large">Large</option></select>
       <label for="tabSize">Indent</label>
       <select id="tabSize" class="toolbar-select" aria-label="Indent size"><option value="2" selected>2 spaces</option><option value="4">4 spaces</option><option value="8">8 spaces</option></select>
     </div>
@@ -83,6 +86,7 @@
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
     <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, Python, PHP, and Java</h1>
     <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
+      <button type="button" role="tab" aria-selected="false" data-panel-tab="files">Files</button>
       <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
       <button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button>
       <button type="button" role="tab" aria-selected="false" data-panel-tab="output">Output <span class="console-count" id="problemCount">0</span></button>
@@ -90,16 +94,19 @@
 
     <aside class="file-sidebar" id="fileSidebar" aria-label="Project explorer">
       <div class="sidebar-heading"><span>EXPLORER</span><div class="sidebar-heading-actions"><button id="collapseExplorer" class="subtle-icon-button" type="button" aria-expanded="true" title="Collapse Explorer">‹</button><button id="resetProject" class="subtle-icon-button" type="button" title="Restore the selected starter; unsaved files will be replaced">↺</button></div></div>
-      <div class="project-tree-label"><span class="tree-chevron" aria-hidden="true">⌄</span><span id="treeProjectName">MY FIRST WEBSITE</span></div>
-      <div class="file-actions">
-        <label class="visually-hidden" for="newFileType">New file type</label>
-        <select id="newFileType" class="toolbar-select" aria-label="New file type">
-          <option value="html">HTML</option><option value="css">CSS</option><option value="js">JavaScript</option><option value="ts">TypeScript</option><option value="py">Python</option><option value="php">PHP</option><option value="java">Java</option><option value="md">Markdown</option><option value="json">JSON</option><option value="yaml">YAML</option>
-        </select>
-        <button id="addFile" class="subtle-icon-button" type="button" aria-label="Create a new file" title="Create a new file">+</button>
+      <button class="project-tree-label" id="explorerRoot" type="button" aria-label="Select project root"><span class="tree-chevron" aria-hidden="true">⌄</span><span id="treeProjectName">MY FIRST WEBSITE</span></button>
+      <div class="file-actions explorer-toolbar" role="toolbar" aria-label="File actions">
+        <button id="addFile" class="subtle-icon-button" type="button" aria-label="New file" title="New file">＋</button>
+        <button id="addFolder" class="subtle-icon-button" type="button" aria-label="New folder" title="New folder">▣＋</button>
+        <button id="pasteFile" class="subtle-icon-button" type="button" aria-label="Paste file or folder" title="Paste file or folder">▤</button>
+        <button id="importFiles" class="subtle-icon-button" type="button" aria-label="Import text files" title="Import text files">⇧</button>
+        <button id="importFolder" class="subtle-icon-button" type="button" aria-label="Import a folder of text files" title="Import a folder of text files">⇧▣</button>
+        <button id="collapseFolders" class="subtle-icon-button" type="button" aria-label="Collapse all folders" title="Collapse all folders">⊟</button>
+        <button id="importBackupMobile" class="subtle-icon-button mobile-backup-button" type="button" aria-label="Import project backup" title="Import project backup">⇩</button>
+        <button id="exportBackupMobile" class="subtle-icon-button mobile-backup-button" type="button" aria-label="Export project backup" title="Export project backup">⇧↓</button>
       </div>
-      <div class="file-list" id="fileList" role="list" aria-label="Project files"></div>
-      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Syntax colors cover common web, data, PHP and Java files. HTML, CSS, JavaScript, TypeScript, Python, PHP and Java run locally in browser workers/WebAssembly.</p></div>
+      <div class="file-list" id="fileList" role="tree" aria-label="Project files"></div>
+      <div class="sidebar-tip explorer-hint"><span class="tip-mark" aria-hidden="true">i</span><p>Right-click an item for more actions, or drag it into a folder. Changes stay in this browser.</p></div>
       <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Drafts saved only in this browser</span></div>
     </aside>
 
@@ -128,7 +135,7 @@
         </div>
       </div>
       <div class="preview-stage" id="previewStage"><div class="preview-canvas-wrap" id="previewCanvasWrap" data-size="responsive"><iframe id="previewFrame" title="Sandboxed project preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><div class="preview-empty" id="previewEmpty" hidden><span class="empty-orbit" aria-hidden="true">&lt;/&gt;</span><p>Run a file to see it here.</p></div></div>
-      <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="Only local project files run. External scripts, network requests and navigation are blocked in the website preview. Python code runs separately in a worker with network access disabled. Avoid running code you do not trust.">Sandboxed · network blocked</span></div>
+      <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="External resources and network requests are restricted within the sandboxed preview document. The frame can navigate away. Avoid running code you do not trust.">Sandboxed · requests restricted</span></div>
     </section>
 
     <div class="output-divider" id="outputDivider" role="separator" aria-label="Resize output and terminal panel" aria-orientation="horizontal" aria-valuemin="145" aria-valuemax="360" aria-valuenow="205" tabindex="0"></div>
@@ -154,6 +161,8 @@
   </main>
 
   <input class="visually-hidden" id="projectFileInput" type="file" accept="application/json,.tzrender.json,.json" aria-label="Import a project file">
+  <input class="visually-hidden" id="localFilesInput" type="file" multiple aria-label="Import text files">
+  <input class="visually-hidden" id="localFolderInput" type="file" multiple webkitdirectory aria-label="Import a folder of text files">
   <div class="editor-mobile-notice" id="mobileEditorNotice" hidden><span><strong>Best with a keyboard.</strong> Monaco is designed for desktop browsers. On smaller touch screens, editing may feel limited.</span><button id="closeMobileNotice" type="button" aria-label="Dismiss editor support notice">×</button></div>
   <div class="toast-region" id="siteToast" role="status" aria-live="polite"></div>
 </body>
