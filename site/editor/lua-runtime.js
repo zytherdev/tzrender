@@ -1,4 +1,5 @@
 import { LuaFactory } from 'wasmoon';
+import luaWasmUrl from 'wasmoon/dist/glue.wasm?url';
 
 export const MAX_SOURCE_CHARS = 100_000;
 export const MAX_INPUT_CHARS = 100_000;
@@ -161,7 +162,9 @@ export function createLuaRuntime({ onOutput = () => {}, onStatus = () => {} } = 
     if (!loading) {
       loading = (async () => {
         emit('loading', 'Loading Lua 5.4 WebAssembly runtime…');
-        factory ||= new LuaFactory();
+        // Wasmoon's browser default points to unpkg, which is blocked by the
+        // editor's same-origin CSP. Let Vite bundle and resolve the local asset.
+        factory ||= new LuaFactory(luaWasmUrl);
         const next = await factory.createEngine({
           openStandardLibs: true,
           injectObjects: false,
@@ -175,6 +178,9 @@ export function createLuaRuntime({ onOutput = () => {}, onStatus = () => {} } = 
       })().catch((error) => {
         loading = null;
         closeEngine();
+        // A factory retains its rejected initialization promise, so replace it
+        // after a load failure to allow a later run to retry.
+        factory = null;
         emit('error', error?.message || 'Lua runtime could not start.');
         throw error;
       });

@@ -27,13 +27,16 @@ vi.mock('wasmoon', () => ({
     this.createEngine = factoryCreateEngine;
   })
 }));
+vi.mock('wasmoon/dist/glue.wasm?url', () => ({ default: '/assets/lua-runtime.wasm' }));
 
+const { LuaFactory } = await import('wasmoon');
 const { createLuaRuntime, MAX_OUTPUT_CHARS } = await import('../site/editor/lua-runtime.js');
 
 describe('Lua 5.4 runtime adapter', () => {
   beforeEach(() => {
     engines.length = 0;
     factoryCreateEngine.mockClear();
+    LuaFactory.mockClear();
   });
 
   it('creates a sandboxed Wasmoon engine and captures print output', async () => {
@@ -42,6 +45,7 @@ describe('Lua 5.4 runtime adapter', () => {
 
     const result = await runtime.run('main.lua', 'MOCK_PRINT');
 
+    expect(LuaFactory).toHaveBeenCalledWith('/assets/lua-runtime.wasm');
     expect(factoryCreateEngine).toHaveBeenCalledWith(expect.objectContaining({
       openStandardLibs: true,
       injectObjects: false,
@@ -79,6 +83,17 @@ describe('Lua 5.4 runtime adapter', () => {
 
     await runtime.run('again.lua', '');
     expect(factoryCreateEngine).toHaveBeenCalledOnce();
+    expect(runtime.status).toBe('ready');
+  });
+
+  it('retries with a new factory after the WebAssembly runtime fails to load', async () => {
+    factoryCreateEngine.mockRejectedValueOnce(new Error('Failed to fetch'));
+    const runtime = createLuaRuntime();
+
+    await expect(runtime.run('main.lua', '')).rejects.toThrow('Failed to fetch');
+    expect(runtime.status).toBe('error');
+    await expect(runtime.run('main.lua', '')).resolves.toMatchObject({ exitCode: 0 });
+    expect(LuaFactory).toHaveBeenCalledTimes(2);
     expect(runtime.status).toBe('ready');
   });
 
