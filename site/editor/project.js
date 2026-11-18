@@ -19,6 +19,8 @@ export const FILE_TYPES = {
   tsx: { language: 'typescript', icon: 'TS', category: 'script', runnable: false },
   jsx: { language: 'javascript', icon: 'JS', category: 'script', runnable: false },
   py: { language: 'python', icon: 'Py', category: 'script', runnable: true },
+  php: { language: 'php', icon: 'PHP', category: 'php', runnable: true },
+  java: { language: 'java', icon: 'J', category: 'java', runnable: true },
   json: { language: 'json', icon: '{}', category: 'data', runnable: true },
   md: { language: 'markdown', icon: 'M↓', category: 'document', runnable: true },
   markdown: { language: 'markdown', icon: 'M↓', category: 'document', runnable: true },

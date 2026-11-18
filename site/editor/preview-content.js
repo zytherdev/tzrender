@@ -74,3 +74,8 @@ export function buildProjectPreview({ activeFile, files, compiledTypeScript = []
 export function buildPythonInfoPreview(filename) {
   return documentPage(filename, `<h1>Python runs in the Terminal</h1><p>Select <code>${escapeHtml(filename)}</code>, press <strong>Run Python</strong>, or enter <code>python ${escapeHtml(filename)}</code> in the project terminal.</p><p>The code executes in a separate local browser worker. Network access and package installation are disabled.</p>`);
 }
+
+export function buildLanguageInfoPreview(filename, language) {
+  const label = language === 'php' ? 'PHP' : 'Java';
+  return documentPage(filename, `<h1>${label} syntax workspace</h1><p><code>${escapeHtml(filename)}</code> is ready for editing with ${label} syntax highlighting.</p><p>This browser workspace does not include a ${label} runtime or compiler. Use the editor for code authoring and export the file to run it in a local development environment.</p>`);
+}

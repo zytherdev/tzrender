@@ -51,6 +51,8 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .file-symbol.file-js { color: #e8ce68; background: rgba(232,206,104,.12); }
 .file-symbol.file-ts { color: #6e9feb; background: rgba(92,143,227,.16); }
 .file-symbol.file-py { color: #e8ce68; background: rgba(232,206,104,.12); }
+.file-symbol.file-php { color: #b6a2e1; background: rgba(182,162,225,.14); }
+.file-symbol.file-java { color: #f09a75; background: rgba(240,154,117,.14); }
 .file-symbol.file-md { color: #d8a6ff; background: rgba(216,166,255,.12); }
 .file-symbol.file-data { color: #7bd5bf; background: rgba(123,213,191,.12); }
 .file-symbol.file-text { color: #a8a1b5; background: #2b2836; }

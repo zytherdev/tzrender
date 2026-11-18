@@ -15,7 +15,7 @@ import cssWorker from '../node_modules/monaco-editor/esm/vs/language/css/css.wor
 import htmlWorker from '../node_modules/monaco-editor/esm/vs/language/html/html.worker.js?worker';
 import tsWorker from '../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
 import '../node_modules/monaco-editor/min/vs/editor/editor.main.css';
-import { buildProjectPreview, buildPythonInfoPreview } from './editor/preview-content.js';
+import { buildLanguageInfoPreview, buildProjectPreview, buildPythonInfoPreview } from './editor/preview-content.js';
 import {
   createStarterProject,
   FILE_TYPES,
@@ -31,6 +31,8 @@ import {
   STARTERS
 } from './editor/project.js';
 import { createPythonRuntime } from './editor/python-runtime.js';
+import { createJavaRuntime } from './editor/java-runtime.js';
+import { createPhpRuntime } from './editor/php-runtime.js';
 import { createTypeScriptRuntime } from './editor/typescript-runtime.js';
 import { executeTerminalCommand, getTerminalHelp } from './editor/terminal.js';
 
@@ -281,9 +283,12 @@ function updateActiveFileChrome() {
   $('languageLabel').textContent = type.language.toUpperCase();
   $('previewUrl').textContent = `/${file.name}`;
   const runnable = type.runnable;
-  $('runLabel').textContent = file.name.toLowerCase().endsWith('.py') ? 'Run Python' : runnable ? 'Run' : 'Preview only';
+  const extension = file.name.split('.').pop().toLowerCase();
+  $('runLabel').textContent = extension === 'py' ? 'Run Python' : extension === 'php' ? 'Run PHP' : extension === 'java' ? 'Run Java' : runnable ? 'Run' : 'Preview only';
   $('runProject').title = file.name.toLowerCase().endsWith('.py')
     ? 'Run this file in the local Python worker'
+    : extension === 'php' ? 'Run this file in the local PHP WebAssembly runtime'
+    : extension === 'java' ? 'Compile and run this file in the local Java WebAssembly runtime'
     : runnable ? 'Run the project preview' : 'This extension receives syntax highlighting only';
   $('languageStatus').replaceChildren(document.createElement('span'), document.createTextNode(` ${type.language.toUpperCase()} · ${type.runnable ? 'runnable/previewable' : 'syntax only'}`));
   $('languageStatus').querySelector('span').className = 'status-dot';
@@ -483,6 +488,24 @@ function previewFailure(message) {
 }
 
 const typeScriptRuntime = createTypeScriptRuntime();
+function onLanguageRuntimeStatus(state, message) {
+  $('stopPython').disabled = !['loading', 'running'].includes(state);
+  $('runProject').disabled = ['loading', 'running'].includes(state);
+  if (message && ['loading', 'running'].includes(state)) appendTerminalLine(message, 'warning');
+}
+
+const phpRuntime = createPhpRuntime({
+  onOutput(stream, text) {
+    appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success');
+  },
+  onStatus: onLanguageRuntimeStatus
+});
+const javaRuntime = createJavaRuntime({
+  onOutput(stream, text) {
+    appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success');
+  },
+  onStatus: onLanguageRuntimeStatus
+});
 const pythonRuntime = createPythonRuntime({
   onOutput(stream, text) {
     appendTerminalLine(text, stream === 'stderr' ? 'error' : stream === 'result' ? 'success' : 'info');
@@ -515,6 +538,24 @@ async function runPythonFile(name, source) {
   }
 }
 
+async function runCompiledLanguageFile(language, name, source) {
+  const runId = ++pythonRunSequence;
+  setOutputTab('terminal');
+  appendTerminalLine(`$ ${language} ${name}`, 'command');
+  setPreviewStatus(`Loading the local ${language.toUpperCase()} runtime…`, 'running');
+  const runtime = language === 'php' ? phpRuntime : javaRuntime;
+  try {
+    await runtime.run(name, source);
+    if (runId === pythonRunSequence) setPreviewStatus(`${language.toUpperCase()} finished in the local WebAssembly runtime`);
+  } catch (error) {
+    const message = error?.message || String(error);
+    if (runId === pythonRunSequence) {
+      appendTerminalLine(message, 'error');
+      setPreviewStatus(`${language.toUpperCase()} needs attention`, 'error');
+    }
+  }
+}
+
 async function runProject() {
   clearTimeout(previewTimer);
   const activeFile = getFiles().find((file) => file.name === activeFileName);
@@ -523,6 +564,11 @@ async function runProject() {
   if (extension === 'py') {
     setPreviewDocument(buildPythonInfoPreview(activeFile.name), activeFile.name);
     await runPythonFile(activeFile.name, activeFile.content);
+    return;
+  }
+  if (extension === 'php' || extension === 'java') {
+    setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension), activeFile.name);
+    await runCompiledLanguageFile(extension, activeFile.name, activeFile.content);
     return;
   }
   setPreviewStatus('Preparing preview…', 'running');
@@ -556,8 +602,8 @@ function schedulePreview() {
     return;
   }
   const extension = activeFileName.split('.').pop().toLowerCase();
-  if (extension === 'py') {
-    setPreviewStatus('Python is manual-run only', 'paused');
+  if (['py', 'php', 'java'].includes(extension)) {
+    setPreviewStatus(`${extension.toUpperCase()} is manual-run only`, 'paused');
     return;
   }
   clearTimeout(previewTimer);
@@ -617,7 +663,7 @@ function replaceWithStarter(key, force = false) {
 }
 
 function uniqueNewFileName(extension) {
-  const baseNames = { html: 'page', css: 'styles', js: 'script', ts: 'app', py: 'main', md: 'notes', json: 'data', yaml: 'config' };
+  const baseNames = { html: 'page', css: 'styles', js: 'script', ts: 'app', py: 'main', php: 'index', java: 'Main', md: 'notes', json: 'data', yaml: 'config' };
   const base = baseNames[extension] || 'file';
   let name = `${base}.${extension}`;
   let suffix = 2;
@@ -756,6 +802,18 @@ function runTerminalPython(filename) {
   return runPythonFile(file.name, file.content);
 }
 
+function runTerminalPhp(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`PHP file not found: ${filename}`));
+  return runCompiledLanguageFile('php', file.name, file.content);
+}
+
+function runTerminalJava(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`Java file not found: ${filename}`));
+  return runCompiledLanguageFile('java', file.name, file.content);
+}
+
 async function submitTerminal(event) {
   event.preventDefault();
   const input = $('terminalInput');
@@ -773,10 +831,15 @@ async function submitTerminal(event) {
       activeFile: () => activeFileName,
       runActive: runProject,
       runPython: runTerminalPython,
+      runPhp: runTerminalPhp,
+      runJava: runTerminalJava,
       showPreview: () => setWorkspacePanel('preview'),
       clear: () => clearTerminal(''),
-      stopPython: () => {
+      stopRuntime: () => {
         pythonRunSequence += 1;
+        const extension = activeFileName.split('.').pop().toLowerCase();
+        if (extension === 'php') return phpRuntime.stop();
+        if (extension === 'java') return javaRuntime.stop();
         return pythonRuntime.stop();
       }
     });
@@ -838,6 +901,40 @@ function registerLanguages() {
         [/>/, 'delimiter'],
         [/&\w+;/, 'string.escape']
       ], comment: [[/-->/, 'comment', '@pop'], [/./, 'comment']] }
+    },
+    php: {
+      defaultToken: '', tokenPostfix: '.php',
+      tokenizer: { root: [
+        [/<\?(?:php|=)?|\?>/, 'metatag'],
+        [/\/\/.*$/, 'comment'],
+        [/#.*$/, 'comment'],
+        [/\/\*/, 'comment', '@comment'],
+        [/(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, 'string'],
+        [/\$[a-zA-Z_]\w*/, 'variable'],
+        [/\b(?:abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|fn|for|foreach|function|global|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|match|namespace|new|or|print|private|protected|public|readonly|require|require_once|return|self|static|switch|throw|trait|try|unset|use|var|while|xor|yield)\b/, 'keyword'],
+        [/\b(?:true|false|null)\b/i, 'constant'],
+        [/\b\d+(?:\.\d+)?\b/, 'number'],
+        [/[a-zA-Z_]\w*/, 'identifier'],
+        [/[{}()[\]]/, '@brackets'],
+        [/[=<>!~?:&|+*/%-]+/, 'operator'],
+        [/[;,.]/, 'delimiter']
+      ], comment: [[/\*\//, 'comment', '@pop'], [/./, 'comment']] }
+    },
+    java: {
+      defaultToken: '', tokenPostfix: '.java',
+      tokenizer: { root: [
+        [/\/\/.*$/, 'comment'],
+        [/\/\*/, 'comment', '@comment'],
+        [/@[a-zA-Z_]\w*/, 'annotation'],
+        [/(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, 'string'],
+        [/\b(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while|record|sealed|permits|var)\b/, 'keyword'],
+        [/\b(?:true|false|null)\b/, 'constant'],
+        [/\b\d+(?:\.\d+)?[fFdDlL]?\b/, 'number'],
+        [/[a-zA-Z_$][\w$]*/, 'identifier'],
+        [/[{}()[\]]/, '@brackets'],
+        [/[=<>!~?:&|+*/%-]+/, 'operator'],
+        [/[;,.]/, 'delimiter']
+      ], comment: [[/\*\//, 'comment', '@pop'], [/./, 'comment']] }
     }
   };
   for (const [id, definition] of Object.entries(definitions)) {
@@ -1099,7 +1196,9 @@ function initializeEventHandlers() {
   $('fullscreenPreview').addEventListener('click', () => requestFullScreen($('previewPane')));
   $('stopPython').addEventListener('click', () => {
     pythonRunSequence += 1;
-    if (pythonRuntime.stop()) appendTerminalLine('Python worker stopped.', 'warning');
+    const extension = activeFileName.split('.').pop().toLowerCase();
+    const stopped = extension === 'php' ? phpRuntime.stop() : extension === 'java' ? javaRuntime.stop() : pythonRuntime.stop();
+    if (stopped) appendTerminalLine(`${extension.toUpperCase()} runtime stopped.`, 'warning');
   });
   $('clearOutput').addEventListener('click', () => {
     const active = workspace.dataset.outputTab || 'terminal';

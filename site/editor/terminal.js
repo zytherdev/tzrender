@@ -6,12 +6,15 @@ const HELP_TEXT = `tzrender project terminal — local commands only
   cat <file>        Print a text file
   run               Run the active file or refresh the website preview
   python [file.py]  Run a Python file in the local worker
+  php [file.php]    Run a PHP file in the local WebAssembly runtime
+  java [file.java]  Compile and run a Java file in the local WebAssembly runtime
   preview           Switch to the live preview
   clear             Clear terminal output
-  stop              Stop a running Python worker
+  stop              Stop the active language runtime
 
 This is not an operating-system shell. Git, npm/pip installs, pipes, redirection,
-network commands and arbitrary host commands are not available.`;
+network commands and arbitrary host commands are not available. PHP and Java run
+inside browser WebAssembly runtimes, not on the host operating system.`;
 
 const SHELL_OPERATORS = /[;&|<>`$\\]/;
 const SIMPLE_TOKENS = /"([^"\\]|\\.)*"|'[^']*'|[^\s]+/g;
@@ -67,6 +70,20 @@ export async function executeTerminalCommand(source, context) {
       await context.runPython(file.name, file.content);
       return { type: 'info', text: `Running ${file.name} in the local Python worker…` };
     }
+    case 'php': {
+      const fileName = target || context.activeFile();
+      const file = files.find((item) => item.name === fileName);
+      if (!file || !/\.php$/i.test(file.name)) return { type: 'error', text: `PHP file not found: ${fileName || 'select a .php file first'}` };
+      await context.runPhp(file.name, file.content);
+      return { type: 'info', text: `Running ${file.name} in the local PHP WebAssembly runtime…` };
+    }
+    case 'java': {
+      const fileName = target || context.activeFile();
+      const file = files.find((item) => item.name === fileName);
+      if (!file || !/\.java$/i.test(file.name)) return { type: 'error', text: `Java file not found: ${fileName || 'select a .java file first'}` };
+      await context.runJava(file.name, file.content);
+      return { type: 'info', text: `Compiling and running ${file.name} in the local Java WebAssembly runtime…` };
+    }
     case 'preview':
       context.showPreview();
       return { type: 'info', text: 'Switched to the live preview.' };
@@ -74,7 +91,7 @@ export async function executeTerminalCommand(source, context) {
       context.clear();
       return { type: 'empty', text: '' };
     case 'stop':
-      return context.stopPython() ? { type: 'info', text: 'Python worker stopped.' } : { type: 'info', text: 'No Python program is running.' };
+      return context.stopRuntime() ? { type: 'info', text: 'Active language runtime stopped.' } : { type: 'info', text: 'No language runtime is running.' };
     case 'npm':
     case 'npx':
     case 'pnpm':

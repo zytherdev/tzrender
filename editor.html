@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <meta name="description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <meta name="description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
   <link rel="canonical" href="https://tzrender.zyther.dev/editor.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="tzrender">
-  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender">
-  <meta property="og:description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender">
+  <meta property="og:description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
   <meta property="og:url" content="https://tzrender.zyther.dev/editor.html">
   <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -19,11 +19,11 @@
   <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender">
-  <meta name="twitter:description" content="Build websites with HTML, CSS, JavaScript and TypeScript in a browser IDE. Run Python in a worker, preview safely and keep drafts in this browser.">
+  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender">
+  <meta name="twitter:description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
   <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
-  <title>Online IDE: HTML, CSS, JS/TS &amp; Python | tzrender</title>
+  <title>Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/site/site.css">
   <link rel="stylesheet" href="/site/editor.css">
@@ -81,7 +81,7 @@
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
-    <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python</h1>
+    <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, Python, PHP, and Java</h1>
     <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
       <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
       <button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button>
@@ -94,12 +94,12 @@
       <div class="file-actions">
         <label class="visually-hidden" for="newFileType">New file type</label>
         <select id="newFileType" class="toolbar-select" aria-label="New file type">
-          <option value="html">HTML</option><option value="css">CSS</option><option value="js">JavaScript</option><option value="ts">TypeScript</option><option value="py">Python</option><option value="md">Markdown</option><option value="json">JSON</option><option value="yaml">YAML</option>
+          <option value="html">HTML</option><option value="css">CSS</option><option value="js">JavaScript</option><option value="ts">TypeScript</option><option value="py">Python</option><option value="php">PHP</option><option value="java">Java</option><option value="md">Markdown</option><option value="json">JSON</option><option value="yaml">YAML</option>
         </select>
         <button id="addFile" class="subtle-icon-button" type="button" aria-label="Create a new file" title="Create a new file">+</button>
       </div>
       <div class="file-list" id="fileList" role="list" aria-label="Project files"></div>
-      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Syntax colors cover common web and data files. Only HTML, CSS, JavaScript, TypeScript and Python run here. No OS shell, Git, npm/pip installs or remote project execution.</p></div>
+      <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p>Syntax colors cover common web, data, PHP and Java files. HTML, CSS, JavaScript, TypeScript, Python, PHP and Java run locally in browser workers/WebAssembly.</p></div>
       <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Drafts saved only in this browser</span></div>
     </aside>
 
@@ -141,12 +141,12 @@
           <button class="output-tab" type="button" role="tab" aria-selected="false" data-output="problems">Problems <span id="problemsBadge" class="console-count">0</span></button>
           <span class="console-tab-label" id="outputDescription">Local project commands only — type help</span>
         </div>
-        <div class="console-actions"><button id="stopPython" class="subtle-icon-button" type="button" title="Stop Python execution">Stop</button><button id="clearOutput" class="subtle-icon-button" type="button" title="Clear the active output panel">Clear</button></div>
+        <div class="console-actions"><button id="stopPython" class="subtle-icon-button" type="button" title="Stop the active language runtime">Stop</button><button id="clearOutput" class="subtle-icon-button" type="button" title="Clear the active output panel">Clear</button></div>
       </div>
       <div class="output-body" id="terminalPanel" data-output-panel="terminal">
         <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>
         <form class="terminal-form" id="terminalForm" autocomplete="off"><label for="terminalInput" id="terminalPrompt">project $</label><input id="terminalInput" name="command" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Enter a local project command" placeholder="help"><button class="terminal-run" type="submit">Run</button></form>
-        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python runs in a separate worker; standard library only.</p>
+        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly with their supported standard libraries.</p>
       </div>
       <div class="output-body console-output" id="consolePanel" data-output-panel="console" role="log" aria-live="polite" aria-relevant="additions text" hidden><div class="console-placeholder">Console output from the sandboxed website preview appears here.</div></div>
       <div class="output-body problems-output" id="problemsPanel" data-output-panel="problems" role="log" aria-live="polite" hidden><div class="console-placeholder">No editor problems to show.</div></div>
