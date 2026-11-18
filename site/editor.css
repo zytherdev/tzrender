@@ -445,6 +445,7 @@ html[data-theme="contrast"] .toolbar-run:hover { color: #000; background: #fff; 
 html[data-theme="light"] .file-symbol.file-html, html[data-theme="light"] .file-symbol.file-java { color: #8a3f14; background: #fce9dc; }
 html[data-theme="light"] .file-symbol.file-css, html[data-theme="light"] .file-symbol.file-ts { color: #145b91; background: #e3f0fc; }
 html[data-theme="light"] .file-symbol.file-js, html[data-theme="light"] .file-symbol.file-py { color: #735200; background: #fbf1cc; }
+html[data-theme="light"] .file-symbol.file-lua, html[data-theme="light"] .file-symbol.file-sql { color: #195d72; background: #dff3f7; }
 html[data-theme="light"] .file-symbol.file-php, html[data-theme="light"] .file-symbol.file-md { color: #673b93; background: #f0e4fa; }
 html[data-theme="light"] .file-symbol.file-data { color: #006b52; background: #d9f3ea; }
 html[data-theme="light"] .file-symbol.file-text { color: #554f5f; background: #e9e6ee; }

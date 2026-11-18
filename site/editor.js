@@ -37,6 +37,8 @@ import { createPythonRuntime } from './editor/python-runtime.js';
 import { createJavaRuntime } from './editor/java-runtime.js';
 import { createPhpRuntime } from './editor/php-runtime.js';
 import { createTypeScriptRuntime } from './editor/typescript-runtime.js';
+import { createLuaRuntime } from './editor/lua-runtime.js';
+import { createSqlRuntime } from './editor/sql-runtime.js';
 import { executeTerminalCommand, getTerminalHelp } from './editor/terminal.js';
 import { createFileExplorer } from './editor/explorer.js';
 import { setupEditorAppearance } from './editor/appearance.js';
@@ -260,7 +262,7 @@ function fileIconClass(name) {
   const extension = name.split('.').pop().toLowerCase();
   const classes = { htm: 'html', mjs: 'js', cjs: 'js', jsx: 'js', tsx: 'ts', markdown: 'md', json: 'data', yaml: 'data', yml: 'data' };
   const badge = classes[extension] || extension;
-  return `file-${['html', 'css', 'js', 'ts', 'py', 'php', 'java', 'md', 'data'].includes(badge) ? badge : 'text'}`;
+  return `file-${['html', 'css', 'js', 'ts', 'lua', 'py', 'php', 'java', 'sql', 'md', 'data'].includes(badge) ? badge : 'text'}`;
 }
 
 function renderFileList() {
@@ -278,9 +280,11 @@ function updateActiveFileChrome() {
   $('previewUrl').textContent = `/${file.name}`;
   const runnable = type.runnable;
   const extension = file.name.split('.').pop().toLowerCase();
-  $('runLabel').textContent = extension === 'py' ? 'Run Python' : extension === 'php' ? 'Run PHP' : extension === 'java' ? 'Run Java' : runnable ? 'Run' : 'Preview only';
+  $('runLabel').textContent = extension === 'py' ? 'Run Python' : extension === 'lua' ? 'Run Lua' : extension === 'sql' ? 'Run SQL' : extension === 'php' ? 'Run PHP' : extension === 'java' ? 'Run Java' : runnable ? 'Run' : 'Preview only';
   $('runProject').title = file.name.toLowerCase().endsWith('.py')
     ? 'Run this file in the local Python worker'
+    : extension === 'lua' ? 'Run this file in the local Lua WebAssembly runtime'
+    : extension === 'sql' ? 'Run this file in the local SQLite WebAssembly runtime'
     : extension === 'php' ? 'Run this file in the local PHP WebAssembly runtime'
     : extension === 'java' ? 'Compile and run this file in the local Java WebAssembly runtime'
     : runnable ? 'Run the project preview' : 'This extension receives syntax highlighting only';
@@ -502,6 +506,18 @@ const phpRuntime = createPhpRuntime({
   },
   onStatus: onLanguageRuntimeStatus
 });
+const luaRuntime = createLuaRuntime({
+  onOutput(stream, text) {
+    appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success');
+  },
+  onStatus: onLanguageRuntimeStatus
+});
+const sqlRuntime = createSqlRuntime({
+  onOutput(stream, value) {
+    if (stream === 'stderr') appendTerminalLine(value, 'error');
+  },
+  onStatus: onLanguageRuntimeStatus
+});
 const javaRuntime = createJavaRuntime({
   onOutput(stream, text) {
     appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success');
@@ -540,6 +556,57 @@ async function runPythonFile(name, source) {
   }
 }
 
+async function runLuaFile(name, source) {
+  const runId = ++pythonRunSequence;
+  setOutputTab('terminal');
+  appendTerminalLine(`$ lua ${name}`, 'command');
+  setPreviewStatus('Loading the local Lua runtime…', 'running');
+  try {
+    await luaRuntime.run(name, source, { input: $('programInput')?.value || '' });
+    if (runId === pythonRunSequence) setPreviewStatus('Lua finished in the local WebAssembly runtime');
+  } catch (error) {
+    if (runId === pythonRunSequence) {
+      const message = error?.message || String(error);
+      appendTerminalLine(message, message.includes('stopped') ? 'warning' : 'error');
+      setPreviewStatus(message.includes('stopped') ? 'Lua stopped' : 'Lua needs attention', message.includes('stopped') ? 'ready' : 'error');
+    }
+  }
+}
+function escapeSqlHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+function buildSqlResultPreview(result, name) {
+  const tables = (result?.statements || []).map((statement, index) => {
+    const columns = statement.columns || [];
+    const head = columns.map((column) => `<th>${escapeSqlHtml(column)}</th>`).join('');
+    const body = (statement.rows || []).map((row) => `<tr>${columns.map((column) => `<td>${escapeSqlHtml(row[column])}</td>`).join('')}</tr>`).join('');
+    return `<section><h2>Query ${index + 1}</h2><code>${escapeSqlHtml(statement.sql)}</code>${columns.length ? `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>` : '<p class="muted">Statement executed successfully; no rows returned.</p>'}</section>`;
+  }).join('');
+  return buildPreviewDocument({
+    html: `<main><h1>SQLite results</h1><p class="muted">${escapeSqlHtml(name)} · ${result?.queryCount || 0} queries · ${result?.rowCount || 0} rows</p>${tables || '<p class="muted">No SQL statements to show.</p>'}</main>`,
+    css: 'body{margin:0;padding:2rem;background:#f6f4fb;color:#29243a;font:15px system-ui,sans-serif}main{max-width:900px;margin:auto}h1{margin-top:0}section{padding:1rem;margin:1rem 0;background:#fff;border:1px solid #e4def2;border-radius:12px;box-shadow:0 8px 24px #39276b12}h2{font-size:1rem;margin:0 0 .6rem}code{display:block;overflow:auto;padding:.65rem;border-radius:7px;background:#f1eef8;color:#5b3db1}table{width:100%;margin-top:.8rem;border-collapse:collapse}th,td{padding:.55rem .65rem;border-bottom:1px solid #e8e3f0;text-align:left;vertical-align:top}th{color:#6548b7;background:#faf9fd}.muted{color:#716b7f}'
+  });
+}
+async function runSqlFile(name, source) {
+  const runId = ++pythonRunSequence;
+  setOutputTab('terminal');
+  appendTerminalLine(`$ sqlite3 ${name}`, 'command');
+  setPreviewStatus('Loading the local SQLite runtime…', 'running');
+  try {
+    const result = await sqlRuntime.run(name, source, { input: $('programInput')?.value || '' });
+    if (runId === pythonRunSequence) {
+      setPreviewDocument(buildSqlResultPreview(result, name), name);
+      setPreviewStatus('SQLite results rendered in the sandboxed preview');
+      if (window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('preview');
+      appendTerminalLine(`${result.queryCount} quer${result.queryCount === 1 ? 'y' : 'ies'} · ${result.rowCount} row${result.rowCount === 1 ? '' : 's'}`, 'success');
+    }
+  } catch (error) {
+    if (runId === pythonRunSequence) {
+      appendTerminalLine(error?.message || String(error), 'error');
+      setPreviewStatus('SQL needs attention', 'error');
+    }
+  }
+}
 async function runCompiledLanguageFile(language, name, source) {
   const runId = ++pythonRunSequence;
   setOutputTab('terminal');
@@ -622,6 +689,16 @@ async function runProject({ openPreview = false } = {}) {
     await runPythonFile(activeFile.name, activeFile.content);
     return;
   }
+  if (extension === 'lua') {
+    setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension), activeFile.name);
+    await runLuaFile(activeFile.name, activeFile.content);
+    return;
+  }
+  if (extension === 'sql') {
+    setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension), activeFile.name);
+    await runSqlFile(activeFile.name, activeFile.content);
+    return;
+  }
   if (extension === 'php' || extension === 'java') {
     setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension), activeFile.name);
     await runCompiledLanguageFile(extension, activeFile.name, activeFile.content);
@@ -659,7 +736,7 @@ function schedulePreview() {
     return;
   }
   const extension = activeFileName.split('.').pop().toLowerCase();
-  if (['py', 'php', 'java'].includes(extension)) {
+  if (['py', 'lua', 'sql', 'php', 'java'].includes(extension)) {
     setPreviewStatus(`${extension.toUpperCase()} is manual-run only`, 'paused');
     return;
   }
@@ -827,6 +904,18 @@ function runTerminalPhp(filename) {
   return runCompiledLanguageFile('php', file.name, file.content);
 }
 
+function runTerminalLua(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`Lua file not found: ${filename}`));
+  return runLuaFile(file.name, file.content);
+}
+
+function runTerminalSql(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`SQL file not found: ${filename}`));
+  return runSqlFile(file.name, file.content);
+}
+
 function runTerminalJava(filename) {
   const file = getFiles().find((item) => item.name === filename);
   if (!file) return Promise.reject(new Error(`Java file not found: ${filename}`));
@@ -850,6 +939,8 @@ async function submitTerminal(event) {
       activeFile: () => activeFileName,
       runActive: () => runProject({ openPreview: true }),
       runPython: runTerminalPython,
+      runLua: runTerminalLua,
+      runSql: runTerminalSql,
       runPhp: runTerminalPhp,
       runJava: runTerminalJava,
       showPreview: () => setWorkspacePanel('preview'),
@@ -857,6 +948,8 @@ async function submitTerminal(event) {
       stopRuntime: () => {
         pythonRunSequence += 1;
         const extension = activeFileName.split('.').pop().toLowerCase();
+        if (extension === 'lua') return luaRuntime.stop();
+        if (extension === 'sql') return sqlRuntime.stop();
         if (extension === 'php') return phpRuntime.stop();
         if (extension === 'java') return javaRuntime.stop();
         return pythonRuntime.stop();
@@ -920,6 +1013,24 @@ function registerLanguages() {
         [/>/, 'delimiter'],
         [/&\w+;/, 'string.escape']
       ], comment: [[/-->/, 'comment', '@pop'], [/./, 'comment']] }
+    },
+    lua: {
+      defaultToken: '', tokenPostfix: '.lua',
+      keywords: ['and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function', 'goto', 'if', 'in', 'local', 'nil', 'not', 'or', 'repeat', 'return', 'then', 'true', 'until', 'while'],
+      tokenizer: { root: [
+        [/--\[\[/, 'comment', '@commentBlock'], [/--.*$/, 'comment'],
+        [/(?:"""|'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, 'string'],
+        [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
+        [/\b\d+(?:\.\d+)?\b/, 'number'], [/[{}()[\]]/, '@brackets'], [/[=<>~:+*/%-]+/, 'operator']
+      ], commentBlock: [[/\]\]/, 'comment', '@pop'], [/./, 'comment']] }
+    },
+    sql: {
+      defaultToken: '', tokenPostfix: '.sql',
+      keywords: ['select', 'from', 'where', 'insert', 'into', 'values', 'update', 'set', 'delete', 'create', 'table', 'drop', 'alter', 'join', 'left', 'right', 'inner', 'on', 'as', 'and', 'or', 'not', 'null', 'is', 'order', 'by', 'group', 'having', 'limit', 'offset', 'distinct', 'case', 'when', 'then', 'else', 'end', 'primary', 'key', 'foreign', 'references', 'integer', 'text', 'real', 'blob', 'default', 'view', 'index'],
+      tokenizer: { root: [
+        [/--.*$/, 'comment'], [/\/\*/, 'comment', '@comment'], [/'(?:''|[^'])*'/, 'string'], [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
+        [/\b\d+(?:\.\d+)?\b/, 'number'], [/[(),;]/, 'delimiter'], [/[=<>!+*/%-]+/, 'operator']
+      ], comment: [[/\*\//, 'comment', '@pop'], [/./, 'comment']] }
     },
     php: {
       defaultToken: '', tokenPostfix: '.php',
@@ -1250,6 +1361,8 @@ function initializeEventHandlers() {
     clearTimeout(saveTimer);
     if (draftChanged) saveDraftNow();
     pythonRuntime.dispose();
+    luaRuntime.dispose();
+    sqlRuntime.dispose();
     typeScriptRuntime.dispose();
   });
   window.addEventListener('resize', () => editor.layout());

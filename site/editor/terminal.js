@@ -6,6 +6,8 @@ const HELP_TEXT = `tzrender project terminal — local commands only
   cat <file>        Print a text file
   run               Run the active file or refresh the website preview
   python [file.py]  Run a Python file in the local worker
+  lua [file.lua]    Run a Lua file in the local WebAssembly runtime
+  sqlite [file.sql] Run SQL in the local in-memory SQLite runtime
   php [file.php]    Run a PHP file in the local WebAssembly runtime
   java [file.java]  Compile and run a Java file in the local WebAssembly runtime
   preview           Switch to the live preview
@@ -69,6 +71,21 @@ export async function executeTerminalCommand(source, context) {
       if (!file || !/\.py$/i.test(file.name)) return { type: 'error', text: `Python file not found: ${fileName || 'select a .py file first'}` };
       await context.runPython(file.name, file.content);
       return { type: 'info', text: `Running ${file.name} in the local Python worker…` };
+    }
+    case 'lua': {
+      const fileName = target || context.activeFile();
+      const file = files.find((item) => item.name === fileName);
+      if (!file || !/\.lua$/i.test(file.name)) return { type: 'error', text: `Lua file not found: ${fileName || 'select a .lua file first'}` };
+      await context.runLua(file.name, file.content);
+      return { type: 'info', text: `Running ${file.name} in the local Lua WebAssembly runtime…` };
+    }
+    case 'sqlite':
+    case 'sql': {
+      const fileName = target || context.activeFile();
+      const file = files.find((item) => item.name === fileName);
+      if (!file || !/\.sql$/i.test(file.name)) return { type: 'error', text: `SQL file not found: ${fileName || 'select a .sql file first'}` };
+      await context.runSql(file.name, file.content);
+      return { type: 'info', text: `Running ${file.name} in the local SQLite WebAssembly runtime…` };
     }
     case 'php': {
       const fileName = target || context.activeFile();

@@ -84,6 +84,8 @@
   "dependencies": {
     "@live-codes/java-wasm": "^0.1.0",
     "@php-wasm/universal": "^3.1.65",
-    "@php-wasm/web-8-5": "^3.1.65"
+    "@php-wasm/web-8-5": "^3.1.65",
+    "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
+    "wasmoon": "^1.16.0"
   }
 }

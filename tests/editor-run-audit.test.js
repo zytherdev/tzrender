@@ -48,7 +48,8 @@ function harness() {
   const dependencies = {
     monaco, ...projectModule, ...previews, buildPreviewDocument,
     editorWorker: class {}, jsonWorker: class {}, cssWorker: class {}, htmlWorker: class {}, tsWorker: class {},
-    createPythonRuntime: () => runtime, createPhpRuntime: () => runtime, createJavaRuntime: () => runtime,
+    createPythonRuntime: () => runtime, createLuaRuntime: () => runtime, createSqlRuntime: () => runtime,
+    createPhpRuntime: () => runtime, createJavaRuntime: () => runtime,
     createTypeScriptRuntime: () => ({ compile, dispose: vi.fn() }),
     executeTerminalCommand: vi.fn(), getTerminalHelp: vi.fn(), createFileExplorer: vi.fn(), setupEditorAppearance: vi.fn()
   };

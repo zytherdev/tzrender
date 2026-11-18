@@ -27,10 +27,12 @@ export const FILE_TYPES = {
   ts: { language: 'typescript', icon: 'TS', category: 'script', runnable: true },
   tsx: { language: 'typescript', icon: 'TS', category: 'script', runnable: false },
   jsx: { language: 'javascript', icon: 'JS', category: 'script', runnable: false },
+  lua: { language: 'lua', icon: 'Lua', category: 'script', runnable: true },
   py: { language: 'python', icon: 'Py', category: 'script', runnable: true },
   php: { language: 'php', icon: 'PHP', category: 'php', runnable: true },
   java: { language: 'java', icon: 'J', category: 'java', runnable: true },
   json: { language: 'json', icon: '{}', category: 'data', runnable: true },
+  sql: { language: 'sql', icon: 'SQL', category: 'data', runnable: true },
   md: { language: 'markdown', icon: 'M↓', category: 'document', runnable: true },
   markdown: { language: 'markdown', icon: 'M↓', category: 'document', runnable: true },
   yaml: { language: 'yaml', icon: 'Y', category: 'data', runnable: true },
@@ -85,6 +87,20 @@ export const STARTERS = {
       { name: 'README.md', content: '# Python starter\n\nRun `main.py` with the **Run Python** button or enter `python main.py` in the project terminal.\n\nPython executes in a browser worker using the standard library. Package installs, network access and interactive `input()` are not available.' },
       { name: 'main.py', content: `from datetime import date\n\nname = "web builder"\nprint(f"Hello, {name}!")\nprint(f"Today is {date.today():%A}.")` },
       { name: 'index.html', content: `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>Python project</title>\n</head>\n<body>\n  <main>\n    <h1>Python runs in the Terminal</h1>\n    <p>Select <code>main.py</code> and press <strong>Run Python</strong> to see its output.</p>\n  </main>\n</body>\n</html>` }
+    ]
+  },
+  lua: {
+    name: 'Lua starter',
+    files: [
+      { name: 'README.md', content: '# Lua starter\n\nRun `main.lua` in the local Lua 5.4 WebAssembly runtime. Input is supplied as queued lines to `io.read()`; network and DOM access are unavailable.' },
+      { name: 'main.lua', content: 'print("Hello from Lua 5.4!")\nlocal name = io.read()\nif name then print("Hello, " .. name .. "!") end' }
+    ]
+  },
+  sql: {
+    name: 'SQLite starter',
+    files: [
+      { name: 'README.md', content: '# SQLite starter\n\nRun `main.sql` in the local in-memory SQLite WASM runtime. Data is reset when the runtime is reset or the editor is closed.' },
+      { name: 'main.sql', content: `CREATE TABLE people (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\nINSERT INTO people (name) VALUES ('Ada'), ('Grace');\n\nSELECT id, name FROM people ORDER BY id;` }
     ]
   },
   blank: {

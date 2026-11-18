@@ -240,6 +240,10 @@ export function buildPythonInfoPreview(filename) {
 }
 
 export function buildLanguageInfoPreview(filename, language) {
-  const label = language === 'php' ? 'PHP' : 'Java';
-  return documentPage(filename, `<h1>${label} syntax workspace</h1><p><code>${escapeHtml(filename)}</code> is ready for editing with ${label} syntax highlighting.</p><p>This browser workspace does not include a ${label} runtime or compiler. Use the editor for code authoring and export the file to run it in a local development environment.</p>`);
+  const labels = { php: 'PHP', java: 'Java', lua: 'Lua 5.4', sql: 'SQLite / SQL' };
+  const label = labels[language] || language.toUpperCase();
+  const detail = language === 'sql'
+    ? 'Queries run in an in-memory SQLite WebAssembly database and their rows appear in Preview.'
+    : `${label} runs locally in a browser WebAssembly runtime; output appears in Terminal.`;
+  return documentPage(filename, `<h1>${label} workspace</h1><p><code>${escapeHtml(filename)}</code> is ready for editing with ${label} syntax highlighting.</p><p>${detail}</p>`);
 }
