@@ -5,6 +5,9 @@ const MAX_INPUT_CHARS = 100_000;
 const MAX_QUERIES = 100;
 const MAX_ROWS = 5_000;
 const MAX_OUTPUT_CHARS = 200_000;
+const MAX_PROJECT_FILES = 100;
+const MAX_PROJECT_CHARS = 500_000;
+const MAX_INCLUDE_DEPTH = 16;
 const RUNTIME_LOAD_TIMEOUT = 90_000;
 
 function validateSource(source) {
@@ -20,6 +23,69 @@ function validateInput(input) {
     throw new Error(`SQL input is limited to ${MAX_INPUT_CHARS.toLocaleString()} characters.`);
   }
   return input;
+}
+
+function normalizeSqlFiles(files, entryName, source) {
+  if (typeof entryName !== 'string' || !entryName || entryName.startsWith('/')
+    || entryName.split('/').some((part) => !part || part === '.' || part === '..' || !/^[A-Za-z0-9._-]+$/.test(part))) {
+    throw new Error(`Invalid SQL project file name: ${entryName}`);
+  }
+  if (files === undefined) return new Map([[entryName, source]]);
+  if (!Array.isArray(files) || files.length > MAX_PROJECT_FILES) throw new Error(`SQL projects are limited to ${MAX_PROJECT_FILES} files.`);
+  const result = new Map();
+  let total = 0;
+  for (const file of files) {
+    if (!file || typeof file.name !== 'string' || typeof file.content !== 'string') throw new Error('SQL project files must have a name and string content.');
+    const name = file.name.replaceAll('\\', '/');
+    if (!name || name.startsWith('/') || name.split('/').some((part) => !part || part === '.' || part === '..')
+      || name.split('/').some((part) => !/^[A-Za-z0-9._-]+$/.test(part))) throw new Error(`Invalid SQL project file name: ${file.name}`);
+    if (result.has(name)) continue;
+    total += file.content.length;
+    if (total > MAX_PROJECT_CHARS) throw new Error(`SQL project files are limited to ${MAX_PROJECT_CHARS.toLocaleString()} characters in total.`);
+    result.set(name, file.content);
+  }
+  result.set(entryName, source);
+  return result;
+}
+
+function resolveSqlInclude(reference, includingFile) {
+  if (!reference || reference.includes('\\') || /[\0-\x1f\x7f]/.test(reference)) return null;
+  const rooted = reference.startsWith('/') && !reference.startsWith('//');
+  if (reference.startsWith('//')) return null;
+  const segments = rooted ? [] : includingFile.includes('/') ? includingFile.slice(0, includingFile.lastIndexOf('/')).split('/') : [];
+  for (const raw of (rooted ? reference.slice(1) : reference).split('/')) {
+    let part;
+    try { part = decodeURIComponent(raw); } catch { return null; }
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (!segments.length) return null;
+      segments.pop();
+    } else if (part.includes('/') || part.includes('\\') || part.includes(':')) return null;
+    else segments.push(part);
+  }
+  return segments.length ? segments.join('/') : null;
+}
+
+function expandSqlIncludes(entryName, source, files) {
+  const stack = [];
+  let expandedLength = 0;
+  function expand(name, text) {
+    if (stack.length >= MAX_INCLUDE_DEPTH) throw new Error(`SQL .read includes are limited to ${MAX_INCLUDE_DEPTH} nested files.`);
+    if (stack.includes(name)) throw new Error(`SQL .read cycle detected: ${[...stack, name].join(' -> ')}`);
+    stack.push(name);
+    const output = text.replace(/^\s*\.read\s+(?:"([^"\r\n]+)"|'([^'\r\n]+)'|([^\s;]+))\s*(?:--.*)?$/gmi,
+      (_match, doubleQuoted, singleQuoted, bare) => {
+        const reference = doubleQuoted ?? singleQuoted ?? bare;
+        const includedName = resolveSqlInclude(reference, name);
+        if (!includedName || !files.has(includedName)) throw new Error(`SQL .read file not found or unsafe: ${reference}`);
+        return expand(includedName, files.get(includedName));
+      });
+    stack.pop();
+    expandedLength += output.length;
+    if (expandedLength > MAX_PROJECT_CHARS) throw new Error(`Expanded SQL scripts are limited to ${MAX_PROJECT_CHARS.toLocaleString()} characters.`);
+    return output;
+  }
+  return expand(entryName, source);
 }
 
 // SQLite exec() can run a script, but its resultRows/columnNames options only
@@ -87,17 +153,20 @@ export function createSqlRuntime({ onOutput = () => {}, onStatus = () => {} } = 
   let loading = null;
   let active = null;
   let runSequence = 0;
+  let databaseLifecycle = 0;
 
   async function ensureDatabase() {
     if (db) return db;
     if (!loading) {
+      const lifecycle = databaseLifecycle;
       onStatus('loading', 'Starting the local SQLite WASM runtime…');
       loading = sqlite3InitModule().then((module) => {
+        if (lifecycle !== databaseLifecycle) return null;
         sqlite = module;
         db = new module.oo1.DB(':memory:', 'c');
         return db;
       }).catch((error) => {
-        loading = null;
+        if (lifecycle === databaseLifecycle) loading = null;
         throw error;
       });
     }
@@ -105,9 +174,9 @@ export function createSqlRuntime({ onOutput = () => {}, onStatus = () => {} } = 
   }
 
   function closeDatabase() {
+    databaseLifecycle += 1;
     if (db) {
-      db.close();
-      db = null;
+      try { db.close(); } finally { db = null; }
     }
     sqlite = null;
     loading = null;
@@ -125,9 +194,15 @@ export function createSqlRuntime({ onOutput = () => {}, onStatus = () => {} } = 
 
   function execute(name, source, options = {}) {
     let sql;
+    let mode;
     try {
+      if (!options || typeof options !== 'object' || Array.isArray(options)) throw new TypeError('SQL run options must be an object.');
       sql = validateSource(source);
       validateInput(options.input);
+      mode = options.mode ?? 'safe';
+      if (mode !== 'safe' && mode !== 'experimental') throw new TypeError('SQL mode must be "safe" or "experimental".');
+      const files = normalizeSqlFiles(options.files, name, sql);
+      sql = expandSqlIncludes(name, sql, files);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -147,7 +222,7 @@ export function createSqlRuntime({ onOutput = () => {}, onStatus = () => {} } = 
     let resolveTask;
     let rejectTask;
     const taskPromise = new Promise((resolve, reject) => { resolveTask = resolve; rejectTask = reject; });
-    active = { id, reject: rejectTask };
+    active = { id, reject: rejectTask, mode };
     (async () => {
       const loadTimer = setTimeout(() => stopActive('SQLite took too long to initialize.'), RUNTIME_LOAD_TIMEOUT);
       try {
@@ -198,10 +273,12 @@ export function createSqlRuntime({ onOutput = () => {}, onStatus = () => {} } = 
         };
         onOutput('result', result);
         active = null;
+        if (mode === 'experimental') closeDatabase();
         onStatus('ready', `SQLite finished ${result.queryCount} ${result.queryCount === 1 ? 'query' : 'queries'}.`);
         resolveTask(result);
       } catch (error) {
         clearTimeout(loadTimer);
+        if (mode === 'experimental') closeDatabase();
         if (active?.id === id) {
           active = null;
           onStatus('error', errorMessage(error));

@@ -83,9 +83,9 @@ function moduleAliases(path) {
 
 function validateModules(modules) {
   if (modules === undefined) return [];
-  if (!Array.isArray(modules)) throw new Error('Lua modules must be an array.');
+  if (!Array.isArray(modules)) throw new Error('Lua project files must be an array.');
   if (modules.length > MAX_MODULES) {
-    throw new Error(`Lua modules are limited to ${MAX_MODULES}.`);
+    throw new Error(`Lua project files are limited to ${MAX_MODULES}.`);
   }
 
   const registered = new Set();
@@ -93,21 +93,21 @@ function validateModules(modules) {
   const result = [];
   for (const module of modules) {
     if (!module || typeof module !== 'object') throw new Error('Each Lua module must be an object.');
-    const path = validateText(module.path, 'Lua module path', MAX_MODULE_PATH_CHARS);
-    const source = validateText(module.source, `Lua module ${path || '<unnamed>'} source`, MAX_MODULE_SOURCE_CHARS);
+    const path = validateText(module.name, 'Lua project file name', MAX_MODULE_PATH_CHARS);
+    const source = validateText(module.content, `Lua project file ${path || '<unnamed>'} content`, MAX_MODULE_SOURCE_CHARS);
     if (!path || path.startsWith('/') || path.includes('\\') || path.split('/').some((part) => part === '..')) {
-      throw new Error(`Lua module path is invalid: ${path || '<empty>'}.`);
+      throw new Error(`Lua project file name is invalid: ${path || '<empty>'}.`);
     }
     if (!/^[A-Za-z0-9_./-]+(?:\.lua)?$/.test(path) || path.endsWith('/') || path.includes('//')) {
-      throw new Error(`Lua module path is invalid: ${path}.`);
+      throw new Error(`Lua project file name is invalid: ${path}.`);
     }
     totalSource += source.length;
     if (totalSource > MAX_MODULES_SOURCE_CHARS) {
-      throw new Error(`Lua module sources are limited to ${MAX_MODULES_SOURCE_CHARS.toLocaleString()} characters in total.`);
+      throw new Error(`Lua project file contents are limited to ${MAX_MODULES_SOURCE_CHARS.toLocaleString()} characters in total.`);
     }
     const aliases = moduleAliases(path);
     if (aliases.some((alias) => registered.has(alias))) {
-      throw new Error(`Lua module path is duplicated: ${path}.`);
+      throw new Error(`Lua project file name is duplicated: ${path}.`);
     }
     aliases.forEach((alias) => registered.add(alias));
     result.push({ path, source, aliases });
@@ -194,10 +194,18 @@ export function createLuaRuntime({ onOutput = () => {}, onStatus = () => {} } = 
   }
 
   return {
-    async run(name, source, { input, modules } = {}) {
+    async run(name, source, { input, files = [], mode = 'safe', packages = [] } = {}) {
       if (disposed) throw new Error('Lua runtime has been disposed.');
       validateText(source, 'Lua source', MAX_SOURCE_CHARS);
-      const localModules = validateModules(modules);
+      if (mode !== 'safe' && mode !== 'experimental') throw new Error("Lua mode must be 'safe' or 'experimental'.");
+      if (!Array.isArray(packages) || packages.some((item) => typeof item !== 'string' || !item.trim())) {
+        throw new Error('Lua packages must be an array of package names.');
+      }
+      if (mode === 'experimental' && packages.length) {
+        throw new Error('Experimental Lua package installation is unavailable: Wasmoon does not provide a package manager or isolated per-run filesystem, and this runtime will not fetch or execute packages.');
+      }
+      if (!Array.isArray(files)) throw new Error('Lua project files must be an array.');
+      const localModules = validateModules(files.filter((file) => typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.lua')));
       if (active) throw new Error('Lua is already running. Stop it before starting another run.');
       const providedInput = input === undefined ? pendingInput : validateInput(input);
       pendingInput = '';
@@ -249,6 +257,8 @@ export function createLuaRuntime({ onOutput = () => {}, onStatus = () => {} } = 
           emit('error', message);
           task.reject(error instanceof Error ? error : new Error(message));
         }
+      } finally {
+        if (mode === 'experimental') closeEngine();
       }
       return promise;
     },

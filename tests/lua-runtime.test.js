@@ -105,6 +105,37 @@ describe('Lua 5.4 runtime adapter', () => {
     expect(MAX_OUTPUT_CHARS).toBe(100_000);
   });
 
+  it('preloads project snapshot files for safe require without a filesystem searcher', async () => {
+    const runtime = createLuaRuntime();
+    await runtime.run('main.lua', '', {
+      files: [{ name: 'lib/math.lua', content: 'return { answer = 42 }' }]
+    });
+    const script = engines[0].engine.doString.mock.calls[0][0];
+    expect(script).toContain("package.preload['lib.math']");
+    expect(script).toContain("package.searchers = { package.searchers[1] }");
+    expect(script).toContain('return { answer = 42 }');
+  });
+
+  it('rejects traversal in project snapshot file names', async () => {
+    const runtime = createLuaRuntime();
+    await expect(runtime.run('main.lua', '', {
+      files: [{ name: '../escape.lua', content: 'return true' }]
+    })).rejects.toThrow(/file name is invalid/i);
+    expect(factoryCreateEngine).not.toHaveBeenCalled();
+  });
+
+  it('does not pretend to install experimental packages and closes its engine after experimental runs', async () => {
+    const runtime = createLuaRuntime();
+    await expect(runtime.run('main.lua', '', { mode: 'experimental', packages: ['socket'] }))
+      .rejects.toThrow(/Wasmoon does not provide a package manager/i);
+    expect(factoryCreateEngine).not.toHaveBeenCalled();
+
+    await runtime.run('main.lua', '', { mode: 'experimental' });
+    expect(engines[0].engine.global.close).toHaveBeenCalledOnce();
+    await runtime.run('main.lua', '', { mode: 'experimental' });
+    expect(factoryCreateEngine).toHaveBeenCalledTimes(2);
+  });
+
   it('stops and disposes the engine safely', async () => {
     const runtime = createLuaRuntime();
     await runtime.run('main.lua', '');

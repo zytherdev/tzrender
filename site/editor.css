@@ -27,6 +27,8 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .tool-check { display: flex; align-items: center; gap: .2rem; color: #aaa5bb; font-size: .56rem; cursor: pointer; white-space: nowrap; }
 .tool-check input { width: 12px; height: 12px; }
 .tool-button { min-height: 25px; padding: .23rem .4rem; font-size: .53rem; }
+.execution-warning { color: #ffcb79; font: 600 .55rem var(--font-mono); white-space: nowrap; }
+.execution-warning[hidden] { display: none; }
 .tool-view-actions { margin-left: auto; }
 .editor-workspace { --explorer-width: 205px; --code-width: minmax(280px, 1fr); --output-height: 205px; display: grid; width: 100%; height: calc(100dvh - 95px); min-height: 385px; grid-template-columns: var(--explorer-width) 7px var(--code-width) 7px minmax(320px, 1.05fr); grid-template-rows: minmax(245px, 1fr) 7px var(--output-height); gap: 1px; background: #35313f; transition: grid-template-columns .18s ease, grid-template-rows .18s ease; }
 .editor-workspace.is-resizing { transition: none; user-select: none; }

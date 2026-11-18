@@ -223,10 +223,31 @@ export function normalizeProject(value, fallbackName = 'Imported project') {
   return {
     projectName: typeof value.projectName === 'string' ? value.projectName.trim().slice(0, 48) || fallbackName : fallbackName,
     starter: Object.hasOwn(STARTERS, value.starter) ? value.starter : 'blank',
+    executionMode: value.executionMode === 'experimental' ? 'experimental' : 'safe',
+    packages: normalizeProjectPackages(value.packages),
     activeFile: files.some((file) => file.name === activeFile) ? activeFile : files.find((file) => file.name === 'index.html')?.name || files[0].name,
     files,
     folders
   };
+}
+
+const PACKAGE_NAME = /^(?:@[A-Za-z0-9][A-Za-z0-9._-]{0,49}\/)?[A-Za-z0-9][A-Za-z0-9._+-]{0,99}(?:==[A-Za-z0-9][A-Za-z0-9._+-]{0,99})?$/;
+const PYTHON_PACKAGE_SPEC = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}(?:==[A-Za-z0-9][A-Za-z0-9._+-]{0,99})?$/;
+const ESM_PACKAGE_NAME = /^(?:@[A-Za-z0-9][A-Za-z0-9._-]{0,49}\/)?[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
+const PACKAGE_LANGUAGES = new Set(['javascript', 'typescript', 'python', 'lua', 'php', 'java']);
+
+export function normalizeProjectPackages(value) {
+  const result = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return result;
+  for (const [language, packages] of Object.entries(value)) {
+    if (!PACKAGE_LANGUAGES.has(language) || !Array.isArray(packages)) continue;
+    const unique = [...new Set(packages.filter((name) => typeof name === 'string'
+      && PACKAGE_NAME.test(name)
+      && (language !== 'python' || PYTHON_PACKAGE_SPEC.test(name))
+      && (!['javascript', 'typescript'].includes(language) || ESM_PACKAGE_NAME.test(name))))].slice(0, 32);
+    if (unique.length) result[language] = unique;
+  }
+  return result;
 }
 
 export function loadSavedProject(storage = globalThis.localStorage) {
@@ -241,6 +262,8 @@ export function loadSavedProject(storage = globalThis.localStorage) {
         format: 'tzrender-project',
         projectName: parsed.projectName,
         starter: parsed.starter,
+        executionMode: parsed.executionMode,
+        packages: parsed.packages,
         activeFile: parsed.activeFile,
         files: parsed.files,
         folders: parsed.folders
@@ -252,13 +275,15 @@ export function loadSavedProject(storage = globalThis.localStorage) {
   return null;
 }
 
-export function serializeProject({ projectName, starter, activeFile, files, folders }) {
+export function serializeProject({ projectName, starter, activeFile, files, folders, executionMode, packages }) {
   const { files: cleanFiles, folders: cleanFolders } = validateProjectTree(files, folders);
   return JSON.stringify({
     format: 'tzrender-project',
     version: 2,
     projectName: String(projectName || 'Untitled project').trim().slice(0, 48) || 'Untitled project',
     starter: Object.hasOwn(STARTERS, starter) ? starter : 'blank',
+    executionMode: executionMode === 'experimental' ? 'experimental' : 'safe',
+    packages: normalizeProjectPackages(packages),
     activeFile: cleanFiles.some((file) => file.name === activeFile) ? activeFile : cleanFiles[0].name,
     files: cleanFiles,
     folders: cleanFolders,

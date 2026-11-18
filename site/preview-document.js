@@ -1,16 +1,22 @@
 export const PREVIEW_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
+export const EXPERIMENTAL_PREVIEW_CSP = "default-src 'none'; script-src 'unsafe-inline' https: blob:; style-src 'unsafe-inline' https:; img-src data: blob: https:; font-src data: https:; media-src data: blob: https:; connect-src https: wss:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
 
-export function buildPreviewDocument({ html = '', css = '', javascript = '', maxLength = 100_000 } = {}) {
+export function buildPreviewDocument({ html = '', css = '', javascript = '', maxLength = 100_000, allowNetwork = false } = {}) {
   const limit = Number.isFinite(Number(maxLength)) ? Math.max(0, Number(maxLength)) : 100_000;
   const markup = String(html).slice(0, limit);
   const stylesheet = String(css).slice(0, limit);
   const scriptText = String(javascript).slice(0, limit);
   const parsed = new DOMParser().parseFromString(markup, 'text/html');
-  parsed.querySelectorAll('base, script[src], link[rel~="stylesheet" i], meta[http-equiv="Content-Security-Policy" i], meta[http-equiv="refresh" i]').forEach((node) => node.remove());
+  parsed.querySelectorAll('base, script[src], link[rel~="stylesheet" i], meta[http-equiv="Content-Security-Policy" i], meta[http-equiv="refresh" i]').forEach((node) => {
+    const remote = node.matches('script[src]') ? node.getAttribute('src')
+      : node.matches('link[rel~="stylesheet" i]') ? node.getAttribute('href') : '';
+    if (allowNetwork === true && /^https:\/\//i.test(remote || '')) return;
+    node.remove();
+  });
 
   const policy = document.createElement('meta');
   policy.httpEquiv = 'Content-Security-Policy';
-  policy.content = PREVIEW_CSP;
+  policy.content = allowNetwork === true ? EXPERIMENTAL_PREVIEW_CSP : PREVIEW_CSP;
   parsed.head.prepend(policy);
 
   const style = document.createElement('style');

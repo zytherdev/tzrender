@@ -91,6 +91,29 @@ describe('createSqlRuntime', () => {
     expect(statuses.at(-1)[0]).toBe('ready');
   });
 
+  it('expands project-local .read scripts across folders and rejects unsafe or cyclic includes', async () => {
+    const runtime = makeRuntime();
+    const files = [
+      { name: 'queries/main.sql', content: '.read ../schema/setup.sql\nselect 7 as answer;' },
+      { name: 'schema/setup.sql', content: "select 'loaded locally' as status;" }
+    ];
+    const result = await runtime.run('queries/main.sql', files[0].content, { files });
+    expect(result.queryCount).toBe(2);
+    expect(result.statements[0].rows[0].status).toBe('loaded locally');
+    await expect(runtime.run('queries/escape.sql', '.read ../../outside.sql', { files }))
+      .rejects.toThrow('not found or unsafe');
+    const cycle = [{ name: 'a.sql', content: '.read b.sql' }, { name: 'b.sql', content: '.read a.sql' }];
+    await expect(runtime.run('a.sql', cycle[0].content, { files: cycle })).rejects.toThrow('cycle detected');
+  });
+
+  it('discards the in-memory database after an experimental session', async () => {
+    const runtime = makeRuntime();
+    await runtime.run('temp.sql', 'select 1', { mode: 'experimental' });
+    expect(databases[0].closed).toBe(true);
+    await runtime.run('safe.sql', 'select 2');
+    expect(databases).toHaveLength(2);
+  });
+
   it('reports SQLite errors through stderr and rejects the run', async () => {
     const runtime = makeRuntime();
     await expect(runtime.run('broken.sql', 'select error')).rejects.toThrow('SQL failed: near "error": syntax error');
@@ -127,6 +150,9 @@ describe('createSqlRuntime', () => {
     expect(runtime.stop()).toBe(true);
     await expect(pending).rejects.toThrow('SQL run stopped.');
     resolveInit({ oo1: { DB: MockDB } });
+    await Promise.resolve();
+    await Promise.resolve();
     expect(runtime.running).toBe(false);
+    expect(databases).toHaveLength(0);
   });
 });

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' https: ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
   <link rel="canonical" href="https://tzrender.zyther.dev/editor.html">
   <meta property="og:type" content="website">
@@ -67,6 +67,13 @@
       <select id="tabSize" class="toolbar-select" aria-label="Indent size"><option value="2" selected>2 spaces</option><option value="4">4 spaces</option><option value="8">8 spaces</option></select>
     </div>
     <div class="tool-group tool-toggles">
+      <label for="executionMode">Run mode</label>
+      <select id="executionMode" class="toolbar-select" aria-label="Project execution security mode" title="Safe mode is the default. Experimental mode allows network access and temporary dependency installation after confirmation on every run.">
+        <option value="safe">Safe · offline</option>
+        <option value="experimental">Experimental · network</option>
+      </select>
+      <button class="tool-button" id="projectPackages" type="button" title="Configure package names for this project">Packages</button>
+      <span class="execution-warning" id="executionWarning" role="status" hidden>EXPERIMENTAL · confirm each run</span>
       <label class="tool-check"><input id="minimapToggle" type="checkbox"><span>Minimap</span></label>
       <label class="tool-check"><input id="wordWrapToggle" type="checkbox" checked><span>Wrap</span></label>
       <button class="tool-button" id="findCode" type="button" title="Find or replace (Ctrl/Cmd+F)">Find</button>
@@ -154,7 +161,7 @@
         <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>
         <div class="program-input-box"><label for="programInput"><strong>Program input</strong><span>Lines are supplied to stdin on the next Python, PHP or Java run.</span></label><textarea id="programInput" rows="2" spellcheck="false" placeholder="Optional stdin, one line per input() / Scanner / fgets call"></textarea></div>
         <form class="terminal-form" id="terminalForm" autocomplete="off"><label for="terminalInput" id="terminalPrompt">project $</label><input id="terminalInput" name="command" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Enter a local project command" placeholder="help"><button class="terminal-run" type="submit">Run</button></form>
-        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.</p>
+        <p class="terminal-disclosure" id="terminalDisclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.</p>
       </div>
       <div class="output-body console-output" id="consolePanel" data-output-panel="console" role="log" aria-live="polite" aria-relevant="additions text" hidden><div class="console-placeholder">Console output from the sandboxed website preview appears here.</div></div>
       <div class="output-body problems-output" id="problemsPanel" data-output-panel="problems" role="log" aria-live="polite" hidden><div class="console-placeholder">No editor problems to show.</div></div>

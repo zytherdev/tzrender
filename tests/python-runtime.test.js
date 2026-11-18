@@ -41,11 +41,62 @@ describe('createPythonRuntime stdin contract', () => {
     const worker = workers[0];
 
     expect(worker.messages).toEqual([
-      { type: 'run', runId: 1, source: 'name = input()\nprint(name)', input: 'Ada\n' }
+      { type: 'run', runId: 1, source: 'name = input()\nprint(name)', input: 'Ada\n', mode: 'safe', name: 'main.py', files: [], packages: [] }
     ]);
     worker.emit({ type: 'started', runId: 1 });
     worker.emit({ type: 'complete', runId: 1 });
     return expect(promise).resolves.toBeUndefined();
+  });
+
+  it('forwards a project snapshot and defaults to safe mode without packages', async () => {
+    const runtime = createPythonRuntime();
+    const promise = runtime.run('import helper; print(helper.VALUE)', {
+      files: [{ name: 'helper.py', content: 'VALUE = 7' }]
+    });
+    expect(workers[0].messages[0]).toMatchObject({
+      type: 'run', mode: 'safe', packages: [],
+      files: [{ name: 'helper.py', content: 'VALUE = 7' }]
+    });
+    workers[0].emit({ type: 'complete', runId: 1 });
+    await expect(promise).resolves.toBeUndefined();
+  });
+
+  it('validates project file paths and package specifications before creating a worker', async () => {
+    const runtime = createPythonRuntime();
+    await expect(runtime.run('print(1)', { files: [{ name: '../escape.py', content: '' }] })).rejects.toThrow('Invalid Python project file name');
+    await expect(runtime.run('print(1)', { mode: 'experimental', packages: ['name; import os'] })).rejects.toThrow('Invalid pip package specification');
+    await expect(runtime.run('print(1)', { packages: ['requests'] })).rejects.toThrow('only in experimental mode');
+    expect(workers).toHaveLength(0);
+  });
+
+  it('restarts the worker after an experimental run', async () => {
+    const runtime = createPythonRuntime();
+    const first = runtime.run('print(1)', { mode: 'experimental', packages: ['requests>=2.0'] });
+    const oldWorker = workers[0];
+    expect(oldWorker.messages[0]).toMatchObject({ mode: 'experimental', packages: ['requests>=2.0'] });
+    oldWorker.emit({ type: 'complete', runId: 1 });
+    await expect(first).resolves.toBeUndefined();
+    expect(oldWorker.terminated).toBe(true);
+
+    const second = runtime.run('print(2)');
+    expect(workers).toHaveLength(2);
+    expect(workers[1].messages[0].mode).toBe('safe');
+    workers[1].emit({ type: 'complete', runId: 2 });
+    await expect(second).resolves.toBeUndefined();
+  });
+
+  it('recreates an offline worker before an approved experimental network session', async () => {
+    const runtime = createPythonRuntime();
+    const safeRun = runtime.run('print(1)');
+    const safeWorker = workers[0];
+    safeWorker.emit({ type: 'complete', runId: 1 });
+    await expect(safeRun).resolves.toBeUndefined();
+
+    const experimentalRun = runtime.run('print(2)', { mode: 'experimental' });
+    expect(safeWorker.terminated).toBe(true);
+    expect(workers).toHaveLength(2);
+    workers[1].emit({ type: 'complete', runId: 2 });
+    await expect(experimentalRun).resolves.toBeUndefined();
   });
 
   it('queues input before a run and routes submitted input to the active run', async () => {

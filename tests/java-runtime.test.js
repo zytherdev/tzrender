@@ -60,6 +60,21 @@ describe('Java runtime adapter', () => {
     expect(engine.run).toHaveBeenCalledWith('class App {}', { input: '', mainClass: 'App' });
   });
 
+  it('combines explicitly imported local Java sources when they share the main source package', async () => {
+    const runtime = makeRuntime();
+    const main = 'package demo;\nimport demo.Helper;\npublic class Main { public static void main(String[] args) { System.out.println(Helper.message()); } }';
+    const helper = 'package demo;\npublic class Helper { public static String message() { return "local"; } }';
+    await runtime.run('src/Main.java', main, { files: [
+      { name: 'src/Main.java', content: main }, { name: 'src/Helper.java', content: helper }
+    ] });
+    const compiled = engine.run.mock.calls[0][0];
+    expect(compiled.match(/package demo;/g)).toHaveLength(1);
+    expect(compiled).not.toContain('import demo.Helper;');
+    expect(compiled).toContain('public class Main');
+    expect(compiled).toContain('class Helper');
+    expect(compiled).not.toContain('public class Helper');
+  });
+
   it.each(['../Main.java', '/Main.java', 'src//Main.java', 'src/not-valid.java', ''])
     ('rejects invalid Java names: %s', async (name) => {
       const runtime = makeRuntime();

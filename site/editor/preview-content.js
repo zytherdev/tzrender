@@ -71,14 +71,16 @@ function isClassicScript(script) {
   return CLASSIC_SCRIPT_TYPES.has(label.trim().toLowerCase());
 }
 
-// Only project-relative URLs are accepted. Decode segments before checking for
-// traversal, separators and schemes; neither a URL base nor the network is used.
+// Only local project URLs are accepted. A leading single slash anchors to the
+// project root; other references resolve from the HTML file's directory.
+// Decode segments before checking traversal, separators and schemes.
 function resolveProjectReference(reference, pagePath) {
   if (typeof reference !== 'string') return null;
   const raw = reference.trim().split(/[?#]/, 1)[0];
-  if (!raw || raw.startsWith('/') || /[\\\x00-\x1f\x7f]/.test(raw)) return null;
-  const result = directoryOf(pagePath) ? directoryOf(pagePath).split('/') : [];
-  const parts = raw.split('/');
+  if (!raw || raw.startsWith('//') || /[\\\x00-\x1f\x7f]/.test(raw)) return null;
+  const rootAnchored = raw.startsWith('/');
+  const result = !rootAnchored && directoryOf(pagePath) ? directoryOf(pagePath).split('/') : [];
+  const parts = (rootAnchored ? raw.slice(1) : raw).split('/');
   for (let index = 0; index < parts.length; index += 1) {
     let part;
     try {
@@ -98,7 +100,7 @@ function resolveProjectReference(reference, pagePath) {
   return result.length ? result.join('/') : null;
 }
 
-function websitePreview(htmlFile, files, compiledTypeScript) {
+function websitePreview(htmlFile, files, compiledTypeScript, executionMode = 'safe', packages = {}) {
   if (!isProjectPath(htmlFile.name)) throw new Error('The HTML file has an unsafe project path.');
   const html = String(htmlFile.content);
   if (html.length > MAX_PROJECT_CHARS) throw new Error('The HTML file is too large to preview.');
@@ -119,6 +121,23 @@ function websitePreview(htmlFile, files, compiledTypeScript) {
   });
 
   const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const experimental = executionMode === 'experimental';
+  if (experimental) {
+    const imports = {};
+    const packageNames = [...new Set([...(packages.javascript || []), ...(packages.typescript || [])])]
+      .filter((name) => typeof name === 'string' && /^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]{0,99}$/i.test(name));
+    for (const name of packageNames) {
+      const url = `https://esm.sh/${name}`;
+      imports[name] = url;
+      imports[`${name}/`] = `${url}/`;
+    }
+    if (Object.keys(imports).length) {
+      const importMap = parsed.createElement('script');
+      importMap.type = 'importmap';
+      importMap.textContent = JSON.stringify({ imports });
+      parsed.head.prepend(importMap);
+    }
+  }
   const stylesheets = [...parsed.querySelectorAll('link[rel~="stylesheet" i]')];
   const externalScripts = [...parsed.querySelectorAll('script[src]')];
   let expandedLength = html.length;
@@ -143,6 +162,8 @@ function websitePreview(htmlFile, files, compiledTypeScript) {
       }
       style.textContent = safeInlineText(file.content, /<\/style/gi);
       link.replaceWith(style);
+    } else if (experimental && !path && /^https:\/\//i.test(link.getAttribute('href') || '')) {
+      // Keep explicitly requested HTTPS stylesheets only after per-run approval.
     } else {
       link.remove();
     }
@@ -154,6 +175,8 @@ function websitePreview(htmlFile, files, compiledTypeScript) {
     const code = extension === 'ts' ? compiledByPath.get(file.name)
       : file && ['js', 'mjs'].includes(extension) ? file.content : undefined;
     if (typeof code !== 'string') {
+      const remoteUrl = source.getAttribute('src') || '';
+      if (experimental && !file && /^https:\/\//i.test(remoteUrl)) continue;
       source.remove();
       continue;
     }
@@ -207,10 +230,10 @@ function websitePreview(htmlFile, files, compiledTypeScript) {
     ].join('\n\n') : '';
   const markup = `<!doctype html>\n${parsed.documentElement.outerHTML}`;
   if (markup.length > MAX_PROJECT_CHARS) throw new Error('The expanded HTML is too large to preview.');
-  return buildPreviewDocument({ html: markup, css, javascript, maxLength: MAX_PROJECT_CHARS });
+  return buildPreviewDocument({ html: markup, css, javascript, maxLength: MAX_PROJECT_CHARS, allowNetwork: experimental });
 }
 
-export function buildProjectPreview({ activeFile, files, compiledTypeScript = [] } = {}) {
+export function buildProjectPreview({ activeFile, files, compiledTypeScript = [], executionMode = 'safe', packages = {} } = {}) {
   if (!activeFile || !Array.isArray(files)) throw new Error('Select a project file to preview.');
   const extension = activeFile.name.split('.').pop().toLowerCase();
   if (extension === 'py') return { mode: 'python', srcdoc: '', path: activeFile.name };
@@ -231,12 +254,15 @@ export function buildProjectPreview({ activeFile, files, compiledTypeScript = []
   return {
     mode: 'website',
     path: htmlFile.name,
-    srcdoc: websitePreview(htmlFile, files, Array.isArray(compiledTypeScript) ? compiledTypeScript : [])
+    srcdoc: websitePreview(htmlFile, files, Array.isArray(compiledTypeScript) ? compiledTypeScript : [], executionMode, packages)
   };
 }
 
-export function buildPythonInfoPreview(filename) {
-  return documentPage(filename, `<h1>Python runs in the Terminal</h1><p>Select <code>${escapeHtml(filename)}</code>, press <strong>Run Python</strong>, or enter <code>python ${escapeHtml(filename)}</code> in the project terminal.</p><p>The code executes in a separate local browser worker. Network access and package installation are disabled.</p>`);
+export function buildPythonInfoPreview(filename, executionMode = 'safe') {
+  const modeNotice = executionMode === 'experimental'
+    ? 'After per-run confirmation, Python may contact external services and install the configured packages in a disposable worker that is destroyed when execution ends.'
+    : 'Network access and package installation are disabled. Project files are mounted locally for imports.';
+  return documentPage(filename, `<h1>Python runs in the Terminal</h1><p>Select <code>${escapeHtml(filename)}</code>, press <strong>Run Python</strong>, or enter <code>python ${escapeHtml(filename)}</code> in the project terminal.</p><p>The code executes in a separate local browser worker. ${escapeHtml(modeNotice)}</p>`);
 }
 
 export function buildLanguageInfoPreview(filename, language) {

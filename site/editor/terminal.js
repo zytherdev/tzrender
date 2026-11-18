@@ -14,9 +14,20 @@ const HELP_TEXT = `tzrender project terminal — local commands only
   clear             Clear terminal output
   stop              Stop the active language runtime
 
-This is not an operating-system shell. Git, npm/pip installs, pipes, redirection,
-network commands and arbitrary host commands are not available. PHP and Java run
-inside browser WebAssembly runtimes, not on the host operating system.`;
+Imports stay inside this project: Python imports .py files from project folders;
+PHP supports require/include; Lua supports require('path.module') for .lua files;
+HTML links/scripts resolve relative or /root-anchored CSS/JS project files; SQL
+supports .read <file.sql>. Java can combine explicitly referenced sources in the
+same package, but its WASM compiler has no general multi-package classpath.
+
+Safe mode is the default and offline. Experimental mode asks on every run. Python
+can install configured pip packages in a disposable worker; JavaScript ESM packages
+resolve via esm.sh. TypeScript import/export still requires a project bundler. Other
+runtimes do not gain network/package installation. Website preview network activity
+ends when stopped or replaced.
+
+This is not an operating-system shell. Git, arbitrary host commands, host files,
+network commands and shell operators are not available.`;
 
 const SHELL_OPERATORS = /[;&|<>`$\\]/;
 const SIMPLE_TOKENS = /"([^"\\]|\\.)*"|'[^']*'|[^\s]+/g;

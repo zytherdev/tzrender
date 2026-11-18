@@ -105,7 +105,7 @@ describe('project persistence and old versions', () => {
     const loaded = loadSavedProject(storage({
       [STORAGE_KEY]: JSON.stringify(draft), [LEGACY_STORAGE_KEY]: JSON.stringify(legacy)
     }));
-    expect(loaded).toEqual({ projectName: draft.projectName, starter: 'blank', activeFile: 'aux.js', files, folders: [] });
+    expect(loaded).toEqual({ projectName: draft.projectName, starter: 'blank', executionMode: 'safe', packages: {}, activeFile: 'aux.js', files, folders: [] });
     expect(loadSavedProject(storage({ [STORAGE_KEY]: serializeProject(loaded) }))).toEqual(loaded);
   });
 
@@ -187,5 +187,18 @@ describe('project persistence and old versions', () => {
     } finally {
       delete STARTERS.nestedTest;
     }
+  });
+
+  it('round-trips safe/experimental mode and bounded package names with a safe legacy default', () => {
+    const project = { projectName: 'Experimental', starter: 'blank', activeFile: 'main.py',
+      executionMode: 'experimental', packages: { python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'], java: ['bad name'] },
+      files: [file('main.py', 'print(1)')] };
+    const serialized = JSON.parse(serializeProject(project));
+    expect(serialized.executionMode).toBe('experimental');
+    expect(serialized.packages).toEqual({ python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'] });
+    expect(normalizeProject(serialized)).toMatchObject({ executionMode: 'experimental', packages: serialized.packages });
+    expect(normalizeProject({ files: [file('main.py')] })).toMatchObject({ executionMode: 'safe', packages: {} });
+    expect(normalizeProject({ ...serialized, executionMode: 'unsafe', packages: { python: ['-e evil'], unknown: ['x'] } }))
+      .toMatchObject({ executionMode: 'safe', packages: {} });
   });
 });

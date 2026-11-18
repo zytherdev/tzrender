@@ -28,6 +28,7 @@ import {
   MAX_PROJECT_CHARS,
   MAX_PROJECT_FILES,
   MAX_PROJECT_FOLDERS,
+  normalizeProjectPackages,
   normalizeProject,
   serializeProject,
   STORAGE_KEY,
@@ -70,6 +71,7 @@ let markerTimer = 0;
 let draftChanged = false;
 let consoleCount = 0;
 let pythonRunSequence = 0;
+let experimentalPreviewActive = false;
 let terminalHistory = [];
 let historyCursor = 0;
 let resizeState = null;
@@ -187,6 +189,8 @@ function saveDraftNow() {
     const serialized = serializeProject({
       projectName: $('projectName').value,
       starter: project.starter,
+      executionMode: project.executionMode,
+      packages: project.packages,
       activeFile: activeFileName,
       folders: project.folders,
       files: getFiles()
@@ -215,6 +219,82 @@ function updateProjectName() {
   $('treeProjectName').textContent = name.toLocaleUpperCase().slice(0, 35);
   $('terminalPrompt').textContent = `${name.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 24) || 'project'} $`;
   document.title = `${name} — tzrender Studio`;
+}
+
+function updateExecutionModeChrome() {
+  const mode = project.executionMode === 'experimental' ? 'experimental' : 'safe';
+  $('executionMode').value = mode;
+  $('executionWarning').hidden = mode !== 'experimental';
+  $('executionWarning').textContent = 'EXPERIMENTAL · confirm each run';
+  $('executionWarning').title = 'Network/package support varies by runtime. HTTPS requests may send project data to external services until the preview session is stopped or replaced.';
+  $('terminalDisclosure').textContent = mode === 'experimental'
+    ? 'Not an OS shell. Experimental access is available only for supported runtimes after a fresh confirmation on every run. Python packages are installed in a disposable worker; JavaScript/TypeScript ESM packages resolve through esm.sh. Other runtimes remain offline and may reject packages. Project code is untrusted.'
+    : 'Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.';
+  document.documentElement.dataset.executionMode = mode;
+}
+
+function packageLanguageForFile(name) {
+  const extension = String(name).split('.').pop().toLowerCase();
+  if (['js', 'mjs', 'cjs', 'jsx'].includes(extension)) return 'javascript';
+  if (['ts', 'tsx'].includes(extension)) return 'typescript';
+  if (extension === 'py') return 'python';
+  if (extension === 'lua') return 'lua';
+  if (extension === 'php') return 'php';
+  if (extension === 'java') return 'java';
+  return null;
+}
+
+function configureProjectPackages() {
+  const language = packageLanguageForFile(activeFileName);
+  if (!language) {
+    showToast('Select a runnable source file before configuring packages.');
+    return;
+  }
+  if (language === 'typescript') {
+    showToast('The current TypeScript compiler handles one file and does not support import/export or package imports. Configure ESM packages from a JavaScript module instead.');
+    return;
+  }
+  if (!['python', 'javascript', 'typescript'].includes(language)) {
+    showToast(`${language.toUpperCase()} packages cannot currently be installed by this browser runtime. Local project files remain available where the language runtime supports imports.`);
+    return;
+  }
+  const current = project.packages?.[language] || [];
+  const description = language === 'python'
+    ? 'Python packages for this project (pip names, comma-separated). They are installed with micropip only in experimental mode and fetched again for each confirmed run.'
+    : `${language} ESM package names (comma-separated). Experimental preview resolves imports from esm.sh after each confirmed run.`;
+  const value = window.prompt(description, current.join(', '));
+  if (value === null) return;
+  const names = value.split(',').map((name) => name.trim()).filter(Boolean);
+  const packages = normalizeProjectPackages({ python: names });
+  if (names.length !== (packages.python || []).length) {
+    showToast('Use up to 32 valid pip package names (letters, numbers, dots, underscores, hyphens; optional ==version).');
+    return;
+  }
+  project.packages = { ...project.packages, ...packages };
+  if (!packages[language]) delete project.packages[language];
+  draftChanged = true;
+  $('dirtyIndicator').hidden = false;
+  scheduleSave();
+  showToast(packages[language]?.length ? `Saved ${packages[language].length} ${language} package${packages[language].length === 1 ? '' : 's'} for this project.` : 'Project package list cleared.');
+}
+
+function confirmExperimentalRun(name, language) {
+  if (project.executionMode !== 'experimental') return true;
+  const packageList = project.packages?.[language] || [];
+  const extension = String(name).split('.').pop().toLowerCase();
+  const networkAvailable = ['html', 'htm', 'css', 'js', 'mjs', 'ts', 'tsx', 'jsx'].includes(extension) || language === 'python';
+  const packageAvailable = ['python', 'javascript'].includes(language);
+  const limits = [];
+  if (!networkAvailable) limits.push('this runtime still has no outbound-network bridge');
+  if (packageList.length && !packageAvailable) limits.push('configured package installation is not supported for this runtime');
+  if (language === 'sql') limits.push('SQL remains confined to an in-memory SQLite database');
+  return window.confirm([
+    `Run ${name} in EXPERIMENTAL mode?`,
+    networkAvailable ? 'The code and downloaded dependencies may send project data to any external HTTPS service. In a website preview, network activity can continue until you press Stop or replace the preview.' : 'Network access is not available to this runtime; it remains offline even in experimental mode.',
+    packageAvailable && packageList.length ? `Packages to fetch for this run: ${packageList.join(', ')}.` : '',
+    limits.length ? `Limitations: ${limits.join('; ')}.` : '',
+    'Project code and dependencies are untrusted. Permission applies to this run only; experimental worker/runtime state is discarded afterward.'
+  ].filter(Boolean).join('\n\n'));
 }
 
 function safeFileUri(name) {
@@ -303,6 +383,7 @@ function setActiveFile(name) {
     editor?.focus();
     return;
   }
+  if (experimentalPreviewActive) stopExperimentalPreview();
   if (editor) {
     viewStates.set(activeFileName, editor.saveViewState());
     activeFileName = name;
@@ -478,11 +559,23 @@ function applyTypeScriptDiagnostics(fileName, diagnostics = []) {
   scheduleProblems();
 }
 
-function setPreviewDocument(srcdoc, path) {
+function setPreviewDocument(srcdoc, path, { experimental = false } = {}) {
   $('previewUrl').textContent = `/${path}`;
   $('previewEmpty').hidden = true;
   frame.dataset.run = String(Number(frame.dataset.run || 0) + 1);
   frame.srcdoc = srcdoc;
+  experimentalPreviewActive = experimental;
+  $('stopPython').disabled = !experimental;
+}
+
+function stopExperimentalPreview() {
+  if (!experimentalPreviewActive) return false;
+  experimentalPreviewActive = false;
+  frame.srcdoc = '';
+  $('previewEmpty').hidden = false;
+  $('stopPython').disabled = true;
+  setPreviewStatus('Experimental preview session stopped; its network activity has ended.', 'ready');
+  return true;
 }
 
 function previewFailure(message) {
@@ -536,13 +629,17 @@ const pythonRuntime = createPythonRuntime({
 });
 
 async function runPythonFile(name, source) {
+  if (!confirmExperimentalRun(name, 'python')) return;
   const runId = ++pythonRunSequence;
   const path = isSafeFileName(name) ? name : 'main.py';
   setOutputTab('terminal');
   appendTerminalLine(`$ python ${path}`, 'command');
   setPreviewStatus(`Running ${path} in a local worker…`, 'running');
   try {
-    await pythonRuntime.run(source, { input: $('programInput')?.value || '' });
+    await pythonRuntime.run(source, {
+      input: $('programInput')?.value || '', name, files: getFiles(),
+      mode: project.executionMode, packages: project.packages?.python || []
+    });
     if (runId === pythonRunSequence) {
       appendTerminalLine('Python finished.', 'success');
       setPreviewStatus('Python finished in the local worker');
@@ -557,12 +654,16 @@ async function runPythonFile(name, source) {
 }
 
 async function runLuaFile(name, source) {
+  if (!confirmExperimentalRun(name, 'lua')) return;
   const runId = ++pythonRunSequence;
   setOutputTab('terminal');
   appendTerminalLine(`$ lua ${name}`, 'command');
   setPreviewStatus('Loading the local Lua runtime…', 'running');
   try {
-    await luaRuntime.run(name, source, { input: $('programInput')?.value || '' });
+    await luaRuntime.run(name, source, {
+      input: $('programInput')?.value || '', files: getFiles(),
+      mode: project.executionMode, packages: project.packages?.lua || []
+    });
     if (runId === pythonRunSequence) setPreviewStatus('Lua finished in the local WebAssembly runtime');
   } catch (error) {
     if (runId === pythonRunSequence) {
@@ -588,12 +689,15 @@ function buildSqlResultPreview(result, name) {
   });
 }
 async function runSqlFile(name, source) {
+  if (!confirmExperimentalRun(name, 'sql')) return;
   const runId = ++pythonRunSequence;
   setOutputTab('terminal');
   appendTerminalLine(`$ sqlite3 ${name}`, 'command');
   setPreviewStatus('Loading the local SQLite runtime…', 'running');
   try {
-    const result = await sqlRuntime.run(name, source, { input: $('programInput')?.value || '' });
+    const result = await sqlRuntime.run(name, source, {
+      input: $('programInput')?.value || '', files: getFiles(), mode: project.executionMode
+    });
     if (runId === pythonRunSequence) {
       setPreviewDocument(buildSqlResultPreview(result, name), name);
       setPreviewStatus('SQLite results rendered in the sandboxed preview');
@@ -608,13 +712,17 @@ async function runSqlFile(name, source) {
   }
 }
 async function runCompiledLanguageFile(language, name, source) {
+  if (!confirmExperimentalRun(name, language)) return;
   const runId = ++pythonRunSequence;
   setOutputTab('terminal');
   appendTerminalLine(`$ ${language} ${name}`, 'command');
   setPreviewStatus(`Loading the local ${language.toUpperCase()} runtime…`, 'running');
   const runtime = language === 'php' ? phpRuntime : javaRuntime;
   try {
-    const result = await runtime.run(name, source, { input: $('programInput')?.value || '' });
+    const result = await runtime.run(name, source, {
+      input: $('programInput')?.value || '', files: getFiles(),
+      mode: project.executionMode, packages: project.packages?.[language] || []
+    });
     if (runId === pythonRunSequence) {
       if (language === 'php' && typeof result?.stdout === 'string') {
         setPreviewDocument(buildPreviewDocument({ html: result.stdout, maxLength: MAX_PROJECT_CHARS }), name);
@@ -685,7 +793,7 @@ async function runProject({ openPreview = false } = {}) {
   if (!activeFile) return;
   const extension = activeFile.name.split('.').pop().toLowerCase();
   if (extension === 'py') {
-    setPreviewDocument(buildPythonInfoPreview(activeFile.name), activeFile.name);
+    setPreviewDocument(buildPythonInfoPreview(activeFile.name, project.executionMode), activeFile.name);
     await runPythonFile(activeFile.name, activeFile.content);
     return;
   }
@@ -704,6 +812,8 @@ async function runProject({ openPreview = false } = {}) {
     await runCompiledLanguageFile(extension, activeFile.name, activeFile.content);
     return;
   }
+  if (['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension)
+    && !confirmExperimentalRun(activeFile.name, extension === 'ts' ? 'typescript' : 'javascript')) return;
   if (openPreview && getFileType(activeFile.name).runnable && window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('preview');
   setPreviewStatus('Preparing preview…', 'running');
   try {
@@ -720,8 +830,9 @@ async function runProject({ openPreview = false } = {}) {
       compiledTypeScript[index] = result.code;
     }
     if (runId !== previewRunSequence) return;
-    const preview = buildProjectPreview({ activeFile, files, compiledTypeScript });
-    setPreviewDocument(preview.srcdoc, preview.path);
+    const preview = buildProjectPreview({ activeFile, files, compiledTypeScript, executionMode: project.executionMode, packages: project.packages });
+    const webpageCode = ['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension);
+    setPreviewDocument(preview.srcdoc, preview.path, { experimental: webpageCode && project.executionMode === 'experimental' });
     setPreviewStatus(preview.mode === 'document' ? 'Document preview updated' : 'Preview is running', 'running');
     clearConsole('Console cleared. Messages from the next preview run appear here.');
   } catch (error) {
@@ -731,6 +842,7 @@ async function runProject({ openPreview = false } = {}) {
 
 function schedulePreview() {
   invalidatePreview();
+  if (experimentalPreviewActive) stopExperimentalPreview();
   if (!$('autoRun').checked) {
     setPreviewStatus('Changes not run yet', 'paused');
     return;
@@ -740,15 +852,22 @@ function schedulePreview() {
     setPreviewStatus(`${extension.toUpperCase()} is manual-run only`, 'paused');
     return;
   }
+  if (project.executionMode === 'experimental' && ['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension)) {
+    setPreviewStatus('Experimental code is manual-run only; each run requires permission.', 'paused');
+    return;
+  }
   setPreviewStatus('Updating preview…', 'running');
   previewTimer = window.setTimeout(() => runProject(), 550);
 }
 
 function setProject(nextProject, { save = true, run = true } = {}) {
+  if (experimentalPreviewActive) stopExperimentalPreview();
   const normalized = normalizeProject({
     format: 'tzrender-project',
     projectName: nextProject.projectName,
     starter: nextProject.starter,
+    executionMode: nextProject.executionMode,
+    packages: nextProject.packages,
     activeFile: nextProject.activeFile,
     folders: nextProject.folders,
     files: nextProject.files
@@ -764,6 +883,7 @@ function setProject(nextProject, { save = true, run = true } = {}) {
   activeFileName = normalized.activeFile;
   $('projectName').value = normalized.projectName;
   $('starterSelect').value = normalized.starter;
+  updateExecutionModeChrome();
   updateProjectName();
   for (const file of normalized.files) makeModel(file);
   if (editor) {
@@ -866,6 +986,8 @@ function exportProject() {
     const serialized = serializeProject({
       projectName: $('projectName').value,
       starter: project.starter,
+      executionMode: project.executionMode,
+      packages: project.packages,
       activeFile: activeFileName,
       folders: project.folders,
       files: getFiles()
@@ -946,6 +1068,7 @@ async function submitTerminal(event) {
       showPreview: () => setWorkspacePanel('preview'),
       clear: () => clearTerminal(''),
       stopRuntime: () => {
+        if (stopExperimentalPreview()) return true;
         pythonRunSequence += 1;
         const extension = activeFileName.split('.').pop().toLowerCase();
         if (extension === 'lua') return luaRuntime.stop();
@@ -1104,11 +1227,13 @@ function initEditor() {
   defineEditorTheme();
   const nextProject = normalizeProject({
     format: 'tzrender-project', projectName: project.projectName,
-    starter: project.starter, activeFile: project.activeFile, folders: project.folders, files: project.files
+    starter: project.starter, executionMode: project.executionMode, packages: project.packages,
+    activeFile: project.activeFile, folders: project.folders, files: project.files
   });
   project = nextProject;
   $('projectName').value = project.projectName;
   $('starterSelect').value = project.starter;
+  updateExecutionModeChrome();
   updateProjectName();
   for (const file of project.files) makeModel(file);
 
@@ -1137,7 +1262,8 @@ function initEditor() {
   updateActiveFileChrome();
   updateProblems();
   setSaveState(readDraft() ? 'Saved only on this device' : 'Ready');
-  runProject();
+  if (project.executionMode === 'experimental') setPreviewStatus('Experimental mode is manual-run only; press Run to review permission.');
+  else runProject();
 }
 
 function resizeEditorPanels(event) {
@@ -1278,6 +1404,23 @@ function initializeEventHandlers() {
     scheduleSave();
   });
   $('starterSelect').addEventListener('change', (event) => replaceWithStarter(event.target.value));
+  $('executionMode').addEventListener('change', (event) => {
+    if (project.executionMode === 'experimental' && event.target.value !== 'experimental') stopExperimentalPreview();
+    project.executionMode = event.target.value === 'experimental' ? 'experimental' : 'safe';
+    updateExecutionModeChrome();
+    draftChanged = true;
+    $('dirtyIndicator').hidden = false;
+    scheduleSave();
+    invalidatePreview();
+    if (project.executionMode === 'experimental') {
+      setPreviewStatus('Experimental mode is manual-run only; every run needs confirmation.', 'paused');
+      showToast('Experimental mode enabled for this project. Network-capable runs ask for permission every time.');
+    } else {
+      showToast('Safe offline mode enabled for this project.');
+      if ($('autoRun').checked) schedulePreview();
+    }
+  });
+  $('projectPackages').addEventListener('click', configureProjectPackages);
   $('resetProject').addEventListener('click', () => replaceWithStarter(project.starter));
   $('runProject').addEventListener('click', () => runProject({ openPreview: true }));
   $('reloadPreview').addEventListener('click', () => runProject({ openPreview: true }));
@@ -1315,9 +1458,14 @@ function initializeEventHandlers() {
   $('fullscreenCode').addEventListener('click', () => requestFullScreen($('codePane')));
   $('fullscreenPreview').addEventListener('click', () => requestFullScreen($('previewPane')));
   $('stopPython').addEventListener('click', () => {
+    if (stopExperimentalPreview()) {
+      appendTerminalLine('Experimental preview session stopped; its network activity has ended.', 'warning');
+      return;
+    }
     pythonRunSequence += 1;
     const extension = activeFileName.split('.').pop().toLowerCase();
-    const stopped = extension === 'php' ? phpRuntime.stop() : extension === 'java' ? javaRuntime.stop() : pythonRuntime.stop();
+    const stopped = extension === 'php' ? phpRuntime.stop() : extension === 'java' ? javaRuntime.stop()
+      : extension === 'lua' ? luaRuntime.stop() : extension === 'sql' ? sqlRuntime.stop() : pythonRuntime.stop();
     if (stopped) appendTerminalLine(`${extension.toUpperCase()} runtime stopped.`, 'warning');
   });
   $('clearOutput').addEventListener('click', () => {
@@ -1363,6 +1511,8 @@ function initializeEventHandlers() {
     pythonRuntime.dispose();
     luaRuntime.dispose();
     sqlRuntime.dispose();
+    phpRuntime.stop();
+    javaRuntime.stop();
     typeScriptRuntime.dispose();
   });
   window.addEventListener('resize', () => editor.layout());
@@ -1380,7 +1530,7 @@ $('terminalInput').addEventListener('focus', () => { if (window.matchMedia('(max
 $('terminalPrompt').addEventListener('click', () => $('terminalInput').focus());
 window.addEventListener('beforeunload', () => {
   if (draftChanged) {
-    try { window.localStorage.setItem(STORAGE_KEY, serializeProject({ projectName: $('projectName').value, starter: project.starter, activeFile: activeFileName, folders: project.folders, files: getFiles() })); }
+    try { window.localStorage.setItem(STORAGE_KEY, serializeProject({ projectName: $('projectName').value, starter: project.starter, executionMode: project.executionMode, packages: project.packages, activeFile: activeFileName, folders: project.folders, files: getFiles() })); }
     catch { /* Best-effort synchronous local draft save. */ }
   }
 });

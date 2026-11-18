@@ -91,13 +91,34 @@ describe('editor preview controller', () => {
     input.value = 'Ada\n42\n';
     app.setProject({ projectName: 'Test', starter: 'blank', files: [file('main.py', 'name = input()')], activeFile: 'main.py' }, { save: false, run: false });
     await app.runProject();
-    expect(app.languageRuntime.run).toHaveBeenCalledWith('name = input()', { input: 'Ada\n42\n' });
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('name = input()', {
+      input: 'Ada\n42\n', name: 'main.py', files: [file('main.py', 'name = input()')], mode: 'safe', packages: []
+    });
     app.setProject({ projectName: 'Test', starter: 'blank', files: [file('main.php', '<?php echo file_get_contents("php://input");')], activeFile: 'main.php' }, { save: false, run: false });
     await app.runProject();
-    expect(app.languageRuntime.run).toHaveBeenCalledWith('main.php', '<?php echo file_get_contents("php://input");', { input: 'Ada\n42\n' });
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('main.php', '<?php echo file_get_contents("php://input");', {
+      input: 'Ada\n42\n', files: [file('main.php', '<?php echo file_get_contents("php://input");')], mode: 'safe', packages: []
+    });
     app.setProject({ projectName: 'Test', starter: 'blank', files: [file('Main.java', 'class Main {}')], activeFile: 'Main.java' }, { save: false, run: false });
     await app.runProject();
-    expect(app.languageRuntime.run).toHaveBeenCalledWith('Main.java', 'class Main {}', { input: 'Ada\n42\n' });
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('Main.java', 'class Main {}', {
+      input: 'Ada\n42\n', files: [file('Main.java', 'class Main {}')], mode: 'safe', packages: []
+    });
+  });
+
+  it('requires a fresh experimental confirmation for every code run and records no approval', async () => {
+    app.setProject({ projectName: 'Test', starter: 'blank', executionMode: 'experimental',
+      files: [file('main.py', 'print(1)')], activeFile: 'main.py' }, { save: false, run: false });
+    window.confirm.mockReturnValueOnce(false).mockReturnValueOnce(true).mockReturnValueOnce(true);
+    await app.runProject();
+    expect(app.languageRuntime.run).not.toHaveBeenCalled();
+    await app.runProject();
+    expect(app.languageRuntime.run).toHaveBeenCalledTimes(1);
+    await app.runProject();
+    expect(app.languageRuntime.run).toHaveBeenCalledTimes(2);
+    expect(window.confirm).toHaveBeenCalledTimes(3);
+    expect(window.confirm.mock.calls[0][0]).toContain('EXPERIMENTAL');
+    expect(window.confirm.mock.calls[0][0]).toContain('Permission applies to this run only');
   });
 
   it('renders successful PHP stdout as a sandboxed web page preview', async () => {

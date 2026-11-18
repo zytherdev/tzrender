@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildProjectPreview } from '../site/editor/preview-content.js';
 import { STARTERS, MAX_PROJECT_CHARS } from '../site/editor/project.js';
-import { PREVIEW_CSP } from '../site/preview-document.js';
+import { PREVIEW_CSP, EXPERIMENTAL_PREVIEW_CSP } from '../site/preview-document.js';
 
 const file = (name, content) => ({ name, content });
 const page = (body, head = '') => `<!doctype html><html><head>${head}</head><body>${body}</body></html>`;
@@ -84,13 +84,29 @@ describe('project website previews', () => {
     }
   });
 
+  it('resolves root-anchored CSS and JavaScript assets from other project folders without network access', () => {
+    const html = file('pages/demo/index.html', page(
+      '<h1 id="title">Local</h1><script src="/js/app.js"></script>',
+      '<link rel="stylesheet" href="/css/site.css">'
+    ));
+    const result = preview(html, [html,
+      file('css/site.css', '#title { color: rgb(1, 2, 3); }'),
+      file('js/app.js', "window.LOCAL_IMPORT = document.getElementById('title').textContent")
+    ]);
+    const document = parse(result.srcdoc);
+    expect(document.querySelector('style').textContent).toContain('#title');
+    expect(result.srcdoc).toContain("window.LOCAL_IMPORT = document.getElementById('title').textContent");
+    expect(document.querySelectorAll('script[src], link[rel~="stylesheet" i]')).toHaveLength(0);
+    expect(document.querySelector('meta[http-equiv="Content-Security-Policy"]').content).toBe(PREVIEW_CSP);
+  });
+
   it('does not load absolute URLs, schemes, traversal, encoded separators, bad escapes or absent files', () => {
     const refs = [
-      'https://example.test/evil.js', '//example.test/evil.js', '/evil.js', 'javascript:evil.js', 'data:text/javascript,evil',
+      'https://example.test/evil.js', '//example.test/evil.js', 'javascript:evil.js', 'data:text/javascript,evil',
       '../../../evil.js', '%2e%2e/%2e%2e/%2e%2e/evil.js', '%2fevil.js', 'nested%2fevil.js',
       '..%5cevil.js', '\\evil.js', 'http%3a/evil.js', 'bad%zz.js', 'missing.js', ''
     ];
-    const links = ['https://example.test/a.css', '/evil.css', '../../../evil.css', '%2e%2e/%2e%2e/%2e%2e/evil.css', 'missing.css'];
+    const links = ['https://example.test/a.css', '../../../evil.css', '%2e%2e/%2e%2e/%2e%2e/evil.css', 'missing.css'];
     const html = file('pages/docs/index.html', page(
       refs.map((ref) => `<script src="${ref}"></script>`).join(''),
       links.map((ref) => `<link rel="stylesheet" href="${ref}">`).join('')
@@ -104,6 +120,28 @@ describe('project website previews', () => {
     expect(parsed.querySelectorAll('script[src], link[rel~="stylesheet" i]')).toHaveLength(0);
     expect(parsed.querySelectorAll('script')).toHaveLength(1); // bridge only
     expect(parsed.querySelector('meta[http-equiv="Content-Security-Policy"]').content).toBe(PREVIEW_CSP);
+  });
+
+  it('keeps HTTPS and configured ESM packages disabled by default, enabling only them experimentally', () => {
+    const html = file('index.html', page(
+      '<script type="module" src="https://cdn.example.test/app.js"></script><script src="http://insecure.example/app.js"></script><script type="module">import "@scope/pkg";</script>',
+      '<link rel="stylesheet" href="https://cdn.example.test/site.css">'
+    ));
+    const files = [html];
+    const safe = parse(preview(html, files).srcdoc);
+    expect(safe.querySelector('meta[http-equiv="Content-Security-Policy"]').content).toBe(PREVIEW_CSP);
+    expect(safe.querySelectorAll('script[src], link[rel~="stylesheet" i]')).toHaveLength(0);
+    expect(safe.querySelector('script[type="importmap"]')).toBeNull();
+
+    const experimental = buildProjectPreview({ activeFile: html, files, executionMode: 'experimental',
+      packages: { javascript: ['@scope/pkg'] } });
+    const document = parse(experimental.srcdoc);
+    expect(document.querySelector('meta[http-equiv="Content-Security-Policy"]').content).toBe(EXPERIMENTAL_PREVIEW_CSP);
+    expect(document.querySelector('script[src="https://cdn.example.test/app.js"]')).not.toBeNull();
+    expect(document.querySelector('link[href="https://cdn.example.test/site.css"]')).not.toBeNull();
+    expect(document.querySelector('script[src^="http://"]')).toBeNull();
+    expect(JSON.parse(document.querySelector('script[type="importmap"]').textContent).imports['@scope/pkg'])
+      .toBe('https://esm.sh/@scope/pkg');
   });
 
   it('allows parent traversal within the project but never resolves above its root', () => {
