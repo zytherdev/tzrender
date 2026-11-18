@@ -54,7 +54,11 @@ async function getRuntime(runId, mode) {
 }
 
 function validateRun(message, runId) {
-  if (!Number.isInteger(runId) || message.source.length > 100_000) throw new Error('The Python file is too large to run.');
+  if (!message || typeof message.source !== 'string' || !Number.isInteger(runId) || message.source.length > 100_000) throw new Error('The Python file is too large to run.');
+  const entryName = typeof message.name === 'string' && message.name ? message.name.replaceAll('\\', '/') : 'main.py';
+  if (entryName.startsWith('/') || entryName.split('/').some((part) => !part || part === '.' || part === '..')) {
+    throw new Error(`Invalid Python entry file name: ${entryName}`);
+  }
   if (message.input !== undefined && (typeof message.input !== 'string' || message.input.length > MAX_INPUT_CHARS)) throw new Error(`Python input is limited to ${MAX_INPUT_CHARS.toLocaleString()} characters.`);
   if (message.mode !== undefined && message.mode !== 'safe' && message.mode !== 'experimental') throw new Error("Python mode must be 'safe' or 'experimental'.");
   const files = message.files ?? [];
@@ -74,7 +78,7 @@ function validateRun(message, runId) {
     if (typeof spec !== 'string' || spec.length > MAX_PACKAGE_SPEC_CHARS || !/^[A-Za-z0-9][A-Za-z0-9._-]*(?:\s*(?:===|==|~=|!=|<=|>=|<|>)\s*[A-Za-z0-9.*+!_-]+)?$/.test(spec)) throw new Error('Invalid pip package specification. Use a package name with an optional version constraint.');
   }
   if ((message.mode ?? 'safe') !== 'experimental' && packages.length) throw new Error('Package installation is available only in experimental mode.');
-  return { mode: message.mode ?? 'safe', files, packages };
+  return { mode: message.mode ?? 'safe', name: entryName, files, packages };
 }
 
 async function prepareProject(runtime, files, entryName) {

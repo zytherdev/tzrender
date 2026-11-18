@@ -1,6 +1,7 @@
 import '@live-codes/java-wasm';
 
 const JAVA_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+const JAVA_QUALIFIED_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*$/;
 const JAVA_PATH = /^(?:[A-Za-z_$][A-Za-z0-9_$]*\/)*[A-Za-z_$][A-Za-z0-9_$]*(?:\.java)?$/;
 const MAX_JAVA_FILES = 100;
 const MAX_JAVA_PROJECT_CHARS = 500_000;
@@ -9,7 +10,7 @@ function javaBaseUrl() {
   return new URL('/java-wasm/', window.location.href).href;
 }
 
-function deriveMainClass(name) {
+function deriveMainClass(name, source = '') {
   const value = String(name ?? '').replaceAll('\\', '/');
   if (!JAVA_PATH.test(value)) {
     throw new Error('Java file names must be a simple class name or a relative path ending in a valid class name.');
@@ -18,17 +19,20 @@ function deriveMainClass(name) {
   if (!JAVA_IDENTIFIER.test(fileName)) {
     throw new Error(`Invalid Java main class name: ${fileName}.`);
   }
-  return fileName;
+  const packageName = String(source).replace(/\/\*[\s\S]*?\*\/|\/\/[^\r\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, (part) => part.replace(/[^\r\n]/g, ' '))
+    .match(/^\s*package\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;/m)?.[1];
+  return packageName ? `${packageName}.${fileName}` : fileName;
 }
 
-function resolveMainClass(name, options) {
-  const derived = deriveMainClass(name);
+function resolveMainClass(name, options, source) {
+  const derived = deriveMainClass(name, source);
   const requested = options?.mainClass;
   if (requested === undefined) return derived;
-  if (typeof requested !== 'string' || !JAVA_IDENTIFIER.test(requested)) {
+  if (typeof requested !== 'string' || !JAVA_QUALIFIED_IDENTIFIER.test(requested)) {
     throw new Error(`Invalid Java main class name: ${requested}.`);
   }
-  return requested;
+  const packageName = derived.includes('.') ? derived.slice(0, derived.lastIndexOf('.')) : '';
+  return packageName && JAVA_IDENTIFIER.test(requested) ? `${packageName}.${requested}` : requested;
 }
 
 function combineLocalJavaSources(entryName, source, files) {
@@ -138,11 +142,11 @@ export function createJavaRuntime({ onOutput = () => {}, onStatus = () => {} } =
 
   return {
     async run(name, source, options = {}) {
-      const mainClass = resolveMainClass(name, options);
       if (typeof source !== 'string') throw new TypeError('Java source must be a string.');
       if (options === null || typeof options !== 'object' || Array.isArray(options)) {
         throw new TypeError('Java run options must be an object.');
       }
+      const mainClass = resolveMainClass(name, options, source);
       if (options.input !== undefined && typeof options.input !== 'string') {
         throw new TypeError('Java run input must be a string.');
       }

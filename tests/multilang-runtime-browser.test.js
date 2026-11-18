@@ -16,30 +16,67 @@ const harness = `<!doctype html>
   import { createRubyRuntime } from '/site/editor/ruby-runtime.js';
   import { createRRuntime } from '/site/editor/r-runtime.js';
   import { createPerlRuntime } from '/site/editor/perl-runtime.js';
-  const output = { ruby: [], r: [], perl: [] };
+  import { createPythonRuntime } from '/site/editor/python-runtime.js';
+  import { createJavaRuntime } from '/site/editor/java-runtime.js';
+  import { createSqlRuntime } from '/site/editor/sql-runtime.js';
+  const only = new URLSearchParams(location.search).get('only');
+  const output = { ruby: [], r: [], perl: [], python: [], java: [], sql: null };
   const runtimes = [];
   const result = document.getElementById('result');
   try {
-    const ruby = createRubyRuntime({ onOutput: (stream, text) => output.ruby.push(stream + ':' + text) });
-    runtimes.push(ruby);
-    await ruby.run('main.rb', 'require_relative "lib/greetings"; puts Greetings.say("browser")', {
-      files: [{ name: 'lib/greetings.rb', content: 'module Greetings; def self.say(name); "Hello, #{name}!"; end; end' }]
-    });
+    if (!only || ['ruby', 'r', 'perl'].includes(only)) {
+      result.dataset.stage = 'ruby';
+      const ruby = createRubyRuntime({ onOutput: (stream, text) => output.ruby.push(stream + ':' + text) });
+      runtimes.push(ruby);
+      await ruby.run('main.rb', 'require_relative "lib/greetings"; puts Greetings.say("browser")', {
+        files: [{ name: 'lib/greetings.rb', content: 'module Greetings; def self.say(name); "Hello, #{name}!"; end; end' }]
+      });
 
-    const r = createRRuntime({ onOutput: (stream, text) => output.r.push(stream + ':' + text) });
-    runtimes.push(r);
-    await r.run('main.R', 'source("R/summary.R"); scores <- read.csv("data/scores.csv"); print(summarise_scores(scores$score))', {
-      files: [
-        { name: 'R/summary.R', content: 'summarise_scores <- function(values) c(count=length(values), mean=mean(values))' },
-        { name: 'data/scores.csv', content: 'student,score\\nAda,96\\nGrace,91\\n' }
-      ]
-    });
+      const r = createRRuntime({ onOutput: (stream, text) => output.r.push(stream + ':' + text) });
+      result.dataset.stage = 'r';
+      runtimes.push(r);
+      await r.run('main.R', 'source("R/summary.R"); scores <- read.csv("data/scores.csv"); print(summarise_scores(scores$score))', {
+        files: [
+          { name: 'R/summary.R', content: 'summarise_scores <- function(values) c(count=length(values), mean=mean(values))' },
+          { name: 'data/scores.csv', content: 'student,score\\nAda,96\\nGrace,91\\n' }
+        ]
+      });
 
-    const perl = createPerlRuntime({ onOutput: (stream, text) => output.perl.push(stream + ':' + text) });
-    runtimes.push(perl);
-    await perl.run('main.pl', 'use lib "/workspace/lib"; use Greetings; print Greetings::say("browser"), "\\n";', {
-      files: [{ name: 'lib/Greetings.pm', content: 'package Greetings; sub say { return "Hello, $_[0]!"; } 1;' }]
-    });
+      const perl = createPerlRuntime({ onOutput: (stream, text) => output.perl.push(stream + ':' + text) });
+      result.dataset.stage = 'perl';
+      runtimes.push(perl);
+      await perl.run('main.pl', 'use lib "/workspace/lib"; use Greetings; print Greetings::say("browser"), "\\n";', {
+        files: [{ name: 'lib/Greetings.pm', content: 'package Greetings; sub say { return "Hello, $_[0]!"; } 1;' }]
+      });
+    }
+    if (!only || only === 'python') {
+    result.dataset.stage = 'python';
+    const python = createPythonRuntime({ onOutput: (stream, text) => output.python.push(stream + ':' + text) });
+    runtimes.push(python);
+    const pythonSource = 'from datetime import date\\n\\nname = "web builder"\\nprint(f"Hello, {name}!")\\nprint(f"Today is {date.today():%A}.")';
+    await python.run(pythonSource, { name: 'main.py', files: [{ name: 'main.py', content: pythonSource }] });
+    const pythonProject = 'from lib.greetings import greet\\n\\nfor name in ("Ada", "Grace", "you"):\\n    print(greet(name))';
+    await python.run(pythonProject, { name: 'main.py', files: [
+      { name: 'main.py', content: pythonProject },
+      { name: 'lib/greetings.py', content: 'def greet(name: str) -> str:\\n    return f"Hello, {name}!"' }
+    ] });
+    }
+
+    if (!only || only === 'java') {
+    result.dataset.stage = 'java';
+    const java = createJavaRuntime({ onOutput: (stream, text) => output.java.push(stream + ':' + text) });
+    runtimes.push(java);
+    const javaMain = 'package demo;\\npublic class Main { public static void main(String[] args) { System.out.println(Greeting.say("browser")); } }';
+    const javaGreeting = 'package demo;\\nfinal class Greeting { static String say(String name) { return "Hello, " + name + "!"; } }';
+    await java.run('src/Main.java', javaMain, { files: [{ name: 'src/Main.java', content: javaMain }, { name: 'src/Greeting.java', content: javaGreeting }] });
+    }
+
+    if (!only || only === 'sql') {
+    result.dataset.stage = 'sql';
+    const sql = createSqlRuntime();
+    runtimes.push(sql);
+    output.sql = await sql.run('main.sql', "CREATE TABLE people(name TEXT); INSERT INTO people VALUES ('Ada'), ('Grace'); SELECT name FROM people ORDER BY name;");
+    }
     result.textContent = JSON.stringify(output);
     result.dataset.status = 'success';
   } catch (error) {
@@ -128,7 +165,10 @@ async function runBrowser(url) {
       status = response.result?.value || 'pending';
       if (status === 'pending') await delay(250);
     }
-    if (status === 'pending') throw new Error('Timed out waiting for the browser runtimes to finish.');
+    if (status === 'pending') {
+      const stage = await cdp.send('Runtime.evaluate', { expression: 'document.getElementById("result").dataset.stage', returnByValue: true });
+      throw new Error(`Timed out waiting for the browser runtime to finish at stage: ${stage.result?.value || 'unknown'}.`);
+    }
     const result = await cdp.send('Runtime.evaluate', {
       expression: 'document.getElementById("result").textContent',
       returnByValue: true
@@ -142,9 +182,9 @@ async function runBrowser(url) {
   }
 }
 
-describe('Ruby, R and Perl runtimes in a browser', () => {
+describe('local WASM runtimes in a browser', () => {
   // Run this high-memory WASM browser check separately from the other Chromium/Vite suites.
-  it.skipIf(!existsSync(chromium) || typeof WebSocket === 'undefined' || process.env.TZRENDER_RUN_MULTILANG_BROWSER !== '1')('runs local project imports with external network blocked', async () => {
+  it.skipIf(!existsSync(chromium) || typeof WebSocket === 'undefined' || process.env.TZRENDER_RUN_MULTILANG_BROWSER !== '1')('runs local project imports and queries with external network blocked', async () => {
     const server = await createViteServer({
       logLevel: 'error',
       server: { host: '127.0.0.1', port: 0 },
@@ -161,13 +201,18 @@ describe('Ruby, R and Perl runtimes in a browser', () => {
     try {
       await server.listen();
       const { port } = server.httpServer.address();
-      const result = await runBrowser(`http://127.0.0.1:${port}/__multilang_runtime_test`);
+      const only = process.env.TZRENDER_BROWSER_ONLY;
+      const result = await runBrowser(`http://127.0.0.1:${port}/__multilang_runtime_test${only ? `?only=${encodeURIComponent(only)}` : ''}`);
       expect(result.status, JSON.stringify(result.payload)).toBe('success');
-      expect(result.payload.ruby.join(' ')).toContain('Hello, browser!');
-      expect(result.payload.r.join(' ')).toContain('93.5');
-      expect(result.payload.perl.join(' ')).toContain('Hello, browser!');
+      if (!only || only === 'ruby') expect(result.payload.ruby.join(' ')).toContain('Hello, browser!');
+      if (!only || only === 'r') expect(result.payload.r.join(' ')).toContain('93.5');
+      if (!only || only === 'perl') expect(result.payload.perl.join(' ')).toContain('Hello, browser!');
+      if (!only || only === 'python') expect(result.payload.python.join(' ')).toContain('Hello, web builder!');
+      if (!only || only === 'python') expect(result.payload.python.join(' ')).toContain('Hello, Ada!');
+      if (!only || only === 'java') expect(result.payload.java.join(' ')).toContain('Hello, browser!');
+      if (!only || only === 'sql') expect(result.payload.sql.statements.at(-1)).toMatchObject({ columns: ['name'], rows: [{ name: 'Ada' }, { name: 'Grace' }] });
     } finally {
       await server.close();
     }
-  }, 135_000);
+  }, 300_000);
 });

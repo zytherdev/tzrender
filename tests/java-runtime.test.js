@@ -29,15 +29,15 @@ describe('Java runtime adapter', () => {
     });
   }
 
-  it('passes preloaded stdin and derives mainClass from a simple Java path', async () => {
+  it('passes preloaded stdin and derives a package-qualified mainClass from the source file', async () => {
     const runtime = makeRuntime();
 
-    const result = await runtime.run('examples/Calculator.java', 'class Calculator {}', { input: '41\n' });
+    const result = await runtime.run('examples/Calculator.java', 'package demo.calc;\nclass Calculator {}', { input: '41\n' });
 
     expect(createRuntime).toHaveBeenCalledOnce();
-    expect(engine.run).toHaveBeenCalledWith('class Calculator {}', {
+    expect(engine.run).toHaveBeenCalledWith('package demo.calc;\nclass Calculator {}', {
       input: '41\n',
-      mainClass: 'Calculator'
+      mainClass: 'demo.calc.Calculator'
     });
     expect(result).toMatchObject({ stdout: 'answer\n', stderr: '', exitCode: 0 });
     expect(output).toEqual([['stdout', 'answer\n']]);
@@ -58,6 +58,14 @@ describe('Java runtime adapter', () => {
     await runtime.run('src/Launcher.java', 'class App {}', { mainClass: 'App', input: '' });
 
     expect(engine.run).toHaveBeenCalledWith('class App {}', { input: '', mainClass: 'App' });
+  });
+
+  it('accepts a qualified explicit mainClass and qualifies simple overrides from the source package', async () => {
+    const runtime = makeRuntime();
+    await runtime.run('src/Main.java', 'package demo; class Main {}', { mainClass: 'Launcher' });
+    expect(engine.run).toHaveBeenLastCalledWith('package demo; class Main {}', { input: '', mainClass: 'demo.Launcher' });
+    await runtime.run('src/Main.java', 'package demo; class Main {}', { mainClass: 'other.Launcher' });
+    expect(engine.run).toHaveBeenLastCalledWith('package demo; class Main {}', { input: '', mainClass: 'other.Launcher' });
   });
 
   it('combines explicitly imported local Java sources when they share the main source package', async () => {
