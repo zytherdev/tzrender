@@ -653,6 +653,7 @@ The repository's learning website is separate from the npm API:
   - **Import and backup:** Import text files or a folder into the project; binary files are not supported. Folder import cannot include empty folders because the browser only supplies files. Export a JSON backup and import it to restore a project; importing a backup replaces the current browser draft.
   - **Storage:** The project is virtual and saved in the browser. Editing it does not modify the original files on your computer or synchronize with GitHub. Export a JSON backup before clearing browser site data, which can erase the draft.
   - **Appearance:** Choose a dark, light or high-contrast theme and adjust the code font size and interface size.
+  - **Program input:** Use the **Program input** box before running Python, PHP or Java. Python supports `input()` and `sys.stdin` with queued lines; Java receives the buffer through `System.in` for `Scanner`/`BufferedReader`; PHP receives it through `php://input` and `/workspace/stdin.txt`. Java's browser runtime accepts preloaded stdin per run rather than a live interactive channel, and PHP's installed WASM API does not expose a CLI stdin stream.
 - [Front-end tools](https://github.com/zytherdev/tzrender/blob/main/tools.html): eight focused utilities for starter HTML, color and contrast, CSS layout and visual effects.
 
 ## Troubleshooting

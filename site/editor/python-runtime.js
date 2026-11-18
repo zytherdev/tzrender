@@ -1,13 +1,23 @@
 import PythonWorker from './python.worker.js?worker';
 
 const MAX_SOURCE_CHARS = 100_000;
+const MAX_INPUT_CHARS = 100_000;
 const RUNTIME_LOAD_TIMEOUT = 90_000;
 const RUN_TIMEOUT = 15_000;
+
+function validateInput(input) {
+  if (input === undefined) return '';
+  if (typeof input !== 'string' || input.length > MAX_INPUT_CHARS) {
+    throw new Error(`Python input is limited to ${MAX_INPUT_CHARS.toLocaleString()} characters.`);
+  }
+  return input;
+}
 
 export function createPythonRuntime({ onOutput = () => {}, onStatus = () => {} } = {}) {
   let worker = null;
   let runSequence = 0;
   let active = null;
+  let pendingInput = '';
 
   function clearTimers(task) {
     if (!task) return;
@@ -26,6 +36,7 @@ export function createPythonRuntime({ onOutput = () => {}, onStatus = () => {} }
 
   function stopWorker(reason) {
     if (worker) {
+      worker.postMessage({ type: 'stop', runId: active?.id ?? 0 });
       worker.terminate();
       worker = null;
     }
@@ -67,12 +78,31 @@ export function createPythonRuntime({ onOutput = () => {}, onStatus = () => {} }
     return worker;
   }
 
+  function sendInput(input, replace) {
+    const value = validateInput(input);
+    if (active && worker) {
+      worker.postMessage({ type: 'input', runId: active.id, input: value, replace });
+    } else if (replace) {
+      pendingInput = value;
+    } else {
+      pendingInput += value;
+    }
+    return value.length;
+  }
+
   return {
-    run(source) {
+    run(source, options = {}) {
       if (typeof source !== 'string' || source.length > MAX_SOURCE_CHARS) {
         return Promise.reject(new Error(`Python files are limited to ${MAX_SOURCE_CHARS.toLocaleString()} characters.`));
       }
       if (active) return Promise.reject(new Error('Python is already running. Stop it before starting another run.'));
+      let input;
+      try {
+        input = options.input === undefined ? pendingInput : validateInput(options.input);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      pendingInput = '';
       const id = ++runSequence;
       const currentWorker = ensureWorker();
       onStatus('loading', 'Starting the local Python runtime…');
@@ -81,9 +111,15 @@ export function createPythonRuntime({ onOutput = () => {}, onStatus = () => {} }
         active.loadTimer = setTimeout(() => {
           stopWorker('Python took too long to initialize. Try again after reloading the editor.');
         }, RUNTIME_LOAD_TIMEOUT);
-        currentWorker.postMessage({ type: 'run', runId: id, source });
+        currentWorker.postMessage({ type: 'run', runId: id, source, input });
       });
       return promise;
+    },
+    setInput(input = '') {
+      return sendInput(input, true);
+    },
+    submitInput(input = '') {
+      return sendInput(input, false);
     },
     stop() {
       if (!active && !worker) return false;

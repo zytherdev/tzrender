@@ -152,8 +152,9 @@
       </div>
       <div class="output-body" id="terminalPanel" data-output-panel="terminal">
         <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>
+        <div class="program-input-box"><label for="programInput"><strong>Program input</strong><span>Lines are supplied to stdin on the next Python, PHP or Java run.</span></label><textarea id="programInput" rows="2" spellcheck="false" placeholder="Optional stdin, one line per input() / Scanner / fgets call"></textarea></div>
         <form class="terminal-form" id="terminalForm" autocomplete="off"><label for="terminalInput" id="terminalPrompt">project $</label><input id="terminalInput" name="command" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Enter a local project command" placeholder="help"><button class="terminal-run" type="submit">Run</button></form>
-        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly with their supported standard libraries.</p>
+        <p class="terminal-disclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.</p>
       </div>
       <div class="output-body console-output" id="consolePanel" data-output-panel="console" role="log" aria-live="polite" aria-relevant="additions text" hidden><div class="console-placeholder">Console output from the sandboxed website preview appears here.</div></div>
       <div class="output-body problems-output" id="problemsPanel" data-output-panel="problems" role="log" aria-live="polite" hidden><div class="console-placeholder">No editor problems to show.</div></div>

@@ -1,9 +1,11 @@
 import { loadPyodide } from 'pyodide';
 
 const MAX_OUTPUT_CHARS = 24_000;
+const MAX_INPUT_CHARS = 100_000;
 let pyodide;
 let outputLength = 0;
 let activeRun = 0;
+let inputQueue = [];
 
 function send(message) {
   self.postMessage(message);
@@ -54,6 +56,21 @@ function disableNetwork() {
   }
 }
 
+function queueInput(value, replace = false) {
+  if (typeof value !== 'string' || value.length > MAX_INPUT_CHARS) {
+    throw new TypeError(`Python input is limited to ${MAX_INPUT_CHARS.toLocaleString()} characters.`);
+  }
+  if (replace) inputQueue = [];
+  if (value) {
+    const lines = value.match(/[^\n]*(?:\n|$)/g)?.filter(Boolean) || [];
+    inputQueue.push(...lines);
+  }
+}
+
+function readInput() {
+  return inputQueue.length ? inputQueue.shift() : null;
+}
+
 async function getRuntime(runId) {
   if (pyodide) return pyodide;
   send({ type: 'loading', runId, text: 'Loading the local Python runtime (first run may take a moment)…' });
@@ -62,19 +79,45 @@ async function getRuntime(runId) {
   disableNetwork();
   pyodide.setStdout({ batched: (text) => postOutput(activeRun, 'stdout', text) });
   pyodide.setStderr({ batched: (text) => postOutput(activeRun, 'stderr', text) });
+  pyodide.setStdin({ stdin: readInput, autoEOF: true });
   return pyodide;
 }
 
 self.addEventListener('message', async (event) => {
   const message = event.data;
-  if (!message || message.type !== 'run' || typeof message.source !== 'string') return;
+  if (!message) return;
+
+  if (message.type === 'stop') {
+    activeRun = 0;
+    inputQueue = [];
+    return;
+  }
+
+  if (message.type === 'input') {
+    if (Number(message.runId) === activeRun) {
+      try {
+        queueInput(message.input, message.replace === true);
+      } catch (error) {
+        send({ type: 'error', runId: activeRun, text: error.message });
+      }
+    }
+    return;
+  }
+
+  if (message.type !== 'run' || typeof message.source !== 'string') return;
   const runId = Number(message.runId);
   if (!Number.isInteger(runId) || message.source.length > 100_000) {
     send({ type: 'error', runId, text: 'The Python file is too large to run.' });
     return;
   }
+  if (message.input !== undefined && (typeof message.input !== 'string' || message.input.length > MAX_INPUT_CHARS)) {
+    send({ type: 'error', runId, text: `Python input is limited to ${MAX_INPUT_CHARS.toLocaleString()} characters.` });
+    return;
+  }
   activeRun = runId;
   outputLength = 0;
+  inputQueue = [];
+  if (message.input) queueInput(message.input);
   try {
     const runtime = await getRuntime(runId);
     if (activeRun !== runId) return;

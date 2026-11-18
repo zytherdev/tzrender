@@ -525,7 +525,7 @@ async function runPythonFile(name, source) {
   appendTerminalLine(`$ python ${path}`, 'command');
   setPreviewStatus(`Running ${path} in a local worker…`, 'running');
   try {
-    await pythonRuntime.run(source);
+    await pythonRuntime.run(source, { input: $('programInput')?.value || '' });
     if (runId === pythonRunSequence) {
       appendTerminalLine('Python finished.', 'success');
       setPreviewStatus('Python finished in the local worker');
@@ -546,7 +546,7 @@ async function runCompiledLanguageFile(language, name, source) {
   setPreviewStatus(`Loading the local ${language.toUpperCase()} runtime…`, 'running');
   const runtime = language === 'php' ? phpRuntime : javaRuntime;
   try {
-    await runtime.run(name, source);
+    await runtime.run(name, source, { input: $('programInput')?.value || '' });
     if (runId === pythonRunSequence) setPreviewStatus(`${language.toUpperCase()} finished in the local WebAssembly runtime`);
   } catch (error) {
     const message = error?.message || String(error);

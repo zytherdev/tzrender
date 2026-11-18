@@ -53,7 +53,8 @@ function harness() {
   };
   return new Function(...Object.keys(dependencies), `${controllerSource}\nreturn {
     setProject, setActiveFile, runProject, schedulePreview, saveDraftNow,
-    importProjectFile, initializeEventHandlers, snapshotProject, safeFileUri, models, previewTypeScriptIndices
+    importProjectFile, initializeEventHandlers, snapshotProject, safeFileUri, models, previewTypeScriptIndices,
+    languageRuntime: createPythonRuntime()
   };`)(...Object.values(dependencies));
 }
 
@@ -82,6 +83,21 @@ function panel() { return document.getElementById('editorWorkspace').dataset.pan
 
 
 describe('editor preview controller', () => {
+  it('passes the Program input buffer to Python, PHP and Java runs', async () => {
+    const app = harness();
+    const input = document.getElementById('programInput');
+    input.value = 'Ada\n42\n';
+    app.setProject({ projectName: 'Test', starter: 'blank', files: [file('main.py', 'name = input()')], activeFile: 'main.py' }, { save: false, run: false });
+    await app.runProject();
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('name = input()', { input: 'Ada\n42\n' });
+    app.setProject({ projectName: 'Test', starter: 'blank', files: [file('main.php', '<?php echo file_get_contents("php://input");')], activeFile: 'main.php' }, { save: false, run: false });
+    await app.runProject();
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('main.php', '<?php echo file_get_contents("php://input");', { input: 'Ada\n42\n' });
+    app.setProject({ projectName: 'Test', starter: 'blank', files: [file('Main.java', 'class Main {}')], activeFile: 'Main.java' }, { save: false, run: false });
+    await app.runProject();
+    expect(app.languageRuntime.run).toHaveBeenCalledWith('Main.java', 'class Main {}', { input: 'Ada\n42\n' });
+  });
+
   it('compiles only referenced TypeScript and preserves its original output index', async () => {
     const files = [file('unrelated.ts', 'export const outside = 1'),
       file('pages/page.html', page('<h1>Page</h1><script src="../src/main.ts?v=1"></script>')),

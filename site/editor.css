@@ -423,6 +423,11 @@ html[data-theme="contrast"] .toolbar-run:hover { color: #000; background: #fff; 
 .terminal-form { color: var(--editor-success); border-color: var(--editor-border-subtle); background: var(--editor-surface); font-size: var(--editor-text); }
 .terminal-form input { color: var(--editor-text-color); }
 .terminal-form input::placeholder { color: var(--editor-muted); opacity: 1; }
+.program-input-box { display: flex; flex: 0 0 auto; flex-direction: column; gap: .25rem; padding: .45rem .65rem; border-top: 1px solid var(--editor-border-subtle); background: var(--editor-surface); }
+.program-input-box label { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45rem .7rem; color: var(--editor-secondary); font-size: var(--editor-text-small); }
+.program-input-box label span { color: var(--editor-muted); }
+.program-input-box textarea { width: 100%; min-height: 42px; resize: vertical; padding: .4rem .5rem; border: 1px solid var(--editor-border); border-radius: 5px; color: var(--editor-text-color); background: var(--editor-code); font: 500 var(--editor-text)/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.program-input-box textarea:focus { border-color: var(--editor-focus); outline: 2px solid color-mix(in srgb, var(--editor-focus) 35%, transparent); }
 .terminal-form button { color: var(--editor-secondary); border-color: var(--editor-border); background: var(--editor-raised); }
 .terminal-disclosure { color: var(--editor-muted); background: var(--editor-surface); font-size: var(--editor-text-small); }
 .console-entry, .problem-entry { border-color: var(--editor-border-subtle); }
