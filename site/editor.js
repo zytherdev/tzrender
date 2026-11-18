@@ -63,6 +63,60 @@ let pythonRunSequence = 0;
 let terminalHistory = [];
 let historyCursor = 0;
 let resizeState = null;
+const LAYOUT_STORAGE_KEY = 'tzrender-editor-layout-v1';
+let layoutResizeState = null;
+let sidebarWidth = 205;
+let outputHeight = 205;
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+function saveLayoutPreferences() {
+  try {
+    window.localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({
+      explorerWidth: sidebarWidth,
+      outputHeight,
+      explorerCollapsed: workspace.dataset.explorerCollapsed === 'true'
+    }));
+  } catch { /* Layout preferences are optional. */ }
+}
+function updateExplorerControls() {
+  const collapsed = workspace.dataset.explorerCollapsed === 'true';
+  const collapseButton = $('collapseExplorer');
+  const toolbarButton = $('toggleExplorer');
+  if (collapseButton) {
+    collapseButton.textContent = collapsed ? '›' : '‹';
+    collapseButton.setAttribute('aria-expanded', String(!collapsed));
+    collapseButton.title = collapsed ? 'Expand Explorer' : 'Collapse Explorer';
+  }
+  if (toolbarButton) {
+    toolbarButton.setAttribute('aria-expanded', String(!collapsed));
+    toolbarButton.title = collapsed ? 'Expand the Explorer' : 'Collapse the Explorer';
+  }
+}
+function applyWorkspaceLayout() {
+  workspace.style.setProperty('--explorer-width', `${sidebarWidth}px`);
+  workspace.style.setProperty('--output-height', `${outputHeight}px`);
+  $('sidebarDivider')?.setAttribute('aria-valuenow', String(Math.round(sidebarWidth)));
+  $('outputDivider')?.setAttribute('aria-valuenow', String(Math.round(outputHeight)));
+  updateExplorerControls();
+  editor?.layout();
+}
+function restoreLayoutPreferences() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(LAYOUT_STORAGE_KEY) || 'null');
+    if (saved && Number.isFinite(Number(saved.explorerWidth))) sidebarWidth = clamp(Number(saved.explorerWidth), 160, 340);
+    if (saved && Number.isFinite(Number(saved.outputHeight))) outputHeight = clamp(Number(saved.outputHeight), 145, 360);
+    if (saved?.explorerCollapsed) workspace.dataset.explorerCollapsed = 'true';
+  } catch { /* Layout preferences are optional. */ }
+  applyWorkspaceLayout();
+}
+function toggleExplorer() {
+  if (workspace.dataset.explorerCollapsed === 'true') delete workspace.dataset.explorerCollapsed;
+  else workspace.dataset.explorerCollapsed = 'true';
+  updateExplorerControls();
+  saveLayoutPreferences();
+  window.setTimeout(() => editor?.layout(), 190);
+}
 
 function readDraft() {
   try {
@@ -873,13 +927,70 @@ function resizeEditorPanels(event) {
   if (window.matchMedia('(max-width: 760px)').matches || window.matchMedia('(max-width: 900px)').matches) return;
   const divider = $('paneDivider');
   const workspaceRect = workspace.getBoundingClientRect();
-  const sidebarWidth = $('fileSidebar')?.getBoundingClientRect().width || 205;
-  const available = workspaceRect.width - sidebarWidth - 7;
-  const currentLeft = event.clientX - workspaceRect.left - sidebarWidth;
+  const renderedSidebarWidth = workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
+  const available = workspaceRect.width - renderedSidebarWidth - 7 - 7;
+  const currentLeft = event.clientX - workspaceRect.left - renderedSidebarWidth - 7;
   const codeWidth = Math.max(280, Math.min(available - 320, currentLeft));
-  workspace.style.gridTemplateColumns = `${sidebarWidth}px ${codeWidth}px 7px minmax(320px, 1fr)`;
+  workspace.style.setProperty('--code-width', `${codeWidth}px`);
   editor.layout();
   divider.setAttribute('aria-valuenow', String(Math.round((codeWidth / available) * 100)));
+}
+function resizeExplorer(event) {
+  if (window.matchMedia('(max-width: 900px)').matches || workspace.dataset.explorerCollapsed === 'true') return;
+  const rect = workspace.getBoundingClientRect();
+  const maximum = Math.min(340, Math.max(160, rect.width - 640));
+  sidebarWidth = clamp(event.clientX - rect.left, 160, maximum);
+  applyWorkspaceLayout();
+}
+function resizeOutput(event) {
+  if (window.matchMedia('(max-width: 900px)').matches) return;
+  const rect = workspace.getBoundingClientRect();
+  const maximum = Math.min(360, Math.max(145, rect.height - 245));
+  outputHeight = clamp(rect.bottom - event.clientY, 145, maximum);
+  applyWorkspaceLayout();
+}
+function startLayoutResize(kind, event) {
+  if (window.matchMedia('(max-width: 900px)').matches) return;
+  event.preventDefault();
+  layoutResizeState = { kind, pointerId: event.pointerId };
+  workspace.classList.add('is-resizing');
+  event.currentTarget.setPointerCapture(event.pointerId);
+}
+function moveLayoutResize(event) {
+  if (!layoutResizeState || layoutResizeState.pointerId !== event.pointerId) return;
+  if (layoutResizeState.kind === 'explorer') resizeExplorer(event);
+  else if (layoutResizeState.kind === 'output') resizeOutput(event);
+}
+function finishLayoutResize() {
+  if (!layoutResizeState) return;
+  layoutResizeState = null;
+  workspace.classList.remove('is-resizing');
+  saveLayoutPreferences();
+  editor?.layout();
+}
+function adjustExplorerWidth(delta) {
+  if (workspace.dataset.explorerCollapsed === 'true' && delta > 0) {
+    toggleExplorer();
+    return;
+  }
+  sidebarWidth = clamp(sidebarWidth + delta, 160, 340);
+  applyWorkspaceLayout();
+  saveLayoutPreferences();
+}
+function adjustOutputHeight(delta) {
+  outputHeight = clamp(outputHeight + delta, 145, 360);
+  applyWorkspaceLayout();
+  saveLayoutPreferences();
+}
+function handleExplorerResizeKeydown(event) {
+  if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+  event.preventDefault();
+  adjustExplorerWidth(event.key === 'ArrowRight' ? 24 : -24);
+}
+function handleOutputResizeKeydown(event) {
+  if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+  event.preventDefault();
+  adjustOutputHeight(event.key === 'ArrowUp' ? 24 : -24);
 }
 
 function setFocusMode(mode) {
@@ -980,6 +1091,8 @@ function initializeEventHandlers() {
   $('minimapToggle').addEventListener('change', (event) => editor.updateOptions({ minimap: { enabled: event.target.checked } }));
   $('wordWrapToggle').addEventListener('change', (event) => editor.updateOptions({ wordWrap: event.target.checked ? 'on' : 'off' }));
   $('viewportSize').addEventListener('change', (event) => { $('previewCanvasWrap').dataset.size = event.target.value; });
+  $('toggleExplorer').addEventListener('click', toggleExplorer);
+  $('collapseExplorer').addEventListener('click', toggleExplorer);
   $('focusCode').addEventListener('click', () => { setFocusMode('code'); });
   $('focusPreview').addEventListener('click', () => { setFocusMode('preview'); });
   $('fullscreenCode').addEventListener('click', () => requestFullScreen($('codePane')));
@@ -998,6 +1111,16 @@ function initializeEventHandlers() {
   $('terminalInput').addEventListener('keydown', handleTerminalHistory);
   document.querySelectorAll('[data-output]').forEach((tab) => tab.addEventListener('click', () => setOutputTab(tab.dataset.output)));
   document.querySelectorAll('[data-panel-tab]').forEach((tab) => tab.addEventListener('click', () => setWorkspacePanel(tab.dataset.panelTab)));
+  $('sidebarDivider').addEventListener('pointerdown', (event) => startLayoutResize('explorer', event));
+  $('sidebarDivider').addEventListener('pointermove', moveLayoutResize);
+  $('sidebarDivider').addEventListener('pointerup', finishLayoutResize);
+  $('sidebarDivider').addEventListener('pointercancel', finishLayoutResize);
+  $('sidebarDivider').addEventListener('keydown', handleExplorerResizeKeydown);
+  $('outputDivider').addEventListener('pointerdown', (event) => startLayoutResize('output', event));
+  $('outputDivider').addEventListener('pointermove', moveLayoutResize);
+  $('outputDivider').addEventListener('pointerup', finishLayoutResize);
+  $('outputDivider').addEventListener('pointercancel', finishLayoutResize);
+  $('outputDivider').addEventListener('keydown', handleOutputResizeKeydown);
   $('paneDivider').addEventListener('pointerdown', (event) => {
     event.preventDefault();
     resizeState = { pointerId: event.pointerId };
@@ -1010,7 +1133,8 @@ function initializeEventHandlers() {
     event.preventDefault();
     const current = editor.getLayoutInfo().width;
     const bounds = workspace.getBoundingClientRect();
-    resizeEditorPanels({ clientX: bounds.left + 205 + current + (event.key === 'ArrowRight' ? 32 : -32) });
+    const renderedSidebarWidth = workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
+    resizeEditorPanels({ clientX: bounds.left + renderedSidebarWidth + 7 + current + (event.key === 'ArrowRight' ? 32 : -32) });
   });
   $('closeMobileNotice').addEventListener('click', () => { $('mobileEditorNotice').hidden = true; });
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -1023,6 +1147,7 @@ function initializeEventHandlers() {
   window.addEventListener('resize', () => editor.layout());
 }
 
+restoreLayoutPreferences();
 initEditor();
 initializeEventHandlers();
 setOutputTab('terminal');
