@@ -4,6 +4,21 @@ import { getFileType, MAX_FILE_CHARS } from './project.js';
 const parentOf = (path) => path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
 const baseOf = (path) => path.slice(path.lastIndexOf('/') + 1);
 const join = (folder, name) => folder ? `${folder}/${name}` : name;
+const ICON_PATHS = {
+  chevronDown: 'M7 9l5 5 5-5',
+  chevronRight: 'M9 6l6 6-6 6',
+  more: 'M6 12h.01M12 12h.01M18 12h.01'
+};
+function createIcon(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'action-icon');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', ICON_PATHS[name]);
+  svg.append(path);
+  return svg;
+}
 
 // The clipboard is intentionally internal to the project, not the system text clipboard.
 export function createFileExplorer({ getProject, applyProject, openFile, download, toast }) {
@@ -237,7 +252,7 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
         const item = document.createElement('button');
         item.type = 'button'; item.className = 'tree-item'; item.dataset.path = path; item.title = path;
         const icon = document.createElement('span'); icon.setAttribute('aria-hidden', 'true');
-        if (folder) { icon.className = 'tree-chevron-button'; icon.textContent = expanded.has(path) ? '▾' : '▸'; }
+        if (folder) { icon.className = 'tree-chevron-button'; icon.append(createIcon(expanded.has(path) ? 'chevronDown' : 'chevronRight')); }
         else { const type = getFileType(path); icon.className = `file-symbol file-${type.category}`; icon.textContent = type.icon; }
         const name = document.createElement('span'); name.className = 'tree-name'; name.textContent = baseOf(path);
         item.append(icon, name);
@@ -248,7 +263,7 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
           else { openFile(path); render(); }
         });
         const actions = document.createElement('button');
-        actions.type = 'button'; actions.className = 'tree-actions'; actions.textContent = '⋯';
+        actions.type = 'button'; actions.className = 'tree-actions'; actions.append(createIcon('more'));
         actions.setAttribute('aria-label', `Actions for ${path}`); actions.title = 'More actions';
         actions.addEventListener('focus', () => markFocused(path));
         actions.addEventListener('click', (event) => { const rect = event.currentTarget.getBoundingClientRect(); openContext(path, rect.left, rect.bottom); });

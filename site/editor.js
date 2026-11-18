@@ -16,6 +16,7 @@ import htmlWorker from '../node_modules/monaco-editor/esm/vs/language/html/html.
 import tsWorker from '../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
 import '../node_modules/monaco-editor/min/vs/editor/editor.main.css';
 import { buildLanguageInfoPreview, buildProjectPreview, buildPythonInfoPreview } from './editor/preview-content.js';
+import { buildPreviewDocument } from './preview-document.js';
 import {
   createStarterProject,
   FILE_TYPES,
@@ -546,8 +547,16 @@ async function runCompiledLanguageFile(language, name, source) {
   setPreviewStatus(`Loading the local ${language.toUpperCase()} runtime…`, 'running');
   const runtime = language === 'php' ? phpRuntime : javaRuntime;
   try {
-    await runtime.run(name, source, { input: $('programInput')?.value || '' });
-    if (runId === pythonRunSequence) setPreviewStatus(`${language.toUpperCase()} finished in the local WebAssembly runtime`);
+    const result = await runtime.run(name, source, { input: $('programInput')?.value || '' });
+    if (runId === pythonRunSequence) {
+      if (language === 'php' && typeof result?.stdout === 'string') {
+        setPreviewDocument(buildPreviewDocument({ html: result.stdout, maxLength: MAX_PROJECT_CHARS }), name);
+        setPreviewStatus('PHP page rendered in the sandboxed preview', 'running');
+        if (window.matchMedia('(max-width: 760px)').matches) setWorkspacePanel('preview');
+      } else {
+        setPreviewStatus(`${language.toUpperCase()} finished in the local WebAssembly runtime`);
+      }
+    }
   } catch (error) {
     const message = error?.message || String(error);
     if (runId === pythonRunSequence) {

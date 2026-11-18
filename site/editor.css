@@ -379,6 +379,9 @@ html[data-theme="contrast"] .toolbar-run:hover { color: #000; background: #fff; 
 .file-sidebar, .editor-panel { color: var(--editor-secondary); background: var(--editor-surface); }
 .sidebar-heading, .project-tree-label { color: var(--editor-muted); font-size: var(--editor-text-small); }
 .tree-chevron { color: var(--editor-muted); }
+.action-icon { display: block; width: 1.05em; height: 1.05em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sidebar-heading-actions .action-icon, .explorer-toolbar .action-icon { width: 17px; height: 17px; }
+.project-tree-label .action-icon { width: 15px; height: 15px; }
 .subtle-icon-button, .file-action { color: var(--editor-secondary); font-size: var(--editor-text); }
 .subtle-icon-button:hover, .file-action:hover { color: var(--editor-text-color); border-color: var(--editor-accent); background: var(--editor-hover); }
 .file-actions, .sidebar-footer { border-color: var(--editor-border-subtle); }
@@ -500,6 +503,7 @@ html[data-theme="contrast"] .file-symbol { color: #fff; background: #222; outlin
   cursor: pointer;
 }
 .tree-chevron-button:hover, .tree-actions button:hover { color: var(--editor-text-color); background: var(--editor-hover); }
+.tree-chevron-button .action-icon { width: 15px; height: 15px; }
 .tree-name { overflow: hidden; min-width: 0; flex: 1 1 auto; text-overflow: ellipsis; white-space: nowrap; }
 .tree-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; margin-left: auto; }
 .tree-actions button {
@@ -515,6 +519,7 @@ html[data-theme="contrast"] .file-symbol { color: #fff; background: #222; outlin
   font: inherit;
   cursor: pointer;
 }
+.tree-actions > .action-icon { width: 17px; height: 17px; stroke-width: 2.2; }
 .explorer-toolbar { display: flex; flex: 0 0 auto; align-items: center; gap: .3rem; padding: .3rem .5rem; border-bottom: 1px solid var(--editor-border-subtle); }
 .explorer-toolbar select { min-width: 0; flex: 1; }
 .explorer-empty, .explorer-hint { margin: .5rem; color: var(--editor-muted); font-size: var(--editor-text-small); line-height: 1.5; }

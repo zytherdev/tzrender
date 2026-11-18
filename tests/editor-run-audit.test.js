@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { URI } from '../node_modules/monaco-editor/esm/vs/base/common/uri.js';
 import * as projectModule from '../site/editor/project.js';
 import * as previews from '../site/editor/preview-content.js';
+import { buildPreviewDocument } from '../site/preview-document.js';
 
 // Exercise the real controller functions with Monaco and the workers replaced by
 // small deterministic doubles. The page and preview builder remain real.
@@ -45,7 +46,7 @@ function harness() {
   };
   const runtime = { run: vi.fn(), stop: vi.fn(), dispose: vi.fn() };
   const dependencies = {
-    monaco, ...projectModule, ...previews,
+    monaco, ...projectModule, ...previews, buildPreviewDocument,
     editorWorker: class {}, jsonWorker: class {}, cssWorker: class {}, htmlWorker: class {}, tsWorker: class {},
     createPythonRuntime: () => runtime, createPhpRuntime: () => runtime, createJavaRuntime: () => runtime,
     createTypeScriptRuntime: () => ({ compile, dispose: vi.fn() }),
@@ -96,6 +97,16 @@ describe('editor preview controller', () => {
     app.setProject({ projectName: 'Test', starter: 'blank', files: [file('Main.java', 'class Main {}')], activeFile: 'Main.java' }, { save: false, run: false });
     await app.runProject();
     expect(app.languageRuntime.run).toHaveBeenCalledWith('Main.java', 'class Main {}', { input: 'Ada\n42\n' });
+  });
+
+  it('renders successful PHP stdout as a sandboxed web page preview', async () => {
+    const app = harness();
+    app.languageRuntime.run.mockResolvedValue({ stdout: '<!doctype html><h1>PHP page</h1>', stderr: '', exitCode: 0 });
+    app.setProject({ projectName: 'Test', starter: 'blank', files: [file('index.php', '<?php echo "<h1>PHP page</h1>";')], activeFile: 'index.php' }, { save: false, run: false });
+    await app.runProject();
+    expect(document.getElementById('previewFrame').srcdoc).toContain('PHP page');
+    expect(document.getElementById('previewUrl').textContent).toBe('/index.php');
+    expect(document.getElementById('previewStatus').textContent).toContain('PHP page rendered');
   });
 
   it('compiles only referenced TypeScript and preserves its original output index', async () => {
