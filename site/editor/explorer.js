@@ -31,6 +31,46 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
   let clipboard = null;
   let menu = null;
   let dragging = null;
+  let activeDialog = null;
+  function showDialog({ title, description, value = '', folders = null, needsName = false, destructive = false, confirmLabel = 'Save', onConfirm }) {
+    const trigger = document.activeElement;
+    const overlay = document.createElement('div'); overlay.className = 'explorer-dialog-backdrop';
+    const dialog = document.createElement('section'); dialog.className = 'explorer-dialog'; dialog.setAttribute('role', 'dialog'); dialog.setAttribute('aria-modal', 'true');
+    const id = `explorer-dialog-${Math.random().toString(36).slice(2)}`;
+    const heading = document.createElement('h2'); heading.id = `${id}-title`; heading.textContent = title;
+    const help = document.createElement('p'); help.id = `${id}-description`; help.textContent = description;
+    dialog.setAttribute('aria-labelledby', heading.id); dialog.setAttribute('aria-describedby', help.id); dialog.append(heading, help);
+    let field = null, error = null;
+    let destinationSelect = null;
+    if (folders) {
+      destinationSelect = document.createElement('select'); destinationSelect.className = 'explorer-dialog-field'; destinationSelect.setAttribute('aria-label', 'Destination folder');
+      const rootOption = document.createElement('option'); rootOption.value = ''; rootOption.textContent = '/ (project root)'; destinationSelect.append(rootOption);
+      for (const folder of folders) { const option = document.createElement('option'); option.value = folder; option.textContent = folder; destinationSelect.append(option); }
+      destinationSelect.value = value;
+    }
+    if ((!folders || needsName) && !destructive) {
+      field = document.createElement('input'); field.className = 'explorer-dialog-field'; field.type = 'text'; field.value = value; field.autocomplete = 'off'; field.setAttribute('aria-label', 'Name');
+    }
+    if (field) dialog.append(field);
+    if (destinationSelect) dialog.append(destinationSelect);
+    error = document.createElement('div'); error.className = 'explorer-dialog-error'; error.setAttribute('role', 'alert'); error.id = `${id}-error`;
+    if (field) field.setAttribute('aria-describedby', `${help.id} ${error.id}`);
+    if (destinationSelect) destinationSelect.setAttribute('aria-describedby', `${help.id} ${error.id}`);
+    dialog.append(error);
+    const actions = document.createElement('div'); actions.className = 'explorer-dialog-actions';
+    const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'explorer-dialog-button'; cancel.textContent = 'Cancel';
+    const accept = document.createElement('button'); accept.type = 'button'; accept.className = `explorer-dialog-button${destructive ? ' is-destructive' : ' is-primary'}`; accept.textContent = confirmLabel;
+    actions.append(cancel, accept); dialog.append(actions); overlay.append(dialog); document.body.append(overlay); activeDialog = overlay;
+    const close = (restore = true) => { overlay.remove(); if (activeDialog === overlay) activeDialog = null; if (restore && trigger?.isConnected) trigger.focus(); };
+    cancel.addEventListener('click', () => close()); overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+    const keydown = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (event.key === 'Tab') { const focusable = [...dialog.querySelectorAll('button,input,select')]; const first = focusable[0], last = focusable.at(-1); if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }
+    };
+    overlay.addEventListener('keydown', keydown);
+    accept.addEventListener('click', () => { try { onConfirm(field?.value ?? destinationSelect?.value ?? '', destinationSelect?.value); close(); } catch (e) { { error.textContent = e?.message || 'Unable to complete this operation.'; (field || destinationSelect)?.setAttribute('aria-invalid', 'true'); (field || destinationSelect || accept).focus(); } } });
+    (field || accept).focus(); return overlay;
+  }
 
   function isFolder(path, snapshot = getProject()) {
     return path === '' || (snapshot.folders || []).includes(path);
@@ -69,48 +109,33 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
   }
   function create(kind, folder = destination()) {
     const label = kind === 'file' ? 'file' : 'folder';
-    const name = window.prompt(`New ${label} in ${folder || '/'}:`, kind === 'file' ? 'untitled.txt' : 'New folder');
-    if (name === null) return;
-    run(() => {
-      const path = join(folder, name.trim());
+    showDialog({ title: `Create ${label}`, description: `Choose a name and destination folder for the new ${label}.`, value: kind === 'file' ? 'untitled.txt' : 'New folder', folders: ['', ...(getProject().folders || [])], needsName: true, onConfirm: (name, selectedFolder) => {
+      const targetFolder = selectedFolder ?? folder;
+      const path = join(targetFolder, name.trim());
       const next = kind === 'file' ? filesystem.createFile(getProject(), path) : filesystem.createFolder(getProject(), path);
-      selected = path;
-      reveal(path);
-      if (folder) expanded.add(folder);
-      if (kind === 'file') next.activeFile = path;
-      else expanded.add(path);
+      selected = path; reveal(path); if (targetFolder) expanded.add(targetFolder);
+      if (kind === 'file') next.activeFile = path; else expanded.add(path);
       commit(next, `${baseOf(path)} created.`);
-    });
+    }});
+    const select = activeDialog?.querySelector('select'); if (select) select.value = folder;
   }
   function rename(path) {
     if (!path) return;
-    const name = window.prompt('Rename:', baseOf(path));
-    if (name === null || name.trim() === baseOf(path)) return;
-    run(() => {
+    showDialog({ title: 'Rename item', description: `Enter a new name for ${baseOf(path)}.`, value: baseOf(path), onConfirm: (name) => {
+      if (!name.trim()) throw new Error('Name cannot be empty.');
       const target = join(parentOf(path), name.trim());
       const next = filesystem.renameEntry(getProject(), path, target);
-      if (clipboard && (clipboard.path === path || clipboard.path.startsWith(`${path}/`))) {
-        clipboard.path = target + clipboard.path.slice(path.length);
-      }
-      for (const item of [...expanded]) if (item === path || item.startsWith(`${path}/`)) {
-        expanded.delete(item); expanded.add(target + item.slice(path.length));
-      }
-      selected = target;
-      reveal(target);
-      commit(next, `Renamed to ${baseOf(target)}.`);
-    });
+      if (clipboard && (clipboard.path === path || clipboard.path.startsWith(`${path}/`))) clipboard.path = target + clipboard.path.slice(path.length);
+      for (const item of [...expanded]) if (item === path || item.startsWith(`${path}/`)) { expanded.delete(item); expanded.add(target + item.slice(path.length)); }
+      selected = target; reveal(target); commit(next, `Renamed to ${baseOf(target)}.`);
+    }});
   }
   function remove(path) {
     if (!path) return;
     const folder = isFolder(path);
-    if (!window.confirm(`Delete ${folder ? 'folder' : 'file'} “${path}”${folder ? ' and everything inside it' : ''}? This cannot be undone.`)) return;
-    run(() => {
-      const next = filesystem.deleteEntry(getProject(), path);
-      if (clipboard && (clipboard.path === path || clipboard.path.startsWith(`${path}/`))) clipboard = null;
-      selected = parentOf(path);
-      for (const item of [...expanded]) if (item === path || item.startsWith(`${path}/`)) expanded.delete(item);
-      commit(next, `${baseOf(path)} deleted.`);
-    });
+    showDialog({ title: `Delete ${folder ? 'folder' : 'file'}?`, description: `${path}${folder ? ' and everything inside it' : ''} will be permanently deleted. This cannot be undone.`, destructive: true, confirmLabel: 'Delete', onConfirm: () => {
+      run(() => { const next = filesystem.deleteEntry(getProject(), path); if (clipboard && (clipboard.path === path || clipboard.path.startsWith(`${path}/`))) clipboard = null; selected = parentOf(path); for (const item of [...expanded]) if (item === path || item.startsWith(`${path}/`)) expanded.delete(item); commit(next, `${baseOf(path)} deleted.`); });
+    }});
   }
   function copy(path, cut = false) {
     if (!path) return;
@@ -144,17 +169,11 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
   }
   function move(path) {
     if (!path) return;
-    const folder = window.prompt('Move to folder (leave empty for project root):', parentOf(path));
-    if (folder === null) return;
-    run(() => {
-      const targetFolder = folder.trim().replace(/^\/$/, '');
-      const next = filesystem.moveEntry(getProject(), path, targetFolder);
-      selected = join(targetFolder, baseOf(path));
-      if (targetFolder) expanded.add(targetFolder);
-      reveal(selected);
-      if (clipboard?.path === path) clipboard = null;
-      commit(next, `Moved to ${targetFolder || '/'}.`);
-    });
+    const snapshot = getProject();
+    showDialog({ title: 'Move item', description: `Choose a destination folder for ${path}.`, value: parentOf(path), folders: ['', ...(snapshot.folders || []).filter((folder) => folder !== path && !folder.startsWith(`${path}/`))], confirmLabel: 'Move', onConfirm: (folder) => {
+      const next = filesystem.moveEntry(getProject(), path, folder);
+      selected = join(folder, baseOf(path)); if (folder) expanded.add(folder); reveal(selected); if (clipboard?.path === path) clipboard = null; commit(next, `Moved to ${folder || '/'}.`);
+    }});
   }
   function duplicate(path) {
     if (!path) return;
@@ -327,6 +346,7 @@ export function createFileExplorer({ getProject, applyProject, openFile, downloa
   document.getElementById('localFolderInput').addEventListener('change', importLocalFiles);
   document.addEventListener('pointerdown', (event) => { if (menu && !menu.contains(event.target)) closeMenu(); });
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && activeDialog) return;
     if (event.key === 'Escape' && menu) { closeMenu(); list.querySelector('.tree-selected .tree-item')?.focus(); return; }
     if (!sidebar.contains(event.target) && !menu?.contains(event.target)) return;
     const focusedRow = event.target.closest?.('.tree-row');

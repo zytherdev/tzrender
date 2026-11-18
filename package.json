@@ -82,10 +82,15 @@
     }
   },
   "dependencies": {
+    "@6over3/zeroperl-ts": "1.0.10",
+    "@bjorn3/browser_wasi_shim": "0.4.2",
     "@live-codes/java-wasm": "^0.1.0",
     "@php-wasm/universal": "^3.1.65",
     "@php-wasm/web-8-5": "^3.1.65",
+    "@ruby/3.4-wasm-wasi": "2.10.1",
+    "@ruby/wasm-wasi": "2.10.1",
     "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
-    "wasmoon": "^1.16.0"
+    "wasmoon": "^1.16.0",
+    "webr": "0.6.1"
   }
 }

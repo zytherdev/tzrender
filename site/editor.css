@@ -691,3 +691,18 @@ html[data-theme="contrast"] .editor-brand .brand-mark { color: #000; border-colo
     white-space: normal;
   }
 }
+
+/* Explorer operation dialogs inherit the active editor theme tokens. */
+.explorer-dialog-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(8, 7, 12, .68); }
+.explorer-dialog { width: min(420px, 100%); padding: 1.15rem; border: 1px solid var(--editor-border); border-radius: 12px; color: var(--editor-text-color); background: var(--editor-raised); box-shadow: var(--editor-menu-shadow); }
+.explorer-dialog h2 { margin: 0; color: var(--editor-text-color); font-size: 1rem; }
+.explorer-dialog p { margin: .45rem 0 .9rem; color: var(--editor-muted); font-size: var(--editor-text-small); line-height: 1.55; }
+.explorer-dialog-field { box-sizing: border-box; width: 100%; min-height: 38px; padding: .5rem .6rem; border: 1px solid var(--editor-border); border-radius: 7px; color: var(--editor-text-color); background: var(--editor-surface); font: inherit; }
+.explorer-dialog-error { min-height: 1.15rem; margin-top: .35rem; color: var(--editor-danger, #e35b66); font-size: var(--editor-text-small); }
+.explorer-dialog-error:empty { display: none; }
+.explorer-dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+.explorer-dialog-button { min-height: 35px; padding: .45rem .8rem; border: 1px solid var(--editor-border); border-radius: 7px; color: var(--editor-text-color); background: var(--editor-surface); font: inherit; cursor: pointer; }
+.explorer-dialog-button.is-primary { border-color: var(--editor-accent); color: var(--editor-on-accent, #fff); background: var(--editor-accent); }
+.explorer-dialog-button.is-destructive { border-color: var(--editor-danger, #d64550); color: #fff; background: var(--editor-danger, #c93643); }
+.explorer-dialog-button:focus-visible, .explorer-dialog-field:focus-visible { outline: 2px solid var(--editor-focus); outline-offset: 2px; }
+@media (prefers-contrast: more) { .explorer-dialog-backdrop { background: rgba(0, 0, 0, .85); } .explorer-dialog, .explorer-dialog-field, .explorer-dialog-button { border-width: 2px; } }

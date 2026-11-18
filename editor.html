@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' https: ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <meta name="description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
+  <meta name="description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
   <link rel="canonical" href="https://tzrender.zyther.dev/editor.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="tzrender">
-  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender">
-  <meta property="og:description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
+  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender">
+  <meta property="og:description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
   <meta property="og:url" content="https://tzrender.zyther.dev/editor.html">
   <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -19,11 +19,11 @@
   <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender">
-  <meta name="twitter:description" content="Build websites and run Python, PHP and Java in a browser IDE with local WebAssembly runtimes, safe previews and browser-only drafts.">
+  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender">
+  <meta name="twitter:description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
   <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
-  <title>Online IDE: HTML, CSS, JS/TS, Python, PHP &amp; Java | tzrender</title>
+  <title>Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <script>try { const theme = localStorage.getItem('tzrender-editor-theme'); if (theme === 'vs') document.documentElement.dataset.theme = 'light'; else if (theme === 'hc-black') document.documentElement.dataset.theme = 'contrast'; } catch { /* Default to dark when storage is unavailable. */ }</script>
   <link rel="stylesheet" href="/site/site.css">
@@ -38,11 +38,24 @@
       <input id="projectName" class="project-name" value="My first website" maxlength="48" autocomplete="off">
       <label class="visually-hidden" for="starterSelect">Choose a starter</label>
       <select id="starterSelect" class="toolbar-select" aria-label="Load a starter project">
-        <option value="landing">Landing page</option>
-        <option value="profile">Profile card</option>
-        <option value="typescript">TypeScript</option>
-        <option value="python">Python</option>
-        <option value="blank">Blank project</option>
+        <optgroup label="Web projects">
+          <option value="landing">Landing page</option>
+          <option value="profile">Profile card</option>
+          <option value="todo">Interactive task list</option>
+          <option value="typescript">TypeScript</option>
+          <option value="blank">Blank project</option>
+        </optgroup>
+        <optgroup label="Language starters">
+          <option value="python">Python</option>
+          <option value="pythonModules">Python · local modules</option>
+          <option value="lua">Lua · local modules</option>
+          <option value="phpIncludes">PHP · local includes</option>
+          <option value="javaProject">Java · same-package sources</option>
+          <option value="sqlProject">SQLite · schema and data</option>
+          <option value="ruby">Ruby · local require</option>
+          <option value="rProject">R · data and helper script</option>
+          <option value="perl">Perl · local module</option>
+        </optgroup>
       </select>
     </div>
     <div class="editor-actions">
@@ -91,7 +104,7 @@
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
-    <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, Python, PHP, and Java</h1>
+    <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, Python, Lua, PHP, Java, Ruby, R, and Perl</h1>
     <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
       <button type="button" role="tab" aria-selected="false" data-panel-tab="files">Files</button>
       <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
@@ -161,7 +174,7 @@
         <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>
         <div class="program-input-box"><label for="programInput"><strong>Program input</strong><span>Lines are supplied to stdin on the next Python, PHP or Java run.</span></label><textarea id="programInput" rows="2" spellcheck="false" placeholder="Optional stdin, one line per input() / Scanner / fgets call"></textarea></div>
         <form class="terminal-form" id="terminalForm" autocomplete="off"><label for="terminalInput" id="terminalPrompt">project $</label><input id="terminalInput" name="command" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Enter a local project command" placeholder="help"><button class="terminal-run" type="submit">Run</button></form>
-        <p class="terminal-disclosure" id="terminalDisclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.</p>
+        <p class="terminal-disclosure" id="terminalDisclosure">Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, Lua, PHP, Java, Ruby, R, Perl and SQLite run with browser-local runtimes. Only configured, WebAssembly-precompiled R packages can be fetched in experimental mode after confirmation.</p>
       </div>
       <div class="output-body console-output" id="consolePanel" data-output-panel="console" role="log" aria-live="polite" aria-relevant="additions text" hidden><div class="console-placeholder">Console output from the sandboxed website preview appears here.</div></div>
       <div class="output-body problems-output" id="problemsPanel" data-output-panel="problems" role="log" aria-live="polite" hidden><div class="console-placeholder">No editor problems to show.</div></div>

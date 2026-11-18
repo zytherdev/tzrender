@@ -265,11 +265,17 @@ export function buildPythonInfoPreview(filename, executionMode = 'safe') {
   return documentPage(filename, `<h1>Python runs in the Terminal</h1><p>Select <code>${escapeHtml(filename)}</code>, press <strong>Run Python</strong>, or enter <code>python ${escapeHtml(filename)}</code> in the project terminal.</p><p>The code executes in a separate local browser worker. ${escapeHtml(modeNotice)}</p>`);
 }
 
-export function buildLanguageInfoPreview(filename, language) {
-  const labels = { php: 'PHP', java: 'Java', lua: 'Lua 5.4', sql: 'SQLite / SQL' };
+export function buildLanguageInfoPreview(filename, language, executionMode = 'safe') {
+  const labels = { php: 'PHP', java: 'Java', lua: 'Lua 5.4', sql: 'SQLite / SQL', rb: 'Ruby', r: 'R', pl: 'Perl' };
   const label = labels[language] || language.toUpperCase();
   const detail = language === 'sql'
     ? 'Queries run in an in-memory SQLite WebAssembly database and their rows appear in Preview.'
+    : language === 'r'
+      ? `R runs locally in the webR WebAssembly runtime. Local source() imports are available.${executionMode === 'experimental' ? ' Only explicitly configured packages precompiled for WebAssembly are fetched from the webR package repository after per-run confirmation; arbitrary network connections remain unavailable.' : ' Network access and package installation are disabled in safe mode.'}`
+    : language === 'rb'
+      ? 'CRuby 3.4 runs in an isolated WebAssembly worker. Local require/require_relative are available; host OS, network sockets and gem installation are not.'
+    : language === 'pl'
+      ? 'Perl 5 runs in an isolated WebAssembly worker. Local use/require imports are available; host OS, network and CPAN installation are not supported.'
     : `${label} runs locally in a browser WebAssembly runtime; output appears in Terminal.`;
   return documentPage(filename, `<h1>${label} workspace</h1><p><code>${escapeHtml(filename)}</code> is ready for editing with ${label} syntax highlighting.</p><p>${detail}</p>`);
 }

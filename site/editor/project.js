@@ -29,6 +29,10 @@ export const FILE_TYPES = {
   jsx: { language: 'javascript', icon: 'JS', category: 'script', runnable: false },
   lua: { language: 'lua', icon: 'Lua', category: 'script', runnable: true },
   py: { language: 'python', icon: 'Py', category: 'script', runnable: true },
+  rb: { language: 'ruby', icon: 'Rb', category: 'ruby', runnable: true },
+  r: { language: 'r', icon: 'R', category: 'r', runnable: true },
+  pl: { language: 'perl', icon: 'Pl', category: 'perl', runnable: true },
+  pm: { language: 'perl', icon: 'Pl', category: 'perl', runnable: false },
   php: { language: 'php', icon: 'PHP', category: 'php', runnable: true },
   java: { language: 'java', icon: 'J', category: 'java', runnable: true },
   json: { language: 'json', icon: '{}', category: 'data', runnable: true },
@@ -101,6 +105,89 @@ export const STARTERS = {
     files: [
       { name: 'README.md', content: '# SQLite starter\n\nRun `main.sql` in the local in-memory SQLite WASM runtime. Data is reset when the runtime is reset or the editor is closed.' },
       { name: 'main.sql', content: `CREATE TABLE people (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\nINSERT INTO people (name) VALUES ('Ada'), ('Grace');\n\nSELECT id, name FROM people ORDER BY id;` }
+    ]
+  },
+  todo: {
+    name: 'Interactive task list',
+    activeFile: 'index.html',
+    files: [
+      { name: 'index.html', content: `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>Today, in small steps</title>\n  <link rel="stylesheet" href="src/styles.css">\n</head>\n<body>\n  <main class="task-app">\n    <p class="eyebrow">A LITTLE PROGRESS</p>\n    <h1>Today, in small steps.</h1>\n    <form id="taskForm"><label class="visually-hidden" for="taskInput">New task</label><input id="taskInput" required maxlength="120" placeholder="What would you like to do?"><button>Add task</button></form>\n    <ul id="taskList" aria-live="polite"></ul>\n    <p id="taskCount">No tasks yet</p>\n  </main>\n  <script src="src/app.js"></script>\n</body>\n</html>` },
+      { name: 'src/styles.css', content: `:root { font: 16px/1.5 system-ui, sans-serif; color: #242037; background: #f0edf9; }\n* { box-sizing: border-box; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 1.25rem; }\n.task-app { width: min(100%, 38rem); padding: clamp(1.5rem, 6vw, 3rem); border: 1px solid #e4def0; border-radius: 1.5rem; background: white; box-shadow: 0 1rem 4rem #271b4d18; }\n.eyebrow { color: #8067f7; font-size: .72rem; font-weight: 800; letter-spacing: .15em; }\nh1 { margin: .3rem 0 1.5rem; font-size: clamp(2rem, 7vw, 3rem); line-height: 1.08; letter-spacing: -.06em; }\nform { display: flex; gap: .5rem; }\ninput { min-width: 0; flex: 1; padding: .8rem; border: 1px solid #d8d2e5; border-radius: .7rem; font: inherit; }\nbutton { padding: .8rem 1rem; border: 0; border-radius: .7rem; color: white; background: #735bdd; font: inherit; font-weight: 700; cursor: pointer; }\nli { display: flex; justify-content: space-between; gap: .5rem; padding: .65rem 0; border-bottom: 1px solid #eeeaf4; }\nli button { padding: .25rem .5rem; font-size: .8rem; }\n#taskCount { color: #6c667b; font-size: .85rem; }\n.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }` },
+      { name: 'src/app.js', content: `const form = document.querySelector('#taskForm');\nconst input = document.querySelector('#taskInput');\nconst list = document.querySelector('#taskList');\nconst count = document.querySelector('#taskCount');\nlet tasks = 0;\n\nform.addEventListener('submit', (event) => {\n  event.preventDefault();\n  const item = document.createElement('li');\n  const text = document.createElement('span');\n  text.textContent = input.value.trim();\n  const done = document.createElement('button');\n  done.type = 'button';\n  done.textContent = 'Done';\n  done.addEventListener('click', () => { item.remove(); tasks -= 1; updateCount(); });\n  item.append(text, done);\n  list.append(item);\n  tasks += 1;\n  input.value = '';\n  updateCount();\n});\n\nfunction updateCount() { count.textContent = tasks === 1 ? '1 small step in motion' : tasks ? tasks + ' small steps in motion' : 'No tasks yet'; }` }
+    ]
+  },
+  pythonModules: {
+    name: 'Python · local modules',
+    activeFile: 'main.py',
+    files: [
+      { name: 'main.py', content: `from lib.greetings import greet\n\nfor name in ("Ada", "Grace", "you"):\n    print(greet(name))` },
+      { name: 'lib/greetings.py', content: `def greet(name: str) -> str:\n    return f"Hello, {name}!"` },
+      { name: 'README.md', content: '# Python · local modules\n\nRun `main.py`. The import is resolved from this project’s virtual files. Safe mode uses the standard library; package installation is off by default.' }
+    ]
+  },
+  luaModules: {
+    name: 'Lua · local modules',
+    activeFile: 'main.lua',
+    files: [
+      { name: 'main.lua', content: `local greeting = require("lib.greetings")\n\nfor _, name in ipairs({ "Ada", "Grace", "you" }) do\n  print(greeting.say(name))\nend` },
+      { name: 'lib/greetings.lua', content: `local M = {}\n\nfunction M.say(name)\n  return "Hello, " .. name .. "!"\nend\n\nreturn M` },
+      { name: 'README.md', content: '# Lua · local modules\n\nRun `main.lua`; `require()` resolves Lua modules from the current project snapshot. The runtime has no host filesystem or network access.' }
+    ]
+  },
+  phpIncludes: {
+    name: 'PHP · local includes',
+    activeFile: 'index.php',
+    files: [
+      { name: 'index.php', content: `<?php\nrequire __DIR__ . '/includes/greeting.php';\n$name = 'world';\n?>\n<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>PHP on the page</title></head>\n<body><main><h1><?= htmlspecialchars(greeting($name), ENT_QUOTES, 'UTF-8') ?></h1><p>Rendered locally by the PHP WebAssembly runtime.</p></main></body></html>` },
+      { name: 'includes/greeting.php', content: `<?php\nfunction greeting(string $name): string {\n    return 'Hello, ' . $name . '!';\n}` },
+      { name: 'README.md', content: '# PHP · local includes\n\nRun `index.php` to render a sandboxed page. `require` can load files from this project; there is no web server or networked Composer install.' }
+    ]
+  },
+  javaProject: {
+    name: 'Java · same-package sources',
+    activeFile: 'src/Main.java',
+    files: [
+      { name: 'src/Main.java', content: `package demo;\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(Greeting.say("browser"));\n    }\n}` },
+      { name: 'src/Greeting.java', content: `package demo;\n\nfinal class Greeting {\n    static String say(String name) {\n        return "Hello, " + name + "!";\n    }\n}` },
+      { name: 'README.md', content: '# Java · same-package sources\n\nSelect `src/Main.java` and Run. The browser Java compiler combines explicitly referenced sources in the same package; general multi-package classpaths are not supported.' }
+    ]
+  },
+  sqlProject: {
+    name: 'SQLite · schema and data',
+    activeFile: 'main.sql',
+    files: [
+      { name: 'main.sql', content: `.read schema.sql\n.read seed.sql\n\nSELECT department, COUNT(*) AS people, ROUND(AVG(salary), 0) AS avg_salary\nFROM employees\nGROUP BY department\nORDER BY department;` },
+      { name: 'schema.sql', content: `CREATE TABLE employees (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);` },
+      { name: 'seed.sql', content: `INSERT INTO employees (name, department, salary) VALUES\n  ('Ada', 'Research', 125000),\n  ('Grace', 'Research', 132000),\n  ('Katherine', 'Engineering', 118000);` },
+      { name: 'README.md', content: '# SQLite · schema and data\n\nRun `main.sql`. SQLite `.read` loads sibling project scripts. The database is in-memory and starts fresh for each new session.' }
+    ]
+  },
+  ruby: {
+    name: 'Ruby · local require',
+    activeFile: 'main.rb',
+    files: [
+      { name: 'main.rb', content: `require_relative "lib/greetings"\n\nputs Greetings.say("browser")` },
+      { name: 'lib/greetings.rb', content: `module Greetings\n  def self.say(name)\n    "Hello, #{name}!"\n  end\nend` },
+      { name: 'README.md', content: '# Ruby · local require\n\nRun `main.rb` in the CRuby WebAssembly runtime. Project-local `require` is available; host OS, network sockets and gem installation are not.' }
+    ]
+  },
+  rProject: {
+    name: 'R · data and helper script',
+    activeFile: 'main.R',
+    files: [
+      { name: 'main.R', content: `source("R/summary.R")\nscores <- read.csv("data/scores.csv")\nprint(summarise_scores(scores$score))` },
+      { name: 'R/summary.R', content: `summarise_scores <- function(values) {\n  c(count = length(values), mean = mean(values), sd = sd(values))\n}` },
+      { name: 'data/scores.csv', content: `student,score\nAda,96\nGrace,91\nKatherine,99` },
+      { name: 'README.md', content: '# R · data and helper script\n\nRun `main.R` in webR. Base R and local `source()` imports work offline. In experimental mode, configured packages are fetched only from the webR WebAssembly package repository.' }
+    ]
+  },
+  perl: {
+    name: 'Perl · local module',
+    activeFile: 'main.pl',
+    files: [
+      { name: 'main.pl', content: `use strict;\nuse warnings;\nuse lib "/workspace/lib";\nuse Greetings;\n\nprint Greetings::say("browser"), "\\n";` },
+      { name: 'lib/Greetings.pm', content: `package Greetings;\nuse strict;\nuse warnings;\n\nsub say {\n  my ($name) = @_;\n  return "Hello, $name!";\n}\n\n1;` },
+      { name: 'README.md', content: '# Perl · local module\n\nRun `main.pl` in the experimental ZeroPerl WebAssembly runtime. Project files are virtual; CPAN installation and host OS/network access are unavailable.' }
     ]
   },
   blank: {
@@ -234,7 +321,8 @@ export function normalizeProject(value, fallbackName = 'Imported project') {
 const PACKAGE_NAME = /^(?:@[A-Za-z0-9][A-Za-z0-9._-]{0,49}\/)?[A-Za-z0-9][A-Za-z0-9._+-]{0,99}(?:==[A-Za-z0-9][A-Za-z0-9._+-]{0,99})?$/;
 const PYTHON_PACKAGE_SPEC = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}(?:==[A-Za-z0-9][A-Za-z0-9._+-]{0,99})?$/;
 const ESM_PACKAGE_NAME = /^(?:@[A-Za-z0-9][A-Za-z0-9._-]{0,49}\/)?[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
-const PACKAGE_LANGUAGES = new Set(['javascript', 'typescript', 'python', 'lua', 'php', 'java']);
+const R_PACKAGE_SPEC = /^[A-Za-z][A-Za-z0-9.]{0,99}$/;
+const PACKAGE_LANGUAGES = new Set(['javascript', 'typescript', 'python', 'lua', 'php', 'java', 'r']);
 
 export function normalizeProjectPackages(value) {
   const result = {};
@@ -244,7 +332,8 @@ export function normalizeProjectPackages(value) {
     const unique = [...new Set(packages.filter((name) => typeof name === 'string'
       && PACKAGE_NAME.test(name)
       && (language !== 'python' || PYTHON_PACKAGE_SPEC.test(name))
-      && (!['javascript', 'typescript'].includes(language) || ESM_PACKAGE_NAME.test(name))))].slice(0, 32);
+      && (language !== 'r' || R_PACKAGE_SPEC.test(name))
+      && (!['javascript', 'typescript'].includes(language) || ESM_PACKAGE_NAME.test(name))))].slice(0, language === 'r' ? 20 : 32);
     if (unique.length) result[language] = unique;
   }
   return result;
@@ -297,7 +386,8 @@ export function createStarterProject(starter = 'landing') {
   return {
     projectName: selected.name,
     starter: Object.hasOwn(STARTERS, starter) ? starter : 'landing',
-    activeFile: files.find((file) => file.name === 'index.html')?.name || files[0].name,
+    activeFile: files.some((file) => file.name === selected.activeFile) ? selected.activeFile
+      : files.find((file) => file.name === 'index.html')?.name || files[0].name,
     files,
     folders
   };

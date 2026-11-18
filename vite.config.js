@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
@@ -19,6 +19,60 @@ const pyodideMime = {
 };
 
 const javaRuntimeDirectory = resolve(root, 'node_modules/@live-codes/java-wasm/dist');
+const webRRuntimeDirectory = resolve(root, 'node_modules/webr/dist');
+const webRRootAssets = new Set(['R.js', 'R.wasm', 'webr-worker.js', 'libRblas.so', 'libRlapack.so']);
+const webRRuntimeFiles = [];
+function collectWebRRuntimeFiles(directory = webRRuntimeDirectory, prefix = '') {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const absolute = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      if (relative === 'vfs' || relative.startsWith('vfs/')) collectWebRRuntimeFiles(absolute, relative);
+    } else if (relative.startsWith('vfs/') || webRRootAssets.has(relative)) {
+      webRRuntimeFiles.push(relative);
+    }
+  }
+}
+collectWebRRuntimeFiles();
+function webRContentType(path) {
+  if (path.endsWith('.js')) return 'text/javascript; charset=utf-8';
+  if (path.endsWith('.wasm')) return 'application/wasm';
+  if (path.endsWith('.json')) return 'application/json; charset=utf-8';
+  if (path.endsWith('.gz')) return 'application/gzip';
+  return 'application/octet-stream';
+}
+function webRRuntimeAssets() {
+  const assets = new Set(webRRuntimeFiles);
+  return {
+    name: 'tzrender-local-webr-assets',
+    configureServer(server) {
+      server.middlewares.use('/webr', (request, response, next) => {
+        if (request.method !== 'GET' && request.method !== 'HEAD') return next();
+        let relative;
+        try { relative = decodeURIComponent(new URL(request.url || '/', 'http://vite.local').pathname).replace(/^\/+/, ''); }
+        catch { response.statusCode = 400; response.end('Invalid webR asset path.'); return; }
+        if (!assets.has(relative)) return next();
+        try {
+          const bytes = readFileSync(resolve(webRRuntimeDirectory, relative));
+          response.statusCode = 200;
+          response.setHeader('Content-Type', webRContentType(relative));
+          response.setHeader('Cache-Control', 'public, max-age=3600');
+          response.setHeader('Content-Length', bytes.byteLength);
+          response.end(request.method === 'HEAD' ? undefined : bytes);
+        } catch {
+          response.statusCode = 404;
+          response.end('webR runtime asset not found.');
+        }
+      });
+    },
+    generateBundle() {
+      for (const relative of webRRuntimeFiles) {
+        this.emitFile({ type: 'asset', fileName: `webr/${relative}`, source: readFileSync(resolve(webRRuntimeDirectory, relative)) });
+      }
+    }
+  };
+}
+
 const javaRuntimeFiles = [
   'worker-java.js',
   'teavm/compiler.wasm-runtime.js',
@@ -91,7 +145,7 @@ function pyodideRuntimeAssets() {
 }
 
 export default defineConfig({
-  plugins: [pyodideRuntimeAssets(), javaRuntimeAssets()],
+  plugins: [pyodideRuntimeAssets(), javaRuntimeAssets(), webRRuntimeAssets()],
   resolve: {
     alias: [
       {

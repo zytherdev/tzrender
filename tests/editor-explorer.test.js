@@ -5,6 +5,8 @@ import { normalizeProject } from '../site/editor/project.js';
 function buttonFor(path) {
   return [...document.querySelectorAll('.tree-item')].find((item) => item.dataset.path === path);
 }
+function dialogField() { return document.querySelector('.explorer-dialog input.explorer-dialog-field') || document.querySelector('.explorer-dialog select.explorer-dialog-field'); }
+function acceptDialog() { document.querySelector('.explorer-dialog-actions button:last-child').click(); }
 function shortcut(target, key, options = {}) {
   target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...options }));
 }
@@ -31,9 +33,8 @@ describe('project explorer', () => {
   });
 
   it('creates folders and nested files, and expands them in the tree', () => {
-    vi.spyOn(window, 'prompt').mockReturnValueOnce('src').mockReturnValueOnce('app.js');
-    document.getElementById('addFolder').click();
-    document.getElementById('addFile').click();
+    document.getElementById('addFolder').click(); dialogField().value = 'src'; acceptDialog();
+    document.getElementById('addFile').click(); dialogField().value = 'app.js'; acceptDialog();
     expect(state.folders).toContain('src');
     expect(state.files).toContainEqual({ name: 'src/app.js', content: '' });
     expect(state.activeFile).toBe('src/app.js');
@@ -42,6 +43,28 @@ describe('project explorer', () => {
     expect(opened).toHaveBeenCalledWith('src/app.js');
   });
 
+  it('keeps invalid names open with an inline error and restores focus on Escape', () => {
+    const trigger = document.getElementById('addFile'); trigger.focus(); trigger.click();
+    expect(document.activeElement).toBe(dialogField());
+    dialogField().value = '../bad'; acceptDialog();
+    expect(document.querySelector('.explorer-dialog')).toBeTruthy();
+    expect(document.querySelector('[role=alert]').textContent).toBeTruthy();
+    shortcut(dialogField(), 'Escape');
+    expect(document.querySelector('.explorer-dialog')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+  it('allows selecting a destination folder when creating and moving', () => {
+    state.folders.push('src'); explorer.render();
+    document.getElementById('addFile').click();
+    dialogField().value = 'main.js'; document.querySelector('select.explorer-dialog-field').value = 'src'; acceptDialog();
+    expect(state.files.some((file) => file.name === 'src/main.js')).toBe(true);
+    explorer.select('index.html');
+    const context = buttonFor('index.html'); context.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 15, clientY: 15 }));
+    [...document.querySelectorAll('.context-menu-item')].find((button) => button.textContent.includes('Move to')).click();
+    expect(document.querySelector('select.explorer-dialog-field')).toBeTruthy();
+    document.querySelector('select.explorer-dialog-field').value = 'src'; acceptDialog();
+    expect(state.files.some((file) => file.name === 'src/index.html')).toBe(true);
+  });
   it('copies with keyboard shortcuts without overwriting a same-named file', () => {
     explorer.select('index.html');
     shortcut(buttonFor('index.html'), 'c', { ctrlKey: true });
@@ -52,8 +75,7 @@ describe('project explorer', () => {
   });
 
   it('cuts and pastes a file into a folder and retains the active file', () => {
-    vi.spyOn(window, 'prompt').mockReturnValueOnce('src');
-    document.getElementById('addFolder').click();
+    document.getElementById('addFolder').click(); dialogField().value = 'src'; acceptDialog();
     explorer.select('index.html');
     shortcut(buttonFor('index.html'), 'x', { ctrlKey: true });
     explorer.select('src');
@@ -63,12 +85,15 @@ describe('project explorer', () => {
   });
 
   it('provides a contextual menu and protects the last file from deletion', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
     const file = buttonFor('index.html');
     file.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 20, clientY: 20 }));
     const deleteButton = [...document.querySelectorAll('.context-menu-item')].find((item) => item.textContent.includes('Delete'));
     expect(deleteButton).toBeTruthy();
     deleteButton.click();
+    expect(document.querySelector('[role=dialog]').getAttribute('aria-labelledby')).toBeTruthy();
+    expect(document.querySelector('.is-destructive').textContent).toBe('Delete');
+    acceptDialog();
     expect(state.files).toHaveLength(1);
     expect(toast).toHaveBeenCalled();
   });
@@ -76,12 +101,13 @@ describe('project explorer', () => {
   it('targets the focused row rather than a previously selected item for keyboard deletion', () => {
     state.files.push({ name: 'script.js', content: 'code' });
     explorer.select('index.html');
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
     const script = buttonFor('script.js');
     script.focus();
     shortcut(script, 'Delete');
+    expect(document.querySelector('.explorer-dialog').textContent).toContain('script.js');
+    acceptDialog();
     expect(state.files).toEqual([{ name: 'index.html', content: 'hello' }]);
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('script.js'));
   });
 
   it('does not intercept copy and paste in the code or other inputs', () => {
@@ -91,8 +117,7 @@ describe('project explorer', () => {
   });
 
   it('keeps focus on a folder after expanding it', () => {
-    vi.spyOn(window, 'prompt').mockReturnValueOnce('src');
-    document.getElementById('addFolder').click();
+    document.getElementById('addFolder').click(); dialogField().value = 'src'; acceptDialog();
     buttonFor('src').focus();
     buttonFor('src').click();
     expect(document.activeElement.dataset.path).toBe('src');

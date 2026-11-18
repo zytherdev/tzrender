@@ -7,6 +7,9 @@ import '../node_modules/monaco-editor/esm/vs/languages/definitions/css/register.
 import '../node_modules/monaco-editor/esm/vs/languages/definitions/html/register.js';
 import '../node_modules/monaco-editor/esm/vs/languages/definitions/javascript/register.js';
 import '../node_modules/monaco-editor/esm/vs/languages/definitions/typescript/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/ruby/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/r/register.js';
+import '../node_modules/monaco-editor/esm/vs/languages/definitions/perl/register.js';
 import '../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/browser/colorPickerContribution.js';
 import '../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/browser/colorPicker.css';
 import editorWorker from '../node_modules/monaco-editor/esm/vs/editor/editor.worker.js?worker';
@@ -40,6 +43,9 @@ import { createPhpRuntime } from './editor/php-runtime.js';
 import { createTypeScriptRuntime } from './editor/typescript-runtime.js';
 import { createLuaRuntime } from './editor/lua-runtime.js';
 import { createSqlRuntime } from './editor/sql-runtime.js';
+import { createRubyRuntime } from './editor/ruby-runtime.js';
+import { createRRuntime } from './editor/r-runtime.js';
+import { createPerlRuntime } from './editor/perl-runtime.js';
 import { executeTerminalCommand, getTerminalHelp } from './editor/terminal.js';
 import { createFileExplorer } from './editor/explorer.js';
 import { setupEditorAppearance } from './editor/appearance.js';
@@ -228,8 +234,8 @@ function updateExecutionModeChrome() {
   $('executionWarning').textContent = 'EXPERIMENTAL · confirm each run';
   $('executionWarning').title = 'Network/package support varies by runtime. HTTPS requests may send project data to external services until the preview session is stopped or replaced.';
   $('terminalDisclosure').textContent = mode === 'experimental'
-    ? 'Not an OS shell. Experimental access is available only for supported runtimes after a fresh confirmation on every run. Python packages are installed in a disposable worker; JavaScript/TypeScript ESM packages resolve through esm.sh. Other runtimes remain offline and may reject packages. Project code is untrusted.'
-    : 'Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, PHP and Java run in local browser workers/WebAssembly. Java receives the input before each run; Python and PHP use the same local stdin buffer where supported.';
+    ? 'Not an OS shell. Experimental access is available only after a fresh confirmation on every run. Python packages use a disposable worker; JavaScript ESM packages resolve through esm.sh; R can fetch configured packages precompiled for WebAssembly from the webR repository. Ruby and Perl remain offline; unsupported package requests are rejected. Project code is untrusted.'
+    : 'Not an OS shell: no Git, arbitrary commands, package installs, network access or host files. Python, Lua, PHP, Java, Ruby, R and Perl use local browser workers/WebAssembly; SQLite is in-memory. Configured WebAssembly R packages may be fetched only in experimental mode after confirmation.';
   document.documentElement.dataset.executionMode = mode;
 }
 
@@ -238,6 +244,7 @@ function packageLanguageForFile(name) {
   if (['js', 'mjs', 'cjs', 'jsx'].includes(extension)) return 'javascript';
   if (['ts', 'tsx'].includes(extension)) return 'typescript';
   if (extension === 'py') return 'python';
+  if (extension === 'r') return 'r';
   if (extension === 'lua') return 'lua';
   if (extension === 'php') return 'php';
   if (extension === 'java') return 'java';
@@ -254,28 +261,85 @@ function configureProjectPackages() {
     showToast('The current TypeScript compiler handles one file and does not support import/export or package imports. Configure ESM packages from a JavaScript module instead.');
     return;
   }
-  if (!['python', 'javascript', 'typescript'].includes(language)) {
+  if (!['python', 'javascript', 'typescript', 'r'].includes(language)) {
     showToast(`${language.toUpperCase()} packages cannot currently be installed by this browser runtime. Local project files remain available where the language runtime supports imports.`);
     return;
   }
   const current = project.packages?.[language] || [];
   const description = language === 'python'
     ? 'Python packages for this project (pip names, comma-separated). They are installed with micropip only in experimental mode and fetched again for each confirmed run.'
+    : language === 'r'
+      ? 'R package names, comma-separated. In experimental mode, webR fetches only packages precompiled for WebAssembly from its package repository, after confirming each run. Arbitrary R network connections are unavailable.'
     : `${language} ESM package names (comma-separated). Experimental preview resolves imports from esm.sh after each confirmed run.`;
-  const value = window.prompt(description, current.join(', '));
-  if (value === null) return;
-  const names = value.split(',').map((name) => name.trim()).filter(Boolean);
-  const packages = normalizeProjectPackages({ python: names });
-  if (names.length !== (packages.python || []).length) {
-    showToast('Use up to 32 valid pip package names (letters, numbers, dots, underscores, hyphens; optional ==version).');
-    return;
-  }
-  project.packages = { ...project.packages, ...packages };
-  if (!packages[language]) delete project.packages[language];
-  draftChanged = true;
-  $('dirtyIndicator').hidden = false;
-  scheduleSave();
-  showToast(packages[language]?.length ? `Saved ${packages[language].length} ${language} package${packages[language].length === 1 ? '' : 's'} for this project.` : 'Project package list cleared.');
+  const trigger = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'explorer-dialog-backdrop';
+  const dialog = document.createElement('section');
+  dialog.className = 'explorer-dialog';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  const title = document.createElement('h2');
+  title.id = 'package-dialog-title';
+  title.textContent = `Configure ${language.toUpperCase()} packages`;
+  const help = document.createElement('p');
+  help.id = 'package-dialog-description';
+  help.textContent = description;
+  const field = document.createElement('textarea');
+  field.className = 'explorer-dialog-field';
+  field.rows = 3;
+  field.value = current.join(', ');
+  field.setAttribute('aria-label', `${language.toUpperCase()} package names`);
+  field.setAttribute('aria-describedby', help.id);
+  const error = document.createElement('div');
+  error.className = 'explorer-dialog-error';
+  error.setAttribute('role', 'alert');
+  const actions = document.createElement('div');
+  actions.className = 'explorer-dialog-actions';
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'explorer-dialog-button';
+  cancel.textContent = 'Cancel';
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.className = 'explorer-dialog-button is-primary';
+  save.textContent = 'Save packages';
+  actions.append(cancel, save);
+  dialog.append(title, help, field, error, actions);
+  dialog.setAttribute('aria-labelledby', title.id);
+  overlay.append(dialog);
+  document.body.append(overlay);
+  const close = () => { overlay.remove(); if (trigger?.isConnected) trigger.focus(); };
+  cancel.addEventListener('click', close);
+  overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { event.preventDefault(); close(); }
+    if (event.key === 'Tab') {
+      const focusable = [field, cancel, save];
+      if (event.shiftKey && document.activeElement === focusable[0]) { event.preventDefault(); focusable.at(-1).focus(); }
+      else if (!event.shiftKey && document.activeElement === focusable.at(-1)) { event.preventDefault(); focusable[0].focus(); }
+    }
+  });
+  save.addEventListener('click', () => {
+    const names = field.value.split(',').map((name) => name.trim()).filter(Boolean);
+    const packages = normalizeProjectPackages({ [language]: names });
+    const limit = language === 'r' ? 20 : 32;
+    if (names.length > limit || names.length !== (packages[language] || []).length) {
+      error.textContent = language === 'r'
+        ? 'Use up to 20 R package names containing letters, numbers and dots; versions are not accepted.'
+        : 'Use up to 32 valid package names; Python accepts optional ==version.';
+      field.setAttribute('aria-invalid', 'true');
+      field.focus();
+      return;
+    }
+    project.packages = { ...project.packages, ...packages };
+    if (!packages[language]) delete project.packages[language];
+    draftChanged = true;
+    $('dirtyIndicator').hidden = false;
+    scheduleSave();
+    close();
+    showToast(packages[language]?.length ? `Saved ${packages[language].length} ${language} package${packages[language].length === 1 ? '' : 's'} for this project.` : 'Project package list cleared.');
+  });
+  field.focus();
 }
 
 function confirmExperimentalRun(name, language) {
@@ -283,14 +347,21 @@ function confirmExperimentalRun(name, language) {
   const packageList = project.packages?.[language] || [];
   const extension = String(name).split('.').pop().toLowerCase();
   const networkAvailable = ['html', 'htm', 'css', 'js', 'mjs', 'ts', 'tsx', 'jsx'].includes(extension) || language === 'python';
-  const packageAvailable = ['python', 'javascript'].includes(language);
+  const packageAvailable = ['python', 'javascript', 'r'].includes(language);
   const limits = [];
-  if (!networkAvailable) limits.push('this runtime still has no outbound-network bridge');
+  if (!networkAvailable && language !== 'r') limits.push('this runtime still has no outbound-network bridge');
   if (packageList.length && !packageAvailable) limits.push('configured package installation is not supported for this runtime');
   if (language === 'sql') limits.push('SQL remains confined to an in-memory SQLite database');
+  const accessNotice = language === 'r'
+    ? packageList.length
+      ? 'R code has no arbitrary network bridge. Only the configured WebAssembly packages below will be fetched from the webR package repository for this run.'
+      : 'R remains offline; no package downloads are requested for this run.'
+    : networkAvailable
+      ? 'The code and downloaded dependencies may send project data to any external HTTPS service. In a website preview, network activity can continue until you press Stop or replace the preview.'
+      : 'Network access is not available to this runtime; it remains offline even in experimental mode.';
   return window.confirm([
     `Run ${name} in EXPERIMENTAL mode?`,
-    networkAvailable ? 'The code and downloaded dependencies may send project data to any external HTTPS service. In a website preview, network activity can continue until you press Stop or replace the preview.' : 'Network access is not available to this runtime; it remains offline even in experimental mode.',
+    accessNotice,
     packageAvailable && packageList.length ? `Packages to fetch for this run: ${packageList.join(', ')}.` : '',
     limits.length ? `Limitations: ${limits.join('; ')}.` : '',
     'Project code and dependencies are untrusted. Permission applies to this run only; experimental worker/runtime state is discarded afterward.'
@@ -342,7 +413,7 @@ function fileIconClass(name) {
   const extension = name.split('.').pop().toLowerCase();
   const classes = { htm: 'html', mjs: 'js', cjs: 'js', jsx: 'js', tsx: 'ts', markdown: 'md', json: 'data', yaml: 'data', yml: 'data' };
   const badge = classes[extension] || extension;
-  return `file-${['html', 'css', 'js', 'ts', 'lua', 'py', 'php', 'java', 'sql', 'md', 'data'].includes(badge) ? badge : 'text'}`;
+  return `file-${['html', 'css', 'js', 'ts', 'lua', 'py', 'php', 'java', 'sql', 'md', 'data', 'rb', 'r', 'pl', 'pm'].includes(badge) ? badge : 'text'}`;
 }
 
 function renderFileList() {
@@ -360,13 +431,16 @@ function updateActiveFileChrome() {
   $('previewUrl').textContent = `/${file.name}`;
   const runnable = type.runnable;
   const extension = file.name.split('.').pop().toLowerCase();
-  $('runLabel').textContent = extension === 'py' ? 'Run Python' : extension === 'lua' ? 'Run Lua' : extension === 'sql' ? 'Run SQL' : extension === 'php' ? 'Run PHP' : extension === 'java' ? 'Run Java' : runnable ? 'Run' : 'Preview only';
+  $('runLabel').textContent = extension === 'py' ? 'Run Python' : extension === 'lua' ? 'Run Lua' : extension === 'sql' ? 'Run SQL' : extension === 'php' ? 'Run PHP' : extension === 'java' ? 'Run Java' : extension === 'rb' ? 'Run Ruby' : extension === 'r' ? 'Run R' : extension === 'pl' ? 'Run Perl' : runnable ? 'Run' : 'Preview only';
   $('runProject').title = file.name.toLowerCase().endsWith('.py')
     ? 'Run this file in the local Python worker'
     : extension === 'lua' ? 'Run this file in the local Lua WebAssembly runtime'
     : extension === 'sql' ? 'Run this file in the local SQLite WebAssembly runtime'
     : extension === 'php' ? 'Run this file in the local PHP WebAssembly runtime'
     : extension === 'java' ? 'Compile and run this file in the local Java WebAssembly runtime'
+    : extension === 'rb' ? 'Run this file in the local CRuby WebAssembly worker'
+    : extension === 'r' ? 'Run this file in the local webR runtime'
+    : extension === 'pl' ? 'Run this file in the local Perl WebAssembly worker'
     : runnable ? 'Run the project preview' : 'This extension receives syntax highlighting only';
   $('languageStatus').replaceChildren(document.createElement('span'), document.createTextNode(` ${type.language.toUpperCase()} · ${type.runnable ? 'runnable/previewable' : 'syntax only'}`));
   $('languageStatus').querySelector('span').className = 'status-dot';
@@ -617,6 +691,18 @@ const javaRuntime = createJavaRuntime({
   },
   onStatus: onLanguageRuntimeStatus
 });
+const rubyRuntime = createRubyRuntime({
+  onOutput(stream, text) { appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success'); },
+  onStatus: onLanguageRuntimeStatus
+});
+const rRuntime = createRRuntime({
+  onOutput(stream, text) { appendTerminalLine(text, stream === 'stderr' ? 'error' : stream === 'message' ? 'warning' : 'success'); },
+  onStatus: onLanguageRuntimeStatus
+});
+const perlRuntime = createPerlRuntime({
+  onOutput(stream, text) { appendTerminalLine(text, stream === 'stderr' ? 'error' : 'success'); },
+  onStatus: onLanguageRuntimeStatus
+});
 const pythonRuntime = createPythonRuntime({
   onOutput(stream, text) {
     appendTerminalLine(text, stream === 'stderr' ? 'error' : stream === 'result' ? 'success' : 'info');
@@ -717,7 +803,11 @@ async function runCompiledLanguageFile(language, name, source) {
   setOutputTab('terminal');
   appendTerminalLine(`$ ${language} ${name}`, 'command');
   setPreviewStatus(`Loading the local ${language.toUpperCase()} runtime…`, 'running');
-  const runtime = language === 'php' ? phpRuntime : javaRuntime;
+  const runtime = ({ php: phpRuntime, java: javaRuntime, ruby: rubyRuntime, r: rRuntime, perl: perlRuntime })[language];
+  if (!runtime) {
+    appendTerminalLine(`${language.toUpperCase()} runtime is unavailable.`, 'error');
+    return;
+  }
   try {
     const result = await runtime.run(name, source, {
       input: $('programInput')?.value || '', files: getFiles(),
@@ -807,9 +897,10 @@ async function runProject({ openPreview = false } = {}) {
     await runSqlFile(activeFile.name, activeFile.content);
     return;
   }
-  if (extension === 'php' || extension === 'java') {
-    setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension), activeFile.name);
-    await runCompiledLanguageFile(extension, activeFile.name, activeFile.content);
+  if (extension === 'php' || extension === 'java' || extension === 'rb' || extension === 'r' || extension === 'pl') {
+    const language = ({ rb: 'ruby', r: 'r', pl: 'perl' })[extension] || extension;
+    setPreviewDocument(buildLanguageInfoPreview(activeFile.name, extension, project.executionMode), activeFile.name);
+    await runCompiledLanguageFile(language, activeFile.name, activeFile.content);
     return;
   }
   if (['html', 'htm', 'css', 'js', 'mjs', 'ts'].includes(extension)
@@ -1044,6 +1135,24 @@ function runTerminalJava(filename) {
   return runCompiledLanguageFile('java', file.name, file.content);
 }
 
+function runTerminalRuby(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`Ruby file not found: ${filename}`));
+  return runCompiledLanguageFile('ruby', file.name, file.content);
+}
+
+function runTerminalR(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`R file not found: ${filename}`));
+  return runCompiledLanguageFile('r', file.name, file.content);
+}
+
+function runTerminalPerl(filename) {
+  const file = getFiles().find((item) => item.name === filename);
+  if (!file) return Promise.reject(new Error(`Perl file not found: ${filename}`));
+  return runCompiledLanguageFile('perl', file.name, file.content);
+}
+
 async function submitTerminal(event) {
   event.preventDefault();
   const input = $('terminalInput');
@@ -1057,6 +1166,8 @@ async function submitTerminal(event) {
   try {
     const result = await executeTerminalCommand(command, {
       files: getFiles,
+      project: snapshotProject,
+      applyProject: applyFilesystemProject,
       projectName: () => $('projectName').value,
       activeFile: () => activeFileName,
       runActive: () => runProject({ openPreview: true }),
@@ -1065,6 +1176,9 @@ async function submitTerminal(event) {
       runSql: runTerminalSql,
       runPhp: runTerminalPhp,
       runJava: runTerminalJava,
+      runRuby: runTerminalRuby,
+      runR: runTerminalR,
+      runPerl: runTerminalPerl,
       showPreview: () => setWorkspacePanel('preview'),
       clear: () => clearTerminal(''),
       stopRuntime: () => {
@@ -1072,6 +1186,9 @@ async function submitTerminal(event) {
         pythonRunSequence += 1;
         const extension = activeFileName.split('.').pop().toLowerCase();
         if (extension === 'lua') return luaRuntime.stop();
+        if (extension === 'rb') return rubyRuntime.stop();
+        if (extension === 'r') return rRuntime.stop();
+        if (extension === 'pl') return perlRuntime.stop();
         if (extension === 'sql') return sqlRuntime.stop();
         if (extension === 'php') return phpRuntime.stop();
         if (extension === 'java') return javaRuntime.stop();

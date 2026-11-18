@@ -50,6 +50,7 @@ function harness() {
     editorWorker: class {}, jsonWorker: class {}, cssWorker: class {}, htmlWorker: class {}, tsWorker: class {},
     createPythonRuntime: () => runtime, createLuaRuntime: () => runtime, createSqlRuntime: () => runtime,
     createPhpRuntime: () => runtime, createJavaRuntime: () => runtime,
+    createRubyRuntime: () => runtime, createRRuntime: () => runtime, createPerlRuntime: () => runtime,
     createTypeScriptRuntime: () => ({ compile, dispose: vi.fn() }),
     executeTerminalCommand: vi.fn(), getTerminalHelp: vi.fn(), createFileExplorer: vi.fn(), setupEditorAppearance: vi.fn()
   };

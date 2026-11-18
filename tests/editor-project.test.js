@@ -3,7 +3,7 @@ import {
   createStarterProject, FILE_TYPES, getFileType, isSafeFileName, isSafeFolderName,
   LEGACY_STORAGE_KEY, loadSavedProject, MAX_FILE_CHARS, MAX_FILE_NAME,
   MAX_PATH_LENGTH, MAX_PROJECT_CHARS, MAX_PROJECT_FILES, MAX_PROJECT_FOLDERS,
-  normalizeProject, serializeProject, STARTERS, STORAGE_KEY
+  normalizeProject, normalizeProjectPackages, serializeProject, STARTERS, STORAGE_KEY
 } from '../site/editor/project.js';
 
 const storage = (values) => ({ getItem: (key) => values[key] ?? null });
@@ -19,6 +19,10 @@ describe('project paths and validation', () => {
     expect(getFileType('weird.unknown').language).toBe('plaintext');
     expect(getFileType('constructor').language).toBe('plaintext');
     expect(getFileType('src/app.TS').language).toBe('typescript');
+    expect(getFileType('src/Main.RB')).toMatchObject({ language: 'ruby', runnable: true });
+    expect(getFileType('analysis.R')).toMatchObject({ language: 'r', runnable: true });
+    expect(getFileType('lib/Greetings.pm')).toMatchObject({ language: 'perl', runnable: false });
+    expect(getFileType('main.pl')).toMatchObject({ language: 'perl', runnable: true });
   });
 
   it('rejects traversal, absolute, control, dangerous and non-portable names', () => {
@@ -177,6 +181,19 @@ describe('project persistence and old versions', () => {
     expect(createStarterProject('constructor').starter).toBe('landing');
   });
 
+  it('provides runnable multi-file starters for popular runtimes and project patterns', () => {
+    for (const [id, activeFile] of [['ruby', 'main.rb'], ['rProject', 'main.R'], ['perl', 'main.pl'],
+      ['pythonModules', 'main.py'], ['luaModules', 'main.lua'], ['phpIncludes', 'index.php'],
+      ['javaProject', 'src/Main.java'], ['sqlProject', 'main.sql'], ['todo', 'index.html']]) {
+      const project = createStarterProject(id);
+      expect(project.activeFile, id).toBe(activeFile);
+      expect(project.files.length, id).toBeGreaterThan(1);
+      expect(project.files.some((entry) => entry.name === activeFile), id).toBe(true);
+    }
+    expect(createStarterProject('rProject').files.find((entry) => entry.name === 'main.R').content).toContain('source("R/summary.R")');
+    expect(createStarterProject('perl').files.find((entry) => entry.name === 'lib/Greetings.pm')).toBeTruthy();
+  });
+
   it('preserves explicit empty folders and infers ancestors for a starter', () => {
     STARTERS.nestedTest = { name: 'Nested', files: [file('src/deep/app')], folders: ['empty/child'] };
     try {
@@ -191,14 +208,16 @@ describe('project persistence and old versions', () => {
 
   it('round-trips safe/experimental mode and bounded package names with a safe legacy default', () => {
     const project = { projectName: 'Experimental', starter: 'blank', activeFile: 'main.py',
-      executionMode: 'experimental', packages: { python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'], java: ['bad name'] },
+      executionMode: 'experimental', packages: { python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'], r: ['ggplot2', 'dplyr==1.2'], java: ['bad name'] },
       files: [file('main.py', 'print(1)')] };
     const serialized = JSON.parse(serializeProject(project));
     expect(serialized.executionMode).toBe('experimental');
-    expect(serialized.packages).toEqual({ python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'] });
+    expect(serialized.packages).toEqual({ python: ['requests==2.32.3'], javascript: ['lit', '@scope/pkg'], r: ['ggplot2'] });
     expect(normalizeProject(serialized)).toMatchObject({ executionMode: 'experimental', packages: serialized.packages });
     expect(normalizeProject({ files: [file('main.py')] })).toMatchObject({ executionMode: 'safe', packages: {} });
     expect(normalizeProject({ ...serialized, executionMode: 'unsafe', packages: { python: ['-e evil'], unknown: ['x'] } }))
       .toMatchObject({ executionMode: 'safe', packages: {} });
+    expect(normalizeProjectPackages({ r: ['ggplot2', 'invalid-name', 'name==1.2', 'data.table'] }).r).toEqual(['ggplot2', 'data.table']);
+    expect(normalizeProjectPackages({ r: Array.from({ length: 22 }, (_, index) => `pkg${index}`) }).r).toHaveLength(20);
   });
 });
