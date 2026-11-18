@@ -28,12 +28,13 @@ function harness() {
     Uri: URI,
     MarkerSeverity: { Error: 8, Warning: 4 },
     editor: {
-      createModel(content, _language, uri) {
+      createModel(content, language, uri) {
         uri.toString(); // Monaco indexes models by URI and rejects malformed Unicode.
         let value = content;
         const listeners = new Set();
         return {
           uri,
+          getLanguageId: () => language,
           getValue: () => value,
           setValue(next) { value = next; for (const listener of listeners) listener(); },
           onDidChangeContent(listener) { listeners.add(listener); return { dispose: () => listeners.delete(listener) }; },
@@ -52,6 +53,10 @@ function harness() {
     createPhpRuntime: () => runtime, createJavaRuntime: () => runtime,
     createRubyRuntime: () => runtime, createRRuntime: () => runtime, createPerlRuntime: () => runtime,
     createTypeScriptRuntime: () => ({ compile, dispose: vi.fn() }),
+    registerRubyIntelligence: vi.fn(() => ({ dispose: vi.fn() })),
+    registerRIntelligence: vi.fn(() => ({ dispose: vi.fn() })),
+    registerPerlIntelligence: vi.fn(() => ({ dispose: vi.fn() })),
+    updateLanguageDiagnostics: vi.fn(),
     executeTerminalCommand: vi.fn(), getTerminalHelp: vi.fn(), createFileExplorer: vi.fn(), setupEditorAppearance: vi.fn()
   };
   return new Function(...Object.keys(dependencies), `${controllerSource}\nreturn {

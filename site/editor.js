@@ -46,6 +46,10 @@ import { createSqlRuntime } from './editor/sql-runtime.js';
 import { createRubyRuntime } from './editor/ruby-runtime.js';
 import { createRRuntime } from './editor/r-runtime.js';
 import { createPerlRuntime } from './editor/perl-runtime.js';
+import { registerRubyIntelligence } from './editor/ruby-intelligence.js';
+import { registerRIntelligence } from './editor/r-intelligence.js';
+import { registerPerlIntelligence } from './editor/perl-intelligence.js';
+import { updateLanguageDiagnostics } from './editor/language-diagnostics.js';
 import { executeTerminalCommand, getTerminalHelp } from './editor/terminal.js';
 import { createFileExplorer } from './editor/explorer.js';
 import { setupEditorAppearance } from './editor/appearance.js';
@@ -69,6 +73,7 @@ const modelSubscriptions = new Map();
 let project = readDraft() || createStarterProject('landing');
 let activeFileName = project.activeFile;
 let editor;
+let languageIntelligenceDisposers = [];
 let explorer;
 let saveTimer = 0;
 let previewTimer = 0;
@@ -527,6 +532,7 @@ function appendTerminalLine(message, kind = 'info') {
 }
 
 function updateProblems() {
+  updateLanguageDiagnostics(monaco, models);
   const host = $('problemsPanel');
   const entries = [];
   for (const [name, model] of models) {
@@ -1353,6 +1359,15 @@ function initEditor() {
   updateExecutionModeChrome();
   updateProjectName();
   for (const file of project.files) makeModel(file);
+  for (const dispose of languageIntelligenceDisposers) {
+    if (typeof dispose === 'function') dispose();
+    else dispose?.dispose?.();
+  }
+  languageIntelligenceDisposers = [
+    registerRubyIntelligence(monaco, snapshotProject),
+    registerRIntelligence(monaco, snapshotProject),
+    registerPerlIntelligence(monaco, snapshotProject)
+  ];
 
   editor = monaco.editor.create($('codeEditor'), {
     model: models.get(activeFileName), theme: 'tzrender-night', automaticLayout: true,
