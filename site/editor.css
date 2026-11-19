@@ -106,9 +106,14 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .editor-panel { min-width: 0; min-height: 0; background: #191722; }
 .code-pane { display: grid; overflow: hidden; grid-column: 3; grid-row: 1; grid-template-rows: 37px minmax(0, 1fr) 23px; }
 .pane-titlebar { display: flex; min-width: 0; height: 37px; align-items: center; justify-content: space-between; padding-inline: .65rem; border-bottom: 1px solid #302d3a; background: #1b1924; white-space: nowrap; }
-.open-file-tab { display: flex; min-width: 0; height: 100%; align-items: center; gap: .38rem; color: #e8e4f1; font-size: .6rem; }
-.open-file-tab > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.open-file-tabs { display: flex; overflow: auto; min-width: 0; flex: 1; height: 100%; align-items: stretch; gap: 2px; scrollbar-width: thin; }
+.open-file-tab { display: flex; min-width: 0; max-width: 230px; align-items: center; border: 1px solid transparent; border-bottom: 2px solid transparent; color: var(--editor-muted); background: transparent; font-size: var(--editor-text-small); }
+.open-file-tab.active { border-color: var(--editor-border-subtle); border-bottom-color: var(--editor-accent); color: var(--editor-text-color); background: var(--editor-surface); }
+.open-file-tab-main { display: flex; min-width: 0; align-items: center; gap: .38rem; padding: 0 .35rem; border: 0; color: inherit; background: transparent; font: inherit; cursor: pointer; }
+.open-file-tab-main > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .open-file-tab .file-symbol { width: 16px; height: 16px; }
+.open-file-tab-close { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 4px; color: var(--editor-muted); background: transparent; cursor: pointer; }
+.open-file-tab-close:hover { color: var(--editor-text-color); background: var(--editor-hover); }
 .dirty-indicator { color: #f1bf62; font-size: .5rem; }
 .pane-tools { display: flex; flex: 0 0 auto; align-items: center; gap: .25rem; }
 .editor-language-label { margin-right: .25rem; color: #827d90; font: .5rem var(--font-mono); }

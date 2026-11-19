@@ -146,8 +146,8 @@
 
     <section class="code-pane editor-panel" id="codePane" aria-label="Code editor">
       <div class="pane-titlebar">
-        <div class="open-file-tab"><span class="file-symbol file-html" id="activeFileSymbol" aria-hidden="true">5</span><span id="activeFileLabel">index.html</span><span class="dirty-indicator" id="dirtyIndicator" hidden aria-label="Unsaved changes">●</span></div>
-        <div class="pane-tools"><span class="editor-language-label" id="languageLabel">HTML</span><button class="subtle-icon-button" id="renameFile" type="button" title="Rename the active file">Rename</button><button class="subtle-icon-button" id="deleteFile" type="button" title="Delete the active file">Delete</button></div>
+        <div class="open-file-tabs" id="openFileTabs" role="tablist" aria-label="Open files"></div>
+        <div class="pane-tools"><span class="editor-language-label" id="languageLabel">HTML</span><span id="dirtyIndicator" hidden aria-hidden="true"></span><button class="subtle-icon-button" id="renameFile" type="button" title="Rename the active file">Rename</button><button class="subtle-icon-button" id="deleteFile" type="button" title="Delete the active file">Delete</button></div>
       </div>
       <div id="codeEditor" class="monaco-mount" aria-label="Source code editor"></div>
       <div class="editor-statusbar"><span id="cursorStatus">Ln 1, Col 1</span><span id="languageStatus"><span class="status-dot"></span> HTML · CSS · JavaScript</span><span id="encodingStatus">UTF-8 · LF</span></div>

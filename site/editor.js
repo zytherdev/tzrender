@@ -78,6 +78,7 @@ const viewStates = new Map();
 const modelSubscriptions = new Map();
 let project = readDraft() || createStarterProject('landing');
 let activeFileName = project.activeFile;
+let openFileNames = [activeFileName];
 let editor;
 let languageIntelligenceDisposers = [];
 let explorer;
@@ -531,6 +532,7 @@ function onModelChange(name) {
   if (!models.has(name)) return;
   draftChanged = true;
   $('dirtyIndicator').hidden = false;
+  renderOpenFileTabs();
   scheduleSave();
   scheduleProblems();
   schedulePreview();
@@ -564,13 +566,69 @@ function renderFileList() {
   explorer?.render();
 }
 
+function renderOpenFileTabs() {
+  const host = $('openFileTabs');
+  if (!host) return;
+  const available = new Set(getFiles().map((file) => file.name));
+  openFileNames = openFileNames.filter((name) => available.has(name));
+  if (!openFileNames.length && activeFileName && available.has(activeFileName)) openFileNames = [activeFileName];
+  host.replaceChildren();
+  for (const name of openFileNames) {
+    const file = getFiles().find((item) => item.name === name);
+    if (!file) continue;
+    const type = getFileType(name);
+    const tab = document.createElement('div');
+    tab.className = `open-file-tab${name === activeFileName ? ' active' : ''}`;
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-selected', String(name === activeFileName));
+    tab.title = name;
+    const button = document.createElement('button');
+    button.className = 'open-file-tab-main';
+    button.type = 'button';
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-selected', String(name === activeFileName));
+    const symbol = document.createElement('span');
+    symbol.className = `file-symbol ${fileIconClass(name)}`;
+    symbol.setAttribute('aria-hidden', 'true');
+    symbol.textContent = type.icon;
+    const label = document.createElement('span');
+    label.textContent = name;
+    const dirty = document.createElement('span');
+    dirty.className = 'dirty-indicator';
+    dirty.hidden = !(draftChanged && name === activeFileName);
+    dirty.textContent = '●';
+    dirty.setAttribute('aria-label', 'Unsaved changes');
+    button.append(symbol, label, dirty);
+    button.addEventListener('click', () => setActiveFile(name));
+    const close = document.createElement('button');
+    close.className = 'open-file-tab-close';
+    close.type = 'button';
+    close.setAttribute('aria-label', `Close ${name}`);
+    close.title = `Close ${name}`;
+    close.textContent = '×';
+    close.addEventListener('click', (event) => { event.stopPropagation(); closeOpenFile(name); });
+    tab.append(button, close);
+    host.append(tab);
+  }
+}
+
+function closeOpenFile(name) {
+  if (!openFileNames.includes(name)) return;
+  if (openFileNames.length === 1) {
+    showToast('Keep at least one file tab open.');
+    return;
+  }
+  const index = openFileNames.indexOf(name);
+  openFileNames = openFileNames.filter((item) => item !== name);
+  if (activeFileName === name) setActiveFile(openFileNames[Math.max(0, index - 1)]);
+  else renderOpenFileTabs();
+}
+
 function updateActiveFileChrome() {
   const file = getFiles().find((item) => item.name === activeFileName);
   if (!file) return;
   const type = getFileType(file.name);
-  $('activeFileSymbol').textContent = type.icon;
-  $('activeFileSymbol').className = `file-symbol ${fileIconClass(file.name)}`;
-  $('activeFileLabel').textContent = file.name;
+  renderOpenFileTabs();
   $('languageLabel').textContent = type.language.toUpperCase();
   $('previewUrl').textContent = `/${file.name}`;
   const runnable = type.runnable;
@@ -595,6 +653,7 @@ function updateActiveFileChrome() {
 
 function setActiveFile(name) {
   if (!models.has(name)) return;
+  if (!openFileNames.includes(name)) openFileNames.push(name);
   if (activeFileName === name) {
     explorer?.select(name);
     if (window.matchMedia('(max-width: 900px)').matches) setWorkspacePanel('editor');
