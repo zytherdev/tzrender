@@ -808,16 +808,17 @@ function openPreviewInNewTab() {
   let suffix;
   try { suffix = previewLocationSuffix(); }
   catch (error) { showToast(error?.message || 'Invalid preview parameters.'); $('previewLocation')?.focus(); return; }
-  const popup = window.open('', '_blank', 'noopener,noreferrer');
+  const popup = window.open('about:blank', '_blank');
   if (!popup) {
     showToast('The browser blocked the new tab. Allow pop-ups for this editor and try again.');
     return;
   }
   try {
-    popup.document.open();
-    popup.document.write(latestPreviewDocument.srcdoc);
+    popup.document.open('text/html', 'replace');
+    popup.document.write(`<!doctype html>${latestPreviewDocument.srcdoc}`);
     popup.document.close();
     if (suffix) popup.history.replaceState(null, '', `${window.location.pathname}${suffix}`);
+    try { popup.opener = null; } catch { /* Some browsers expose opener as read-only. */ }
   } catch (error) {
     popup.close();
     showToast(error?.message || 'The preview could not be opened in a new tab.');
