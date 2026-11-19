@@ -162,7 +162,8 @@ export default defineConfig({
       input: {
         home: resolve(root, 'index.html'),
         editor: resolve(root, 'editor.html'),
-        tools: resolve(root, 'tools.html')
+        tools: resolve(root, 'tools.html'),
+        preview: resolve(root, 'preview.html')
       }
     }
   },

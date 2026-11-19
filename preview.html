@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tzrender Preview</title>
+  <style>html,body{margin:0;min-height:100%;background:#f4f2f9;font:14px system-ui,sans-serif}body{display:grid;place-items:center;color:#625d70}.preview-error{max-width:34rem;padding:2rem;text-align:center}code{padding:.15rem .3rem;border-radius:4px;background:#e9e5f2}</style>
+</head>
+<body>
+  <main class="preview-error" id="previewError">Loading preview…</main>
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token');
+      const key = token && /^[a-z0-9-]+$/i.test(token) ? `tzrender-preview-${token}` : '';
+      let payload;
+      try { payload = key ? JSON.parse(sessionStorage.getItem(key) || 'null') : null; } catch { payload = null; }
+      if (!payload || typeof payload.srcdoc !== 'string') {
+        document.getElementById('previewError').innerHTML = '<h1>Preview not found</h1><p>Return to the editor and open the Preview again.</p>';
+        return;
+      }
+      document.open('text/html', 'replace');
+      document.write(`<!doctype html>${payload.srcdoc}`);
+      document.close();
+    })();
+  </script>
+</body>
+</html>

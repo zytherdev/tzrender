@@ -808,20 +808,27 @@ function openPreviewInNewTab() {
   let suffix;
   try { suffix = previewLocationSuffix(); }
   catch (error) { showToast(error?.message || 'Invalid preview parameters.'); $('previewLocation')?.focus(); return; }
-  const popup = window.open('about:blank', '_blank');
-  if (!popup) {
-    showToast('The browser blocked the new tab. Allow pop-ups for this editor and try again.');
+  const token = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  const storageKey = `tzrender-preview-${token}`;
+  const viewport = $('viewportSize')?.value || 'responsive';
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify({ srcdoc: latestPreviewDocument.srcdoc, viewport }));
+  } catch {
+    showToast('The preview could not be prepared for a reloadable tab.');
     return;
   }
-  try {
-    popup.document.open('text/html', 'replace');
-    popup.document.write(`<!doctype html>${latestPreviewDocument.srcdoc}`);
-    popup.document.close();
-    if (suffix) popup.history.replaceState(null, '', `${window.location.pathname}${suffix}`);
-    try { popup.opener = null; } catch { /* Some browsers expose opener as read-only. */ }
-  } catch (error) {
-    popup.close();
-    showToast(error?.message || 'The preview could not be opened in a new tab.');
+  const previewUrl = new URL('preview.html', window.location.href);
+  const requested = new URL(suffix || '', previewUrl.href);
+  previewUrl.search = requested.search;
+  previewUrl.searchParams.set('token', token);
+  previewUrl.hash = requested.hash;
+  const sizes = { desktop: [1280, 800], tablet: [768, 1024], mobile: [390, 844], responsive: [1280, 800] };
+  const [width, height] = sizes[viewport] || sizes.responsive;
+  const popup = window.open(previewUrl.href, '_blank', `popup=yes,width=${width},height=${height},resizable=yes,scrollbars=yes`);
+  if (!popup) {
+    sessionStorage.removeItem(storageKey);
+    showToast('The browser blocked the new tab. Allow pop-ups for this editor and try again.');
+    return;
   }
 }
 
