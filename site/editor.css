@@ -626,13 +626,12 @@ body.editor-shell :is(button, a, input, select, textarea, [tabindex], [role="tre
   .editor-workspace:not([data-explorer-hidden="true"])[data-panel="files"] .file-sidebar {
     position: absolute;
     z-index: 4;
-    inset: 38px auto calc(var(--output-height) + 8px) 0;
+    inset: 38px auto 0 0;
     display: flex;
     width: min(320px, 90vw);
     border-right: 1px solid var(--editor-border);
     box-shadow: var(--editor-menu-shadow);
   }
-  .editor-workspace[data-output-hidden="true"] .file-sidebar { bottom: 0; }
   .editor-workspace[data-focus="code"] .code-pane, .editor-workspace[data-focus="preview"] .preview-pane { grid-row: 1; }
   .editor-workspace[data-code-hidden="true"] .code-pane,
   .editor-workspace[data-preview-hidden="true"] .preview-pane,

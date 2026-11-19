@@ -200,7 +200,7 @@ function applyWorkspaceLayout() {
     if (codeVisible && previewVisible) $('paneDivider').style.gridRow = tabletLayout ? '2' : '1';
     if (outputVisible) {
       if (topPanelsVisible) {
-        $('outputPane').style.gridColumn = '1 / -1';
+        $('outputPane').style.gridColumn = !tabletLayout && explorerVisible ? '3 / -1' : '1 / -1';
         $('outputPane').style.gridRow = tabletLayout ? '4' : '3';
       } else if (explorerVisible) {
         columns.push('7px');
@@ -222,7 +222,7 @@ function applyWorkspaceLayout() {
     $('sidebarDivider').style.display = explorerVisible && (codeVisible || previewVisible || (outputVisible && !topPanelsVisible)) ? '' : 'none';
     $('outputDivider').style.display = outputVisible && topPanelsVisible ? '' : 'none';
     if (outputVisible && topPanelsVisible) {
-      $('outputDivider').style.gridColumn = '1 / -1';
+      $('outputDivider').style.gridColumn = !tabletLayout && explorerVisible ? '3 / -1' : '1 / -1';
       $('outputDivider').style.gridRow = tabletLayout ? '3' : '2';
     }
   } else {
