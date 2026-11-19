@@ -70,7 +70,7 @@
 
   <div class="toolstrip" role="toolbar" aria-label="Editor tools">
     <details class="toolstrip-menu">
-      <summary class="tool-button" aria-label="Open editor tools and layout menu">Tools <span aria-hidden="true">⌄</span></summary>
+      <summary class="tool-button" aria-label="Open editor tools and layout menu">Tools <svg class="tools-chevron" aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path d="m3.5 6 4.5 4.5L12.5 6"/></svg></summary>
       <div class="toolstrip-menu-content">
         <section class="tool-panel" aria-labelledby="toolPanelAppearance">
           <h2 id="toolPanelAppearance">Appearance</h2>
@@ -101,18 +101,18 @@
         <section class="tool-panel" aria-labelledby="toolPanelWorkspace">
           <h2 id="toolPanelWorkspace">Workspace panels</h2>
           <div class="tool-menu-actions tool-view-actions" aria-label="Workspace panels">
-            <div class="workspace-toggle-buttons" aria-label="Hide or show workspace panels">
-              <button class="tool-button" id="toggleExplorer" type="button" aria-pressed="true" title="Hide Explorer (Ctrl+Shift+1)">Files</button>
-              <button class="tool-button" id="toggleCode" type="button" aria-pressed="true" title="Hide code (Ctrl+Shift+2)">Code</button>
-              <button class="tool-button" id="togglePreview" type="button" aria-pressed="true" title="Hide Preview (Ctrl+Shift+3)">Preview</button>
-              <button class="tool-button" id="toggleOutput" type="button" aria-pressed="true" title="Hide Terminal (Ctrl+Shift+4)">Terminal</button>
-            </div>
             <button class="tool-button" id="focusCode" type="button" title="Focus only the code pane">Focus code</button>
             <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Code full-screen</button>
           </div>
         </section>
       </div>
     </details>
+    <div class="workspace-toggle-buttons desktop-panel-toggles" aria-label="Workspace panel visibility">
+      <button class="tool-button" id="toggleExplorer" type="button" aria-pressed="true" title="Hide or show Files (Ctrl/Cmd+Shift+1)"><span>Files</span><kbd aria-hidden="true">Ctrl/⌘⇧1</kbd></button>
+      <button class="tool-button" id="toggleCode" type="button" aria-pressed="true" title="Hide or show Code (Ctrl/Cmd+Shift+2)"><span>Code</span><kbd aria-hidden="true">Ctrl/⌘⇧2</kbd></button>
+      <button class="tool-button" id="togglePreview" type="button" aria-pressed="true" title="Hide or show Preview (Ctrl/Cmd+Shift+3)"><span>Preview</span><kbd aria-hidden="true">Ctrl/⌘⇧3</kbd></button>
+      <button class="tool-button" id="toggleOutput" type="button" aria-pressed="true" title="Hide or show Terminal (Ctrl/Cmd+Shift+4)"><span>Terminal</span><kbd aria-hidden="true">Ctrl/⌘⇧4</kbd></button>
+    </div>
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">

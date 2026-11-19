@@ -23,6 +23,8 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .toolstrip-menu { position: relative; flex: 0 0 auto; }
 .toolstrip-menu > summary { display: flex; min-height: 28px; align-items: center; gap: .4rem; list-style: none; }
 .toolstrip-menu > summary::-webkit-details-marker { display: none; }
+.tools-chevron { display: block; width: 13px; height: 13px; flex: 0 0 auto; align-self: center; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .16s ease; }
+.toolstrip-menu[open] .tools-chevron { transform: rotate(180deg); }
 .toolstrip-menu-content { position: absolute; z-index: 12; top: calc(100% + 8px); left: 0; display: grid; width: min(780px, calc(100vw - 24px)); max-height: min(78dvh, 640px); grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr)); align-items: stretch; gap: .6rem; padding: .65rem; overflow-x: hidden; overflow-y: auto; border: 1px solid var(--editor-border); border-radius: 12px; background: var(--editor-raised); box-shadow: var(--editor-menu-shadow); box-sizing: border-box; }
 .toolstrip-menu:not([open]) .toolstrip-menu-content { display: none; }
 .tool-panel { min-width: 0; padding: .7rem; border: 1px solid var(--editor-border-subtle); border-radius: 9px; background: var(--editor-surface); }
@@ -33,6 +35,9 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .tool-check-row, .tool-menu-actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .55rem; }
 .tool-panel .tool-check span { display: inline; }
 .workspace-toggle-buttons { display: flex; min-width: 0; flex-wrap: wrap; gap: .4rem; }
+.desktop-panel-toggles { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; }
+.desktop-panel-toggles .tool-button { display: inline-flex; align-items: center; gap: .32rem; padding-inline: .42rem; }
+.desktop-panel-toggles kbd { padding: .16rem .22rem; border: 1px solid var(--editor-border-subtle); border-radius: 4px; color: var(--editor-muted); background: var(--editor-surface); font: 500 .48rem/1 var(--font-mono); }
 .tool-menu-actions .tool-button { flex: 0 0 auto; }
 .tool-panel .execution-warning { overflow-wrap: anywhere; white-space: normal; }
 .tool-group { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; }
@@ -392,14 +397,14 @@ body.editor-shell {
   font-size: var(--editor-text);
 }
 .toolbar-button:hover, .tool-button:hover { color: var(--editor-text-color); border-color: var(--editor-accent); background: var(--editor-hover); }
-.tool-view-actions .tool-button[aria-pressed="true"] { border-color: var(--editor-accent); color: var(--editor-text-color); background: var(--editor-selected); }
+.tool-view-actions .tool-button[aria-pressed="true"], .desktop-panel-toggles .tool-button[aria-pressed="true"] { border-color: var(--editor-accent); color: var(--editor-text-color); background: var(--editor-selected); }
 .toolstrip-menu > summary { color: var(--editor-secondary); border-color: var(--editor-border); background: var(--editor-raised); }
 .toolstrip-menu > summary:hover, .toolstrip-menu[open] > summary { border-color: var(--editor-accent); color: var(--editor-text-color); }
 .toolbar-run { color: #fff; border-color: #5b3cc7; background: #6345ca; }
 .toolbar-run:hover { color: #fff; background: #5232b9; }
 html[data-theme="contrast"] .toolbar-run { color: #000; border-color: #ffeb3b; background: #ffeb3b; }
 html[data-theme="contrast"] .toolbar-run:hover { color: #000; background: #fff; }
-html[data-theme="contrast"] .tool-view-actions .tool-button[aria-pressed="true"] { color: #000; border-color: #ffeb3b; background: #ffeb3b; }
+html[data-theme="contrast"] .tool-view-actions .tool-button[aria-pressed="true"], html[data-theme="contrast"] .desktop-panel-toggles .tool-button[aria-pressed="true"] { color: #000; border-color: #ffeb3b; background: #ffeb3b; }
 .toolstrip { height: var(--editor-toolstrip-height); border-color: var(--editor-border); background: var(--editor-bar); }
 .tool-group + .tool-group { border-color: var(--editor-border); }
 .tool-group > label:not(.tool-check), .tool-check { color: var(--editor-muted); font-size: var(--editor-text); }
