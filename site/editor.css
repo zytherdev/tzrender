@@ -126,6 +126,10 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .preview-pane-icon { color: #72cfad; font-size: .76rem; }
 .preview-url { overflow: hidden; max-width: 120px; margin-left: .18rem; padding: .1rem .3rem; border: 1px solid #363341; border-radius: 4px; color: #777285; font: .46rem var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .preview-toolbar { display: flex; align-items: center; gap: .2rem; }
+.preview-location-field { display: flex; min-width: 0; }
+.preview-location-field input { width: 126px; min-width: 0; height: 26px; padding: 0 .38rem; border: 1px solid var(--editor-border); border-radius: 4px; color: var(--editor-text-color); background: var(--editor-code); font: var(--editor-text-small) var(--font-mono); }
+.preview-location-field input::placeholder { color: var(--editor-muted); opacity: .8; }
+.preview-location-field input:focus { border-color: var(--editor-focus); outline: 2px solid color-mix(in srgb, var(--editor-focus) 35%, transparent); }
 .viewport-select { max-width: 118px; padding: .28rem .3rem; font-size: .5rem; }
 .preview-toolbar .subtle-icon-button { width: 26px; height: 26px; font-size: .6rem; }
 .preview-stage { position: relative; display: flex; overflow: auto; justify-content: center; align-items: flex-start; min-height: 0; background: #e6e4eb; background-image: radial-gradient(#d0cdd8 1px, transparent 1px); background-size: 15px 15px; }
@@ -622,12 +626,13 @@ body.editor-shell :is(button, a, input, select, textarea, [tabindex], [role="tre
   .editor-workspace:not([data-explorer-hidden="true"])[data-panel="files"] .file-sidebar {
     position: absolute;
     z-index: 4;
-    inset: 38px auto 0 0;
+    inset: 38px auto calc(var(--output-height) + 8px) 0;
     display: flex;
     width: min(320px, 90vw);
     border-right: 1px solid var(--editor-border);
     box-shadow: var(--editor-menu-shadow);
   }
+  .editor-workspace[data-output-hidden="true"] .file-sidebar { bottom: 0; }
   .editor-workspace[data-focus="code"] .code-pane, .editor-workspace[data-focus="preview"] .preview-pane { grid-row: 1; }
   .editor-workspace[data-code-hidden="true"] .code-pane,
   .editor-workspace[data-preview-hidden="true"] .preview-pane,
@@ -658,6 +663,7 @@ body.editor-shell :is(button, a, input, select, textarea, [tabindex], [role="tre
   .editor-workspace[data-panel="files"] .editor-panel { display: none; }
   .tool-group .toolbar-select { max-width: 110px; }
   .tool-group .toolbar-select#fontSize, .tool-group .toolbar-select#tabSize { max-width: 100px; }
+  .preview-location-field input { width: 92px; }
 }
 
 .file-symbol { font-size: var(--editor-text-small); }

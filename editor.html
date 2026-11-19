@@ -161,6 +161,8 @@
         <div class="preview-toolbar">
           <label class="visually-hidden" for="viewportSize">Preview device size</label>
           <select id="viewportSize" class="viewport-select"><option value="responsive">Responsive</option><option value="desktop">Desktop · 1280</option><option value="tablet">Tablet · 768</option><option value="mobile">Mobile · 390</option></select>
+          <label class="preview-location-field" title="Optional query parameters and hash for the new preview tab"><span class="visually-hidden">Preview query and hash</span><input id="previewLocation" type="text" placeholder="?param=value#section" spellcheck="false" inputmode="url" aria-label="Preview query parameters and hash"></label>
+          <button class="subtle-icon-button" id="openPreviewTab" type="button" title="Open the current preview in a new tab">New tab</button>
           <button class="subtle-icon-button" id="reloadPreview" type="button" title="Run preview again">↻</button>
           <button class="subtle-icon-button" id="focusPreview" type="button" title="Focus the preview">Focus</button>
           <button class="subtle-icon-button" id="fullscreenPreview" type="button" title="Make the preview full-screen">⛶</button>

@@ -89,6 +89,7 @@ let draftChanged = false;
 let consoleCount = 0;
 let pythonRunSequence = 0;
 let experimentalPreviewActive = false;
+let latestPreviewDocument = null;
 let terminalHistory = [];
 let historyCursor = 0;
 let resizeState = null;
@@ -781,10 +782,40 @@ function applyTypeScriptDiagnostics(fileName, diagnostics = []) {
 function setPreviewDocument(srcdoc, path, { experimental = false } = {}) {
   $('previewUrl').textContent = `/${path}`;
   $('previewEmpty').hidden = true;
+  latestPreviewDocument = { srcdoc: String(srcdoc ?? ''), path: String(path ?? '') };
   frame.dataset.run = String(Number(frame.dataset.run || 0) + 1);
   frame.srcdoc = srcdoc;
   experimentalPreviewActive = experimental;
   $('stopPython').disabled = !experimental;
+}
+
+function previewLocationSuffix() {
+  const value = String($('previewLocation')?.value || '').trim();
+  if (!value) return '';
+  if (!value.startsWith('?') && !value.startsWith('#')) throw new Error('Preview parameters must start with ? or #.');
+  if (/[ -]/.test(value) || value.includes('://') || value.includes('/') || value.includes('\\')) {
+    throw new Error('Preview parameters may contain only a query and/or hash, not a URL or path.');
+  }
+  const parsed = new URL(value, 'https://tzrender.preview.invalid/');
+  return `${parsed.search}${parsed.hash}`;
+}
+
+function openPreviewInNewTab() {
+  if (!latestPreviewDocument?.srcdoc) {
+    showToast('Run the preview before opening a new tab.');
+    return;
+  }
+  let suffix;
+  try { suffix = previewLocationSuffix(); }
+  catch (error) { showToast(error?.message || 'Invalid preview parameters.'); $('previewLocation')?.focus(); return; }
+  const blobUrl = URL.createObjectURL(new Blob([latestPreviewDocument.srcdoc], { type: 'text/html' }));
+  const popup = window.open(`${blobUrl}${suffix}`, '_blank', 'noopener,noreferrer');
+  if (!popup) {
+    URL.revokeObjectURL(blobUrl);
+    showToast('The browser blocked the new tab. Allow pop-ups for this editor and try again.');
+    return;
+  }
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
 function stopExperimentalPreview() {
@@ -1709,6 +1740,7 @@ function initializeEventHandlers() {
   $('resetProject').addEventListener('click', () => replaceWithStarter(project.starter));
   $('runProject').addEventListener('click', () => runProject({ openPreview: true }));
   $('reloadPreview').addEventListener('click', () => runProject({ openPreview: true }));
+  $('openPreviewTab').addEventListener('click', openPreviewInNewTab);
   $('autoRun').addEventListener('change', () => {
     if ($('autoRun').checked) schedulePreview();
     else {
