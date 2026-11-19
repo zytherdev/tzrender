@@ -70,45 +70,49 @@
 
   <div class="toolstrip" role="toolbar" aria-label="Editor tools">
     <details class="toolstrip-menu">
-      <summary class="tool-button" aria-label="Open editor customization menu">Customize <span aria-hidden="true">⌄</span></summary>
+      <summary class="tool-button" aria-label="Open editor tools and layout menu">Tools <span aria-hidden="true">⌄</span></summary>
       <div class="toolstrip-menu-content">
-    <div class="tool-group">
-      <label for="editorTheme">Theme</label>
-      <select id="editorTheme" class="toolbar-select" aria-label="Studio color theme"><option value="tzrender-night">Dark</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select>
-      <label for="fontSize">Code size</label>
-      <select id="fontSize" class="toolbar-select" aria-label="Editor font size"><option>12</option><option>14</option><option selected>16</option><option>18</option><option>20</option><option>22</option><option>24</option></select>
-      <label for="interfaceSize">UI size</label>
-      <select id="interfaceSize" class="toolbar-select" aria-label="Interface text size"><option value="normal">Default</option><option value="large">Large</option></select>
-      <label for="tabSize">Indent</label>
-      <select id="tabSize" class="toolbar-select" aria-label="Indent size"><option value="2" selected>2 spaces</option><option value="4">4 spaces</option><option value="8">8 spaces</option></select>
-    </div>
-    <div class="tool-group tool-toggles">
-      <label for="executionMode">Run mode</label>
-      <select id="executionMode" class="toolbar-select" aria-label="Project execution security mode" title="Safe mode is the default. Experimental mode allows network access and temporary dependency installation after confirmation on every run.">
-        <option value="safe">Safe · offline</option>
-        <option value="experimental">Experimental · network</option>
-      </select>
-      <button class="tool-button" id="projectPackages" type="button" title="Configure package names for this project">Packages</button>
-      <span class="execution-warning" id="executionWarning" role="status" hidden>EXPERIMENTAL · confirm each run</span>
-      <label class="tool-check"><input id="minimapToggle" type="checkbox"><span>Minimap</span></label>
-      <label class="tool-check"><input id="wordWrapToggle" type="checkbox" checked><span>Wrap</span></label>
-      <button class="tool-button" id="findCode" type="button" title="Find or replace (Ctrl/Cmd+F)">Find</button>
-      <button class="tool-button" id="goToLine" type="button" title="Go to line (Ctrl/Cmd+G)">Go to line</button>
-      <button class="tool-button" id="commandPalette" type="button" title="Command palette (Ctrl/Cmd+Shift+P)">Commands</button>
-      <button class="tool-button" id="formatCode" type="button" title="Format the active file">Format</button>
-      <button class="tool-button" id="insertColor" type="button" title="Insert a color at the cursor">Color</button>
-      <input class="visually-hidden" id="colorPicker" type="color" value="#8067f7" aria-label="Choose an editor color">
-    </div>
+        <section class="tool-panel" aria-labelledby="toolPanelAppearance">
+          <h2 id="toolPanelAppearance">Appearance</h2>
+          <div class="tool-setting-grid">
+            <label class="tool-field" for="editorTheme"><span>Theme</span><select id="editorTheme" class="toolbar-select" aria-label="Studio color theme"><option value="tzrender-night">Dark</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select></label>
+            <label class="tool-field" for="fontSize"><span>Code size</span><select id="fontSize" class="toolbar-select" aria-label="Editor font size"><option>12</option><option>14</option><option selected>16</option><option>18</option><option>20</option><option>22</option><option>24</option></select></label>
+            <label class="tool-field" for="interfaceSize"><span>UI size</span><select id="interfaceSize" class="toolbar-select" aria-label="Interface text size"><option value="normal">Default</option><option value="large">Large</option></select></label>
+            <label class="tool-field" for="tabSize"><span>Indent</span><select id="tabSize" class="toolbar-select" aria-label="Indent size"><option value="2" selected>2 spaces</option><option value="4">4 spaces</option><option value="8">8 spaces</option></select></label>
+          </div>
+          <div class="tool-check-row"><label class="tool-check"><input id="minimapToggle" type="checkbox"><span>Minimap</span></label><label class="tool-check"><input id="wordWrapToggle" type="checkbox" checked><span>Word wrap</span></label></div>
+        </section>
+        <section class="tool-panel" aria-labelledby="toolPanelExecution">
+          <h2 id="toolPanelExecution">Execution</h2>
+          <label class="tool-field" for="executionMode"><span>Security mode</span><select id="executionMode" class="toolbar-select" aria-label="Project execution security mode" title="Safe mode is the default. Experimental mode allows network access and temporary dependency installation after confirmation on every run."><option value="safe">Safe · offline</option><option value="experimental">Experimental · network</option></select></label>
+          <div class="tool-menu-actions"><button class="tool-button" id="projectPackages" type="button" title="Configure package names for this project">Packages</button><span class="execution-warning" id="executionWarning" role="status" hidden>EXPERIMENTAL · confirm each run</span></div>
+        </section>
+        <section class="tool-panel" aria-labelledby="toolPanelEditing">
+          <h2 id="toolPanelEditing">Editing</h2>
+          <div class="tool-menu-actions">
+            <button class="tool-button" id="findCode" type="button" title="Find or replace (Ctrl/Cmd+F)">Find</button>
+            <button class="tool-button" id="goToLine" type="button" title="Go to line (Ctrl/Cmd+G)">Go to line</button>
+            <button class="tool-button" id="commandPalette" type="button" title="Command palette (Ctrl/Cmd+Shift+P)">Commands</button>
+            <button class="tool-button" id="formatCode" type="button" title="Format the active file">Format</button>
+            <button class="tool-button" id="insertColor" type="button" title="Insert a color at the cursor">Color</button>
+            <input class="visually-hidden" id="colorPicker" type="color" value="#8067f7" aria-label="Choose an editor color">
+          </div>
+        </section>
+        <section class="tool-panel" aria-labelledby="toolPanelWorkspace">
+          <h2 id="toolPanelWorkspace">Workspace panels</h2>
+          <div class="tool-menu-actions tool-view-actions" aria-label="Workspace panels">
+            <div class="workspace-toggle-buttons" aria-label="Hide or show workspace panels">
+              <button class="tool-button" id="toggleExplorer" type="button" aria-pressed="true" title="Hide Explorer (Ctrl+Shift+1)">Files</button>
+              <button class="tool-button" id="toggleCode" type="button" aria-pressed="true" title="Hide code (Ctrl+Shift+2)">Code</button>
+              <button class="tool-button" id="togglePreview" type="button" aria-pressed="true" title="Hide Preview (Ctrl+Shift+3)">Preview</button>
+              <button class="tool-button" id="toggleOutput" type="button" aria-pressed="true" title="Hide Terminal (Ctrl+Shift+4)">Terminal</button>
+            </div>
+            <button class="tool-button" id="focusCode" type="button" title="Focus only the code pane">Focus code</button>
+            <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Code full-screen</button>
+          </div>
+        </section>
       </div>
     </details>
-    <div class="tool-group tool-view-actions" aria-label="Workspace panels">
-      <button class="tool-button" id="toggleExplorer" type="button" aria-pressed="true" title="Hide Explorer (Ctrl+Shift+1)">Files</button>
-      <button class="tool-button" id="toggleCode" type="button" aria-pressed="true" title="Hide code (Ctrl+Shift+2)">Code</button>
-      <button class="tool-button" id="togglePreview" type="button" aria-pressed="true" title="Hide Preview (Ctrl+Shift+3)">Preview</button>
-      <button class="tool-button" id="toggleOutput" type="button" aria-pressed="true" title="Hide Terminal (Ctrl+Shift+4)">Terminal</button>
-      <button class="tool-button" id="focusCode" type="button" title="Focus only the code pane">Focus</button>
-      <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Code full-screen</button>
-    </div>
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
