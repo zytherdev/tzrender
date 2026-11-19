@@ -69,6 +69,9 @@
   </header>
 
   <div class="toolstrip" role="toolbar" aria-label="Editor tools">
+    <details class="toolstrip-menu">
+      <summary class="tool-button" aria-label="Open editor customization menu">Customize <span aria-hidden="true">⌄</span></summary>
+      <div class="toolstrip-menu-content">
     <div class="tool-group">
       <label for="editorTheme">Theme</label>
       <select id="editorTheme" class="toolbar-select" aria-label="Studio color theme"><option value="tzrender-night">Dark</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select>
@@ -96,16 +99,21 @@
       <button class="tool-button" id="insertColor" type="button" title="Insert a color at the cursor">Color</button>
       <input class="visually-hidden" id="colorPicker" type="color" value="#8067f7" aria-label="Choose an editor color">
     </div>
-    <div class="tool-group tool-view-actions">
-      <button class="tool-button" id="toggleExplorer" type="button" title="Collapse or expand the Explorer">Explorer</button>
-      <button class="tool-button" id="focusCode" type="button" title="Focus the code editor">Focus code</button>
-      <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Full-screen</button>
+      </div>
+    </details>
+    <div class="tool-group tool-view-actions" aria-label="Workspace panels">
+      <button class="tool-button" id="toggleExplorer" type="button" aria-pressed="true" title="Hide Explorer (Ctrl+Shift+1)">Files</button>
+      <button class="tool-button" id="toggleCode" type="button" aria-pressed="true" title="Hide code (Ctrl+Shift+2)">Code</button>
+      <button class="tool-button" id="togglePreview" type="button" aria-pressed="true" title="Hide Preview (Ctrl+Shift+3)">Preview</button>
+      <button class="tool-button" id="toggleOutput" type="button" aria-pressed="true" title="Hide Terminal (Ctrl+Shift+4)">Terminal</button>
+      <button class="tool-button" id="focusCode" type="button" title="Focus only the code pane">Focus</button>
+      <button class="tool-button" id="fullscreenCode" type="button" title="Make the code pane full-screen">Code full-screen</button>
     </div>
   </div>
 
   <main class="editor-workspace" id="editorWorkspace" data-panel="editor" data-output-tab="terminal">
     <h1 class="visually-hidden">Free browser IDE for HTML, CSS, JavaScript, TypeScript, Python, Lua, PHP, Java, Ruby, R, and Perl</h1>
-    <nav class="editor-mobile-tabs" aria-label="Workspace panels" role="tablist">
+    <nav class="editor-mobile-tabs" id="editorMobileTabs" aria-label="Workspace panels" role="tablist">
       <button type="button" role="tab" aria-selected="false" data-panel-tab="files">Files</button>
       <button type="button" role="tab" aria-selected="true" data-panel-tab="editor">Code</button>
       <button type="button" role="tab" aria-selected="false" data-panel-tab="preview">Preview</button>
@@ -158,7 +166,7 @@
       <div class="preview-footer"><span id="previewStatus"><i class="status-dot"></i> Preview is up to date</span><span class="sandbox-note" role="note" aria-label="External resources and network requests are restricted within the sandboxed preview document. The frame can navigate away. Avoid running code you do not trust.">Sandboxed · requests restricted</span></div>
     </section>
 
-    <div class="output-divider" id="outputDivider" role="separator" aria-label="Resize output and terminal panel" aria-orientation="horizontal" aria-valuemin="145" aria-valuemax="360" aria-valuenow="205" tabindex="0"></div>
+    <div class="output-divider" id="outputDivider" role="separator" aria-label="Resize output and terminal panel" aria-orientation="horizontal" aria-valuemin="145" aria-valuemax="1600" aria-valuenow="205" tabindex="0"></div>
 
     <section class="output-pane editor-panel" id="outputPane" aria-label="Editor output and terminal">
       <div class="output-heading">
@@ -168,7 +176,7 @@
           <button class="output-tab" type="button" role="tab" aria-selected="false" data-output="problems">Problems <span id="problemsBadge" class="console-count">0</span></button>
           <span class="console-tab-label" id="outputDescription">Local project commands only — type help</span>
         </div>
-        <div class="console-actions"><button id="stopPython" class="subtle-icon-button" type="button" title="Stop the active language runtime">Stop</button><button id="clearOutput" class="subtle-icon-button" type="button" title="Clear the active output panel">Clear</button></div>
+        <div class="console-actions"><button id="fullscreenOutput" class="subtle-icon-button" type="button" title="Make Terminal full-screen">Full-screen</button><button id="stopPython" class="subtle-icon-button" type="button" title="Stop the active language runtime">Stop</button><button id="clearOutput" class="subtle-icon-button" type="button" title="Clear the active output panel">Clear</button></div>
       </div>
       <div class="output-body" id="terminalPanel" data-output-panel="terminal">
         <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"><div class="terminal-banner">tzrender local project terminal · type <code>help</code> to see supported commands.</div></div>

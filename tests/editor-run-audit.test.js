@@ -68,6 +68,7 @@ function harness() {
   return new Function(...Object.keys(dependencies), `${controllerSource}\nreturn {
     setProject, setActiveFile, runProject, schedulePreview, saveDraftNow,
     importProjectFile, initializeEventHandlers, snapshotProject, safeFileUri, models, previewTypeScriptIndices,
+    toggleWorkspacePanel, applyWorkspaceLayout, handleGlobalKeydown, setWorkspacePanel,
     languageRuntime: createPythonRuntime()
   };`)(...Object.values(dependencies));
 }
@@ -94,6 +95,65 @@ function load(files, activeFile = files[0].name, folders = []) {
 }
 function currentPreview() { return document.getElementById('previewFrame').srcdoc; }
 function panel() { return document.getElementById('editorWorkspace').dataset.panel; }
+
+describe('editor workspace layout controls', () => {
+  it('removes hidden tracks from the desktop grid and keeps one main panel available', () => {
+    mobile = false;
+    const workspace = document.getElementById('editorWorkspace');
+    expect(app.toggleWorkspacePanel('explorer')).toBe(true);
+    expect(workspace.dataset.explorerHidden).toBe('true');
+    expect(workspace.style.gridTemplateColumns).not.toContain('235px');
+
+    expect(app.toggleWorkspacePanel('preview')).toBe(true);
+    expect(workspace.dataset.previewHidden).toBe('true');
+    expect(document.getElementById('paneDivider').style.display).toBe('none');
+    expect(app.toggleWorkspacePanel('output')).toBe(true);
+    expect(workspace.dataset.outputHidden).toBe('true');
+    expect(workspace.style.gridTemplateRows).toMatch(/minmax\(0(?:px)?, 1fr\)/);
+
+    expect(app.toggleWorkspacePanel('code')).toBe(false);
+    expect(workspace.dataset.codeHidden).not.toBe('true');
+    expect(document.getElementById('siteToast').textContent).toContain('at least one main workspace panel');
+  });
+
+  it('restores a hidden panel into the grid and persists its visibility setting', () => {
+    mobile = false;
+    const workspace = document.getElementById('editorWorkspace');
+    app.toggleWorkspacePanel('explorer');
+    expect(window.localStorage.getItem('tzrender-editor-layout-v1')).toContain('"explorerHidden":true');
+    app.toggleWorkspacePanel('explorer');
+    expect(workspace.dataset.explorerHidden).toBe('false');
+    expect(workspace.style.gridTemplateColumns).toContain('235px');
+  });
+
+  it('supports the documented panel shortcut and Terminal fullscreen action', () => {
+    mobile = false;
+    const shortcut = new KeyboardEvent('keydown', { key: '3', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true });
+    app.handleGlobalKeydown(shortcut);
+    expect(shortcut.defaultPrevented).toBe(true);
+    expect(document.getElementById('editorWorkspace').dataset.previewHidden).toBe('true');
+
+    app.initializeEventHandlers();
+    const requestFullscreen = vi.fn(() => Promise.resolve());
+    Object.defineProperty(document.getElementById('outputPane'), 'requestFullscreen', { configurable: true, value: requestFullscreen });
+    document.getElementById('fullscreenOutput').click();
+    expect(requestFullscreen).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the compact tab row while panels are hidden on tablet-width layouts', () => {
+    mobile = false;
+    window.matchMedia = vi.fn((query) => ({ matches: query.includes('min-width: 761px') && query.includes('max-width: 900px'), addEventListener: vi.fn() }));
+    app.toggleWorkspacePanel('preview');
+    const workspace = document.getElementById('editorWorkspace');
+    expect(workspace.style.gridTemplateRows).toContain('38px');
+    expect(document.getElementById('editorMobileTabs').style.gridRow).toBe('1');
+    expect(document.getElementById('previewPane').style.gridColumn).toBe('');
+    app.toggleWorkspacePanel('explorer');
+    app.setWorkspacePanel('files');
+    expect(workspace.dataset.panel).toBe('editor');
+    expect(workspace.dataset.explorerHidden).toBe('true');
+  });
+});
 
 
 describe('editor preview controller', () => {

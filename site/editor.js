@@ -109,7 +109,11 @@ function saveLayoutPreferences() {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({
       explorerWidth: sidebarWidth,
       outputHeight,
-      explorerCollapsed: workspace.dataset.explorerCollapsed === 'true'
+      explorerCollapsed: workspace.dataset.explorerCollapsed === 'true',
+      explorerHidden: workspace.dataset.explorerHidden === 'true',
+      codeHidden: workspace.dataset.codeHidden === 'true',
+      previewHidden: workspace.dataset.previewHidden === 'true',
+      outputHidden: workspace.dataset.outputHidden === 'true'
     }));
   } catch { /* Layout preferences are optional. */ }
 }
@@ -123,15 +127,112 @@ function updateExplorerControls() {
     collapseButton.title = collapsed ? 'Expand Explorer' : 'Collapse Explorer';
   }
   if (toolbarButton) {
-    toolbarButton.setAttribute('aria-expanded', String(!collapsed));
-    toolbarButton.title = collapsed ? 'Expand the Explorer' : 'Collapse the Explorer';
+    const hidden = workspace.dataset.explorerHidden === 'true';
+    toolbarButton.setAttribute('aria-pressed', String(!hidden));
+    toolbarButton.title = `${hidden ? 'Show' : 'Hide'} Explorer (Ctrl+Shift+1)`;
+    toolbarButton.classList.toggle('is-active', !hidden);
+  }
+  for (const [id, panel, label, shortcut] of [
+    ['toggleCode', 'code', 'Code', '2'], ['togglePreview', 'preview', 'Preview', '3'], ['toggleOutput', 'output', 'Terminal', '4']
+  ]) {
+    const button = $(id);
+    if (!button) continue;
+    const visible = workspace.dataset[`${panel}Hidden`] !== 'true';
+    button.setAttribute('aria-pressed', String(visible));
+    button.title = `${visible ? 'Hide' : 'Show'} ${label} (Ctrl+Shift+${shortcut})`;
+    button.classList.toggle('is-active', visible);
   }
 }
 function applyWorkspaceLayout() {
+  for (const panel of ['explorer', 'code', 'preview', 'output']) {
+    workspace.dataset[`${panel}Hidden`] = workspace.dataset[`${panel}Hidden`] === 'true' ? 'true' : 'false';
+  }
   workspace.style.setProperty('--explorer-width', `${sidebarWidth}px`);
   workspace.style.setProperty('--output-height', `${outputHeight}px`);
   $('sidebarDivider')?.setAttribute('aria-valuenow', String(Math.round(sidebarWidth)));
   $('outputDivider')?.setAttribute('aria-valuenow', String(Math.round(outputHeight)));
+  const tabletLayout = window.matchMedia('(min-width: 761px) and (max-width: 900px)').matches;
+  if (!window.matchMedia('(max-width: 760px)').matches) {
+    const explorerVisible = !tabletLayout && workspace.dataset.explorerHidden !== 'true';
+    const codeVisible = workspace.dataset.codeHidden !== 'true';
+    const previewVisible = workspace.dataset.previewHidden !== 'true';
+    const outputVisible = workspace.dataset.outputHidden !== 'true';
+    const columns = [];
+    let column = 1;
+    const assign = (id) => { $(id).style.gridColumn = String(column++); };
+    if (explorerVisible) {
+      columns.push(workspace.dataset.explorerCollapsed === 'true' ? '42px' : `${sidebarWidth}px`);
+      assign('fileSidebar');
+      if (codeVisible || previewVisible) { columns.push('7px'); assign('sidebarDivider'); }
+    }
+    if (codeVisible) {
+      columns.push(previewVisible ? 'var(--code-width)' : 'minmax(0, 1fr)');
+      assign('codePane');
+      if (previewVisible) { columns.push('7px'); assign('paneDivider'); }
+    }
+    if (previewVisible) {
+      columns.push(codeVisible ? 'minmax(320px, 1.05fr)' : 'minmax(0, 1fr)');
+      assign('previewPane');
+    }
+    if (!columns.length) columns.push('minmax(0, 1fr)');
+    const topPanelsVisible = codeVisible || previewVisible;
+    const gridRows = outputVisible && topPanelsVisible
+      ? `${tabletLayout ? '38px ' : ''}minmax(120px, 1fr) 9px minmax(145px, var(--output-height))`
+      : `${tabletLayout ? '38px ' : ''}minmax(0, 1fr)`;
+    workspace.style.gridTemplateColumns = columns.join(' ');
+    workspace.style.gridTemplateRows = gridRows;
+    if (tabletLayout) {
+      $('editorMobileTabs').style.gridColumn = '1 / -1';
+      $('editorMobileTabs').style.gridRow = '1';
+      if (codeVisible) $('codePane').style.gridRow = '2';
+      if (previewVisible) $('previewPane').style.gridRow = '2';
+    } else {
+      $('editorMobileTabs').style.removeProperty('grid-column');
+      $('editorMobileTabs').style.removeProperty('grid-row');
+      $('codePane').style.gridRow = '1';
+      $('previewPane').style.gridRow = '1';
+    }
+    if (explorerVisible) $('fileSidebar').style.gridRow = outputVisible && topPanelsVisible ? '1 / 4' : '1';
+    if (explorerVisible && (codeVisible || previewVisible || (outputVisible && !topPanelsVisible))) {
+      $('sidebarDivider').style.gridRow = outputVisible && topPanelsVisible ? '1 / 4' : '1';
+    }
+    if (codeVisible && previewVisible) $('paneDivider').style.gridRow = tabletLayout ? '2' : '1';
+    if (outputVisible) {
+      if (topPanelsVisible) {
+        $('outputPane').style.gridColumn = '1 / -1';
+        $('outputPane').style.gridRow = tabletLayout ? '4' : '3';
+      } else if (explorerVisible) {
+        columns.push('7px');
+        assign('sidebarDivider');
+        columns.push('minmax(0, 1fr)');
+        workspace.style.gridTemplateColumns = columns.join(' ');
+        $('outputPane').style.gridColumn = String(column++);
+        $('outputPane').style.gridRow = '1';
+      } else {
+        $('outputPane').style.gridColumn = '1';
+        $('outputPane').style.gridRow = tabletLayout ? '2' : '1';
+      }
+    }
+    if (tabletLayout && outputVisible && topPanelsVisible) {
+      $('outputDivider').style.gridColumn = '1 / -1';
+      $('outputDivider').style.gridRow = '3';
+    }
+    $('paneDivider').style.display = codeVisible && previewVisible ? '' : 'none';
+    $('sidebarDivider').style.display = explorerVisible && (codeVisible || previewVisible || (outputVisible && !topPanelsVisible)) ? '' : 'none';
+    $('outputDivider').style.display = outputVisible && topPanelsVisible ? '' : 'none';
+    if (outputVisible && topPanelsVisible) {
+      $('outputDivider').style.gridColumn = '1 / -1';
+      $('outputDivider').style.gridRow = tabletLayout ? '3' : '2';
+    }
+  } else {
+    workspace.style.removeProperty('grid-template-columns');
+    workspace.style.removeProperty('grid-template-rows');
+    for (const id of ['fileSidebar', 'codePane', 'previewPane', 'outputPane', 'sidebarDivider', 'paneDivider', 'outputDivider', 'editorMobileTabs']) {
+      $(id).style.removeProperty('grid-column');
+      $(id).style.removeProperty('grid-row');
+      $(id).style.removeProperty('display');
+    }
+  }
   updateExplorerControls();
   editor?.layout();
 }
@@ -139,8 +240,11 @@ function restoreLayoutPreferences() {
   try {
     const saved = JSON.parse(window.localStorage.getItem(LAYOUT_STORAGE_KEY) || 'null');
     if (saved && Number.isFinite(Number(saved.explorerWidth))) sidebarWidth = clamp(Number(saved.explorerWidth), 160, 340);
-    if (saved && Number.isFinite(Number(saved.outputHeight))) outputHeight = clamp(Number(saved.outputHeight), 145, 360);
+    if (saved && Number.isFinite(Number(saved.outputHeight))) outputHeight = clamp(Number(saved.outputHeight), 145, 1600);
     if (saved?.explorerCollapsed) workspace.dataset.explorerCollapsed = 'true';
+    for (const panel of ['explorer', 'code', 'preview', 'output']) {
+      if (saved?.[`${panel}Hidden`]) workspace.dataset[`${panel}Hidden`] = 'true';
+    }
   } catch { /* Layout preferences are optional. */ }
   applyWorkspaceLayout();
 }
@@ -150,6 +254,34 @@ function toggleExplorer() {
   updateExplorerControls();
   saveLayoutPreferences();
   window.setTimeout(() => editor?.layout(), 190);
+}
+function toggleWorkspacePanel(panel) {
+  if (!['explorer', 'code', 'preview', 'output'].includes(panel)) return false;
+  const hiding = workspace.dataset[`${panel}Hidden`] !== 'true';
+  if (hiding && ['code', 'preview', 'output'].every((name) => name === panel || workspace.dataset[`${name}Hidden`] === 'true')) {
+    showToast('Keep at least one main workspace panel visible.');
+    return false;
+  }
+  workspace.dataset[`${panel}Hidden`] = String(hiding);
+  const activePanel = workspace.dataset.panel;
+  const activeMatches = panel === 'explorer' ? activePanel === 'files'
+    : panel === 'code' ? activePanel === 'editor'
+      : activePanel === panel;
+  if (!hiding && panel === 'explorer') setWorkspacePanel('files');
+  else if (!hiding && panel === 'code') setWorkspacePanel('editor');
+  else if (!hiding && panel === 'preview') setWorkspacePanel('preview');
+  else if (!hiding && panel === 'output') setWorkspacePanel('output');
+  else if (hiding && activeMatches) {
+    if (panel === 'explorer') setWorkspacePanel('editor');
+    else {
+      const fallback = ['code', 'preview', 'output'].find((name) => name !== panel && workspace.dataset[`${name}Hidden`] !== 'true');
+      setWorkspacePanel(fallback === 'code' ? 'editor' : fallback);
+    }
+  }
+  saveLayoutPreferences();
+  applyWorkspaceLayout();
+  window.setTimeout(() => editor?.layout(), 190);
+  return true;
 }
 
 function readDraft() {
@@ -598,7 +730,8 @@ function setOutputTab(name) {
 }
 
 function setWorkspacePanel(name) {
-  const valid = ['files', 'editor', 'preview', 'output'].includes(name) ? name : 'editor';
+  let valid = ['files', 'editor', 'preview', 'output'].includes(name) ? name : 'editor';
+  if (valid === 'files' && workspace.dataset.explorerHidden === 'true') valid = 'editor';
   workspace.dataset.panel = valid;
   for (const tab of document.querySelectorAll('[data-panel-tab]')) tab.setAttribute('aria-selected', String(tab.dataset.panelTab === valid));
   if (valid === 'editor') window.setTimeout(() => editor?.layout(), 70);
@@ -1414,7 +1547,7 @@ function resizeEditorPanels(event) {
   if (window.matchMedia('(max-width: 760px)').matches || window.matchMedia('(max-width: 900px)').matches) return;
   const divider = $('paneDivider');
   const workspaceRect = workspace.getBoundingClientRect();
-  const renderedSidebarWidth = workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
+  const renderedSidebarWidth = workspace.dataset.explorerHidden === 'true' ? 0 : workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
   const available = workspaceRect.width - renderedSidebarWidth - 7 - 7;
   const currentLeft = event.clientX - workspaceRect.left - renderedSidebarWidth - 7;
   const codeWidth = Math.max(280, Math.min(available - 320, currentLeft));
@@ -1430,14 +1563,14 @@ function resizeExplorer(event) {
   applyWorkspaceLayout();
 }
 function resizeOutput(event) {
-  if (window.matchMedia('(max-width: 900px)').matches) return;
+  if (window.matchMedia('(max-width: 760px)').matches) return;
   const rect = workspace.getBoundingClientRect();
-  const maximum = Math.min(360, Math.max(145, rect.height - 245));
+  const maximum = Math.min(1600, Math.round(rect.height * .78), Math.max(145, rect.height - 120));
   outputHeight = clamp(rect.bottom - event.clientY, 145, maximum);
   applyWorkspaceLayout();
 }
 function startLayoutResize(kind, event) {
-  if (window.matchMedia('(max-width: 900px)').matches) return;
+  if (window.matchMedia('(max-width: 760px)').matches || (kind === 'explorer' && window.matchMedia('(max-width: 900px)').matches)) return;
   event.preventDefault();
   layoutResizeState = { kind, pointerId: event.pointerId };
   workspace.classList.add('is-resizing');
@@ -1465,7 +1598,9 @@ function adjustExplorerWidth(delta) {
   saveLayoutPreferences();
 }
 function adjustOutputHeight(delta) {
-  outputHeight = clamp(outputHeight + delta, 145, 360);
+  const height = workspace.getBoundingClientRect().height;
+  const maximum = Math.min(1600, Math.round(height * .78), Math.max(145, height - 120));
+  outputHeight = clamp(outputHeight + delta, 145, maximum);
   applyWorkspaceLayout();
   saveLayoutPreferences();
 }
@@ -1512,6 +1647,12 @@ function runEditorAction(id, successMessage) {
 
 function handleGlobalKeydown(event) {
   const modifier = event.metaKey || event.ctrlKey;
+  if (modifier && event.shiftKey && ['1', '2', '3', '4'].includes(event.key)) {
+    event.preventDefault();
+    toggleWorkspacePanel(({ '1': 'explorer', '2': 'code', '3': 'preview', '4': 'output' })[event.key]);
+    return;
+  }
+  if (event.key === 'Escape') document.querySelector('.toolstrip-menu[open]')?.removeAttribute('open');
   if (!modifier) return;
   const key = event.key.toLowerCase();
   if (modifier && key === 'enter') {
@@ -1595,12 +1736,20 @@ function initializeEventHandlers() {
   $('minimapToggle').addEventListener('change', (event) => editor.updateOptions({ minimap: { enabled: event.target.checked } }));
   $('wordWrapToggle').addEventListener('change', (event) => editor.updateOptions({ wordWrap: event.target.checked ? 'on' : 'off' }));
   $('viewportSize').addEventListener('change', (event) => { $('previewCanvasWrap').dataset.size = event.target.value; });
-  $('toggleExplorer').addEventListener('click', toggleExplorer);
+  $('toggleExplorer').addEventListener('click', () => toggleWorkspacePanel('explorer'));
+  $('toggleCode').addEventListener('click', () => toggleWorkspacePanel('code'));
+  $('togglePreview').addEventListener('click', () => toggleWorkspacePanel('preview'));
+  $('toggleOutput').addEventListener('click', () => toggleWorkspacePanel('output'));
+  document.addEventListener('click', (event) => {
+    const menu = document.querySelector('.toolstrip-menu[open]');
+    if (menu && !menu.contains(event.target)) menu.removeAttribute('open');
+  });
   $('collapseExplorer').addEventListener('click', toggleExplorer);
   $('focusCode').addEventListener('click', () => { setFocusMode('code'); });
   $('focusPreview').addEventListener('click', () => { setFocusMode('preview'); });
   $('fullscreenCode').addEventListener('click', () => requestFullScreen($('codePane')));
   $('fullscreenPreview').addEventListener('click', () => requestFullScreen($('previewPane')));
+  $('fullscreenOutput').addEventListener('click', () => requestFullScreen($('outputPane')));
   $('stopPython').addEventListener('click', () => {
     if (stopExperimentalPreview()) {
       appendTerminalLine('Experimental preview session stopped; its network activity has ended.', 'warning');
@@ -1644,7 +1793,7 @@ function initializeEventHandlers() {
     event.preventDefault();
     const current = editor.getLayoutInfo().width;
     const bounds = workspace.getBoundingClientRect();
-    const renderedSidebarWidth = workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
+    const renderedSidebarWidth = workspace.dataset.explorerHidden === 'true' ? 0 : workspace.dataset.explorerCollapsed === 'true' ? 42 : sidebarWidth;
     resizeEditorPanels({ clientX: bounds.left + renderedSidebarWidth + 7 + current + (event.key === 'ArrowRight' ? 32 : -32) });
   });
   $('closeMobileNotice').addEventListener('click', () => { $('mobileEditorNotice').hidden = true; });
@@ -1659,7 +1808,7 @@ function initializeEventHandlers() {
     javaRuntime.stop();
     typeScriptRuntime.dispose();
   });
-  window.addEventListener('resize', () => editor.layout());
+  window.addEventListener('resize', () => { applyWorkspaceLayout(); editor.layout(); });
 }
 
 restoreLayoutPreferences();
