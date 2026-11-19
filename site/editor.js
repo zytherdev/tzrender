@@ -810,9 +810,8 @@ function openPreviewInNewTab() {
   catch (error) { showToast(error?.message || 'Invalid preview parameters.'); $('previewLocation')?.focus(); return; }
   const token = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   const storageKey = `tzrender-preview-${token}`;
-  const viewport = $('viewportSize')?.value || 'responsive';
   try {
-    sessionStorage.setItem(storageKey, JSON.stringify({ srcdoc: latestPreviewDocument.srcdoc, viewport }));
+    sessionStorage.setItem(storageKey, JSON.stringify({ srcdoc: latestPreviewDocument.srcdoc }));
   } catch {
     showToast('The preview could not be prepared for a reloadable tab.');
     return;
@@ -822,9 +821,7 @@ function openPreviewInNewTab() {
   previewUrl.search = requested.search;
   previewUrl.searchParams.set('token', token);
   previewUrl.hash = requested.hash;
-  const sizes = { desktop: [1280, 800], tablet: [768, 1024], mobile: [390, 844], responsive: [1280, 800] };
-  const [width, height] = sizes[viewport] || sizes.responsive;
-  const popup = window.open(previewUrl.href, '_blank', `popup=yes,width=${width},height=${height},resizable=yes,scrollbars=yes`);
+  const popup = window.open(previewUrl.href, '_blank');
   if (!popup) {
     sessionStorage.removeItem(storageKey);
     showToast('The browser blocked the new tab. Allow pop-ups for this editor and try again.');
