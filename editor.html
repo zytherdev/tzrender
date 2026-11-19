@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' https: ws: wss:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <meta name="description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
+  <meta name="description" content="Use a free online code editor and browser IDE to write HTML, CSS, JavaScript and TypeScript with live preview, plus local Python, PHP, Java and more.">
+  <meta name="keywords" content="online code editor, HTML editor, CSS editor, browser IDE, live preview, web coding, JavaScript editor">
+  <meta name="author" content="Zyther Dev">
+  <link rel="author" href="https://zyther.dev/">
+  <link rel="me" href="https://github.com/zytherdev">
   <link rel="canonical" href="https://tzrender.zyther.dev/editor.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="tzrender">
-  <meta property="og:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender">
-  <meta property="og:description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
+  <meta property="og:title" content="Free Online Code Editor: HTML, CSS &amp; JavaScript | tzrender">
+  <meta property="og:description" content="Use a free online code editor and browser IDE to write HTML, CSS, JavaScript and TypeScript with live preview, plus local Python, PHP, Java and more.">
   <meta property="og:url" content="https://tzrender.zyther.dev/editor.html">
   <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -19,11 +23,20 @@
   <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender">
-  <meta name="twitter:description" content="Build websites and run Python, Lua, PHP, Java, Ruby, R and Perl in a browser IDE with local WebAssembly runtimes and browser-only drafts.">
+  <meta name="twitter:title" content="Free Online Code Editor: HTML, CSS &amp; JavaScript | tzrender">
+  <meta name="twitter:description" content="Use a free online code editor and browser IDE to write HTML, CSS, JavaScript and TypeScript with live preview, plus local Python, PHP, Java and more.">
   <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
-  <title>Online IDE: HTML, CSS, JS/TS, Python, PHP, Java, Ruby, R &amp; Perl | tzrender</title>
+  <title>Free Online Code Editor: HTML, CSS &amp; JavaScript | tzrender</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {"@type": "Organization", "@id": "https://tzrender.zyther.dev/#zyther-dev", "name": "Zyther Dev", "url": "https://zyther.dev/", "sameAs": ["https://github.com/zytherdev", "https://zyther.dev/"]},
+        {"@type": "WebApplication", "@id": "https://tzrender.zyther.dev/editor.html#application", "name": "tzrender Studio Online Code Editor", "url": "https://tzrender.zyther.dev/editor.html", "description": "Free online code editor and browser IDE for HTML, CSS, JavaScript, TypeScript and browser-based languages.", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any", "browserRequirements": "Requires a modern web browser", "creator": {"@id": "https://tzrender.zyther.dev/#zyther-dev"}, "offers": {"@type": "Offer", "price": 0, "priceCurrency": "USD"}, "featureList": ["HTML editor", "CSS editor", "JavaScript editor", "TypeScript editor", "Live preview", "Local browser runtimes"]}
+      ]
+    }
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <script>try { const theme = localStorage.getItem('tzrender-editor-theme'); if (theme === 'vs') document.documentElement.dataset.theme = 'light'; else if (theme === 'hc-black') document.documentElement.dataset.theme = 'contrast'; } catch { /* Default to dark when storage is unavailable. */ }</script>
   <link rel="stylesheet" href="/site/site.css">
@@ -139,7 +152,7 @@
       </div>
       <div class="file-list" id="fileList" role="tree" aria-label="Project files"></div>
       <div class="sidebar-tip explorer-hint"><span class="tip-mark" aria-hidden="true">i</span><p>Right-click an item for more actions, or drag it into a folder. Changes stay in this browser.</p></div>
-      <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Drafts saved only in this browser</span></div>
+      <div class="sidebar-footer"><span class="local-icon" aria-hidden="true">◉</span><span>Drafts saved only in this browser</span><a href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">Star tzrender ↗</a></div>
     </aside>
 
     <div class="sidebar-divider" id="sidebarDivider" role="separator" aria-label="Resize Explorer" aria-orientation="vertical" aria-valuemin="160" aria-valuemax="340" aria-valuenow="205" tabindex="0"></div>

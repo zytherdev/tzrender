@@ -84,6 +84,8 @@ body.editor-shell { height: 100dvh; min-height: 480px; overflow: hidden; backgro
 .tip-mark { display: grid; width: 16px; height: 16px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #a390ff; background: #3b315d; font: 600 .55rem var(--font-mono); }
 .sidebar-tip p { margin: 0; color: #a7a1b5; font-size: .52rem; line-height: 1.55; }
 .sidebar-footer { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; padding: .62rem .75rem; border-top: 1px solid #302d3a; color: #7f7a8d; font-size: .51rem; }
+.sidebar-footer a { margin-left: auto; color: #9b86ff; white-space: nowrap; }
+.sidebar-footer a:hover { color: #c4b8ff; }
 .local-icon { color: #6ee1bd; }
 .sidebar-divider { z-index: 2; grid-column: 2; grid-row: 1 / 4; background: #302d3a; cursor: col-resize; touch-action: none; }
 .sidebar-divider:hover, .sidebar-divider:focus-visible { background: #9b86ff; outline: 0; }

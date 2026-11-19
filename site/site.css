@@ -166,6 +166,12 @@ h1, h2, h3, p { margin-top: 0; }
 .learn-number { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 9px; color: var(--violet); font: .61rem var(--font-mono); }
 .learn-note h2 { margin: 0 0 .4rem; font-size: .88rem; letter-spacing: -.02em; }
 .learn-note p { max-width: 440px; margin: 0; color: var(--muted); font-size: .72rem; }
+.community-section { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin-bottom: 4.5rem; padding: 1.35rem 1.5rem; border: 1px solid var(--line); border-radius: 15px; background: linear-gradient(110deg, color-mix(in srgb, var(--violet), transparent 91%), color-mix(in srgb, var(--mint), transparent 94%)); }
+.community-section .eyebrow { margin-bottom: .55rem; }
+.community-section h2 { margin: 0 0 .35rem; font-size: clamp(1.35rem, 2.4vw, 1.85rem); letter-spacing: -.06em; }
+.community-section p:not(.eyebrow) { max-width: 610px; margin: 0; color: var(--muted); font-size: .78rem; }
+.community-section p a { display: inline; font-size: inherit; }
+.community-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: .85rem; }
 .site-footer { display: flex; align-items: center; gap: 1.5rem; min-height: 76px; border-top: 1px solid var(--line); color: var(--quiet); font-size: .65rem; }
 .site-footer .brand { font-size: .85rem; }
 .site-footer .brand-mark { width: 25px; height: 25px; border-radius: 8px; font-size: .59rem; }
@@ -205,6 +211,8 @@ h1, h2, h3, p { margin-top: 0; }
   .float-note small { font-size: .54rem; }
   .section-heading { align-items: start; flex-direction: column; }
   .destination-grid, .learn-section { grid-template-columns: 1fr; }
+  .community-section { align-items: flex-start; flex-direction: column; margin-bottom: 3rem; padding: 1.15rem; }
+  .community-actions { justify-content: flex-start; }
   .destination-card { min-height: 235px; }
   .workbench-section { padding-top: 2.5rem; padding-bottom: 4.2rem; }
   .components-section { padding: 4rem 0; }

@@ -4,12 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Free browser tools for CSS and accessibility: color contrast, gradients, Flexbox, Grid, shadows, spacing scales, and the box model.">
+  <meta name="description" content="Free online CSS tools for web developers: contrast checker, Flexbox and Grid builders, gradients, shadows, spacing scales, and box model visualizer.">
+  <meta name="keywords" content="CSS tools, online CSS tools, Flexbox builder, CSS Grid builder, contrast checker, web development tools">
+  <meta name="author" content="Zyther Dev">
+  <link rel="author" href="https://zyther.dev/">
+  <link rel="me" href="https://github.com/zytherdev">
   <link rel="canonical" href="https://tzrender.zyther.dev/tools.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="tzrender">
-  <meta property="og:title" content="Free CSS Tools: Contrast, Flexbox, Grid &amp; More | tzrender">
-  <meta property="og:description" content="Free browser tools for CSS and accessibility: color contrast, gradients, Flexbox, Grid, shadows, spacing scales, and the box model.">
+  <meta property="og:title" content="Free Online CSS Tools: Flexbox, Grid &amp; Contrast | tzrender">
+  <meta property="og:description" content="Free online CSS tools for web developers: contrast checker, Flexbox and Grid builders, gradients, shadows, spacing scales, and box model visualizer.">
   <meta property="og:url" content="https://tzrender.zyther.dev/tools.html">
   <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -18,11 +22,20 @@
   <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Free CSS Tools: Contrast, Flexbox, Grid &amp; More | tzrender">
-  <meta name="twitter:description" content="Free browser tools for CSS and accessibility: color contrast, gradients, Flexbox, Grid, shadows, spacing scales, and the box model.">
+  <meta name="twitter:title" content="Free Online CSS Tools: Flexbox, Grid &amp; Contrast | tzrender">
+  <meta name="twitter:description" content="Free online CSS tools for web developers: contrast checker, Flexbox and Grid builders, gradients, shadows, spacing scales, and box model visualizer.">
   <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
-  <title>Free CSS Tools: Contrast, Flexbox, Grid &amp; More | tzrender</title>
+  <title>Free Online CSS Tools: Flexbox, Grid &amp; Contrast | tzrender</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {"@type": "Organization", "@id": "https://tzrender.zyther.dev/#zyther-dev", "name": "Zyther Dev", "url": "https://zyther.dev/", "sameAs": ["https://github.com/zytherdev", "https://zyther.dev/"]},
+        {"@type": "WebPage", "@id": "https://tzrender.zyther.dev/tools.html#webpage", "url": "https://tzrender.zyther.dev/tools.html", "name": "Free Online CSS Tools", "description": "Free online CSS tools for web developers, including Flexbox, Grid, contrast and box model utilities.", "author": {"@id": "https://tzrender.zyther.dev/#zyther-dev"}, "isPartOf": {"@id": "https://tzrender.zyther.dev/#website"}}
+      ]
+    }
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/site/site.css">
   <link rel="stylesheet" href="/site/tools.css">
@@ -35,7 +48,7 @@
     <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch to light theme" title="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button>
   </header>
   <main class="tools-main wrap">
-    <section class="tools-hero"><div><p class="eyebrow"><span class="status-dot"></span> Try it. Understand it. Take it with you.</p><h1>Small tools.<br><span>Better front ends.</span></h1><p>Useful CSS builders and accessibility checks with real previews and code you can use in your project.</p></div><div class="tools-hero-aside"><span class="tools-count"><strong>8</strong> tools</span><span>Free to use · Runs in your browser</span></div></section>
+    <section class="tools-hero"><div><p class="eyebrow"><span class="status-dot"></span> Try it. Understand it. Take it with you.</p><h1>Free CSS tools.<br><span>Better front ends.</span></h1><p>Useful online CSS builders and accessibility checks with real previews and code you can use in your project.</p></div><div class="tools-hero-aside"><span class="tools-count"><strong>8</strong> tools</span><span>Free to use · Runs in your browser</span></div></section>
     <section class="tools-catalog" aria-label="Front-end tools">
       <div class="tools-controls"><div class="filter-tabs" role="group" aria-label="Filter tools"><button class="filter-tab active" type="button" data-filter="all" aria-pressed="true">All tools <span>8</span></button><button class="filter-tab" type="button" data-filter="code" aria-pressed="false">Code & starters</button><button class="filter-tab" type="button" data-filter="colors" aria-pressed="false">Colors & accessibility</button><button class="filter-tab" type="button" data-filter="layout" aria-pressed="false">CSS layout</button><button class="filter-tab" type="button" data-filter="effects" aria-pressed="false">Visual effects</button></div><label class="tool-search"><span class="visually-hidden">Search tools</span><span aria-hidden="true">⌕</span><input id="toolSearch" type="search" placeholder="Find a tool…" autocomplete="off"></label></div>
       <p class="filter-status" id="filterStatus" role="status" aria-live="polite">Showing all 8 tools.</p>
@@ -99,6 +112,6 @@
       <div class="no-tools" id="noTools" hidden><span>Nothing found</span><p>Try a different word or choose another category.</p></div>
     </section>
   </main>
-  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Small tools for people learning to build for the web.</p><div><a href="/editor.html">Editor</a><a href="/#components">Component library</a></div></footer>
+  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Built by <a href="https://zyther.dev/" rel="me">Zyther Dev</a> for people learning to build for the web.</p><div><a href="/editor.html">HTML editor</a><a href="/#components">Component library</a><a href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">Star on GitHub ↗</a></div></footer>
 </body>
 </html>

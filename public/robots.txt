@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /preview.html
 Sitemap: https://tzrender.zyther.dev/sitemap.xml

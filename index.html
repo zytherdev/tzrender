@@ -4,12 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Learn web development in a free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python, plus practical CSS tools and accessible UI components.">
+  <meta name="description" content="Learn web development with a free online code editor for HTML, CSS, JavaScript, TypeScript and more, plus practical CSS tools and accessible UI components.">
+  <meta name="keywords" content="online code editor, HTML editor, CSS editor, web development, coding tools, browser IDE">
+  <meta name="author" content="Zyther Dev">
+  <link rel="author" href="https://zyther.dev/">
+  <link rel="me" href="https://github.com/zytherdev">
   <link rel="canonical" href="https://tzrender.zyther.dev/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="tzrender">
-  <meta property="og:title" content="tzrender: Free Browser IDE, CSS Tools &amp; UI Components">
-  <meta property="og:description" content="Learn web development in a free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python, plus practical CSS tools and accessible UI components.">
+  <meta property="og:title" content="Free Online Code Editor for HTML &amp; CSS | tzrender">
+  <meta property="og:description" content="Learn web development with a free online code editor for HTML, CSS, JavaScript, TypeScript and more, plus practical CSS tools and accessible UI components.">
   <meta property="og:url" content="https://tzrender.zyther.dev/">
   <meta property="og:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -18,11 +22,56 @@
   <meta property="og:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="tzrender: Free Browser IDE, CSS Tools &amp; UI Components">
-  <meta name="twitter:description" content="Learn web development in a free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python, plus practical CSS tools and accessible UI components.">
+  <meta name="twitter:title" content="Free Online Code Editor for HTML &amp; CSS | tzrender">
+  <meta name="twitter:description" content="Learn web development with a free online code editor for HTML, CSS, JavaScript, TypeScript and more, plus practical CSS tools and accessible UI components.">
   <meta name="twitter:image" content="https://tzrender.zyther.dev/og-image.jpg">
   <meta name="twitter:image:alt" content="A screenshot of the tzrender browser IDE with a live web-page preview.">
-  <title>tzrender: Free Browser IDE, CSS Tools &amp; UI Components</title>
+  <title>Free Online Code Editor for HTML &amp; CSS | tzrender</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://tzrender.zyther.dev/#zyther-dev",
+          "name": "Zyther Dev",
+          "url": "https://zyther.dev/",
+          "sameAs": ["https://github.com/zytherdev", "https://zyther.dev/"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://tzrender.zyther.dev/#website",
+          "url": "https://tzrender.zyther.dev/",
+          "name": "tzrender",
+          "description": "Free browser tools for learning web development and building with HTML, CSS and JavaScript.",
+          "publisher": {"@id": "https://tzrender.zyther.dev/#zyther-dev"}
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://tzrender.zyther.dev/#studio",
+          "name": "tzrender Studio",
+          "url": "https://tzrender.zyther.dev/editor.html",
+          "description": "A free online code editor and browser IDE for HTML, CSS, JavaScript, TypeScript and browser-based languages.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires a modern web browser",
+          "creator": {"@id": "https://tzrender.zyther.dev/#zyther-dev"},
+          "isPartOf": {"@id": "https://tzrender.zyther.dev/#website"},
+          "offers": {"@type": "Offer", "price": 0, "priceCurrency": "USD"},
+          "featureList": ["HTML editor", "CSS editor", "JavaScript editor", "Live preview", "Browser-based coding"]
+        },
+        {
+          "@type": "SoftwareSourceCode",
+          "@id": "https://github.com/zytherdev/tzrender#source",
+          "name": "tzrender",
+          "codeRepository": "https://github.com/zytherdev/tzrender",
+          "programmingLanguage": ["JavaScript", "HTML", "CSS"],
+          "license": "https://opensource.org/license/mit/",
+          "author": {"@id": "https://tzrender.zyther.dev/#zyther-dev"}
+        }
+      ]
+    }
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%238b72ff'/%3E%3Cpath d='m18 16-8 8 8 8m12-16 8 8-8 8M27 12l-6 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/site/site.css">
   <script type="module" src="/site/home.js"></script>
@@ -46,7 +95,7 @@
     <section class="home-hero wrap">
       <div class="hero-copy">
         <p class="eyebrow"><span class="status-dot"></span> A practical bench for the open web</p>
-        <h1>Edit the page.<br><span>See it come alive.</span></h1>
+        <h1>A free online code editor.<br><span>Build for the web.</span></h1>
         <p class="hero-lede">A free browser IDE for HTML, CSS, JavaScript, TypeScript, and Python — with practical CSS tools and accessible vanilla JavaScript components.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="/editor.html">Open the editor <span aria-hidden="true">↗</span></a>
@@ -136,8 +185,12 @@
       <div class="learn-note"><span class="learn-number">01</span><div><h2>Stay in control of your code.</h2><p>The preview runs in a separate sandbox. Your drafts are stored only in this browser until you export them.</p></div></div>
       <div class="learn-note"><span class="learn-number">02</span><div><h2>Keep learning past the demo.</h2><p>Every CSS tool shows the code it creates. Take it into your own project and build on what you learned.</p></div></div>
     </section>
+    <section class="community-section wrap" aria-labelledby="community-heading">
+      <div><p class="eyebrow">OPEN SOURCE, BUILT BY ZYTHER DEV</p><h2 id="community-heading">Build in the open.</h2><p>tzrender is maintained by <a class="text-link" href="https://zyther.dev/" rel="me">Zyther Dev</a> and shared as an open-source project for people learning the web.</p></div>
+      <div class="community-actions"><a class="button button-primary" href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">Star tzrender on GitHub <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/zytherdev" target="_blank" rel="me noopener">More from Zyther Dev <span aria-hidden="true">→</span></a></div>
+    </section>
   </main>
 
-  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Built for curious people learning the open web.</p><div><a href="/editor.html">Editor</a><a href="/tools.html">Tools</a><a href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">GitHub ↗</a></div></footer>
+  <footer class="site-footer wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span><span>tzrender</span></a><p>Built by <a href="https://zyther.dev/" rel="me">Zyther Dev</a> for curious people learning the open web.</p><div><a href="/editor.html">HTML editor</a><a href="/tools.html">CSS tools</a><a href="https://github.com/zytherdev/tzrender" target="_blank" rel="noopener">Star on GitHub ↗</a></div></footer>
 </body>
 </html>
