@@ -1,12 +1,37 @@
 # tzrender
 
-`@zyther/tzrender` is a small vanilla JavaScript UI library for everyday interface patterns: alerts, dialogs, loading states, notifications, tooltips, accordions, tabs, form controls, navigation, avatars and status badges. It is designed for projects built with ordinary HTML, CSS and JavaScript. It does not require a framework or CSS library.
+> A browser-first coding workspace for building, previewing and learning on the open web.
 
-> **Package vs. website:** The package is the reusable UI library described below. This repository also contains a separate learning website with a [browser code editor](editor.html) and [front-end tools](tools.html). Those website features are not imported from the npm package.
+[Open tzrender Studio](https://tzrender.zyther.dev/editor.html) · [Explore front-end tools](https://tzrender.zyther.dev/tools.html) · [Install the UI package](https://www.npmjs.com/package/@zyther/tzrender) · [Star on GitHub](https://github.com/zytherdev/tzrender)
 
-## Install and use
+tzrender is an open-source project by [Zyther Dev](https://zyther.dev/) built around **tzrender Studio**: a full browser code editor for experimenting with websites and multiple programming languages without installing a local toolchain. Write code in Monaco, manage a virtual project in the Explorer, run it in browser-local WebAssembly runtimes, inspect output in the Terminal and see web projects in a live sandboxed Preview.
 
-Install the package in an existing JavaScript project:
+The repository also publishes `@zyther/tzrender`, a framework-free vanilla JavaScript UI library for accessible interface patterns. The Studio and the package are related parts of the same project, but the website application does not import its editor features from the npm package.
+
+## Why tzrender Studio?
+
+Studio is designed for quick experiments, teaching, prototypes and small web projects:
+
+- **Real editor workflow:** Monaco syntax highlighting and language services, a collapsible and resizable Explorer, nested folders, import/export backups, keyboard shortcuts and an adjustable Terminal.
+- **Live web preview:** HTML, CSS and JavaScript run in an isolated preview iframe with browser-only drafts and no account required.
+- **More than a text editor:** Run and inspect projects with local WebAssembly runtimes for Python, Lua, PHP, Java, Ruby, R, Perl and SQLite, alongside TypeScript compilation and Markdown, JSON and YAML tooling.
+- **Browser-local by design:** Safe mode is offline by default; drafts stay in the current browser and are not synchronized to GitHub or uploaded as a hosted project.
+- **Learning-oriented feedback:** Several languages include completions, hovers, signatures, project-symbol suggestions, import/path assistance and conservative static diagnostics.
+
+Open the [online code editor](https://tzrender.zyther.dev/editor.html) to try it. The editor is best experienced in a modern desktop browser; mobile layouts are supported on a best-effort basis.
+
+## Project map
+
+| Part | What it is | Link |
+| --- | --- | --- |
+| **tzrender Studio** | Browser IDE with Explorer, Terminal, live Preview and local runtimes. | [Launch Studio](https://tzrender.zyther.dev/editor.html) |
+| **Front-end tools** | Eight focused utilities for starter HTML, color contrast, gradients, Flexbox, Grid, shadows, spacing and the CSS box model. | [Open the toolbox](https://tzrender.zyther.dev/tools.html) |
+| **`@zyther/tzrender`** | Reusable vanilla JavaScript components for accessible feedback, dialogs, loading, navigation and form interfaces. | [View on npm](https://www.npmjs.com/package/@zyther/tzrender) |
+
+## Install the UI package
+
+Install and use the package in an existing JavaScript project:
+
 
 ```sh
 npm install @zyther/tzrender
